@@ -1,41 +1,41 @@
 A Java based population file generator for Team Fortress 2's Mann vs Machine gamemode.
 Currrently rather barebones.
 
-Todo:
+### Todo:
 
-Better giant/buster support
+- Better giant/buster support
 
-Tanks
+- Tanks
 
-Squads
+- Squads
 
-RandomChoice
+- RandomChoice
 
-Missions
+- Missions
 
-Templates (creating and using)
+- Templates (creating and using)
 
-Attributes
+- Attributes
 
-Weapon/cosmetic support
+- Weapon/cosmetic support
 
-Item/character attributes
+- Item/character attributes
 
-Map support (spawns, relays, map specific things like engibot hints)
+- Map support (spawns, relays, map specific things like engibot hints)
 
-Loading popfiles (both regular and template only)
+- Loading popfiles (both regular and template only)
 
-Creating template only popfiles
+- Creating template only popfiles
 
-Wavebar simulator
+- Wavebar simulator
 
-Custom classicon support
+- Custom classicon support
 
-Legacy populator support
+- Legacy populator support
 
 
-Rewrite/reorganize as necessary
+- Rewrite/reorganize as necessary
 
-Improve layout
+- Improve layout
 
-Prettiness
+- Prettiness
