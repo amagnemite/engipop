@@ -5,12 +5,6 @@ Currrently rather barebones.
 
 - Better giant/buster support
 
-- Tanks
-
-- Squads
-
-- RandomChoice
-
 - Missions
 
 - Templates (creating and using)
@@ -29,6 +23,8 @@ Currrently rather barebones.
 
 - Wavebar simulator
 
+- Icon preview
+
 - Custom classicon support
 
 - Legacy populator support
@@ -39,3 +35,5 @@ Currrently rather barebones.
 - Improve layout
 
 - Prettiness
+
+- Pictures
