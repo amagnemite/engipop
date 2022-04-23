@@ -1,4 +1,5 @@
 package engipop;
+import java.awt.Window;
 import java.util.*;
 
 import org.w3c.dom.Node;
@@ -29,6 +30,15 @@ public class Tree {
         public List<Node> getChildren() {
         	return this.children;
         }
+        
+     	public boolean hasChildren() {
+    		boolean hasSpawner = false;
+    		
+    		if(this.getChildren().size() > 0) {
+    			hasSpawner = true;
+    		}
+    		return hasSpawner;
+    	}
         
         public Node getParent() {
         	return this.parent;
@@ -145,12 +155,12 @@ public class Tree {
     }    
     
     public static class WaveSpawnNode extends Node { //node for wavespawns
-    	private String where; //todo: add support for the weird locations no one uses
-    	private int totalCount; //default 0
-    	private int maxActive; //default 999
-    	private int spawnCount; //default 1
-    	private double waitBeforeStarting; //default 0.0
-    	private double waitBetweenSpawns; //default 0.0
+    	private String where = "spawnbot"; //todo: add support for the weird locations no one uses
+    	private int totalCount = 1; //default 0
+    	private int maxActive = 1; //default 999
+    	private int spawnCount = 1; //default 1
+    	private double waitBeforeStarting;
+    	private double waitBetweenSpawns;
     	private boolean waitBetweenDeaths; //betweenspawns and betweenspawnsafterdeath are mutually exclusive
     	//todo: add wavespawn sounds/outputs as optional feature
     	private int totalCurrency; //default -1
@@ -158,11 +168,10 @@ public class Tree {
     	private String waitForAllDead; 
     	private String waitForAllSpawned;
     	private String support; //don't forget support limited
-    	private String randomSpawn; //default 0, if true allows bot spawns to be randomized
+    	private boolean randomSpawn; //default 0, if true allows bot spawns to be randomized
     	//prob should be disabled for single spawn maps
     	
     	public WaveSpawnNode() {
-    		//name = "subwave"; //fairly certain name is optional, but for now temp
     	}
     	
     	public void setName(String name) {
@@ -252,18 +261,55 @@ public class Tree {
     	public String getWaitSpawned() {
     		return this.waitForAllSpawned;
     	}
+    	
+    	public Node getSpawner() {
+    		return this.getChildren().get(0);
+    	}
     }
     
     public static class TankNode extends Node {
+    	private int health = Values.tankDefaultHealth;
+    	//private double speed = Values.tankDefaultHealth;
+    	private String name = "tankboss";
+    	private boolean skin = false;
+    	private String startingPathTrackNode; //default ""
+    	//add relays
     	
+    	public String getName() {
+    		return this.name;
+    	}
+    	
+    	public void setHealth(int h) {
+    		this.health = h;
+    	}
+    	
+    	public int getHealth() {
+    		return this.health;
+    	}
+    	
+    	public void setSkin(boolean s) {
+    		this.skin = s;
+    	}
+    	
+    	public boolean getSkin() {
+    		return this.skin;
+    	}
+    	
+    	public void setStartingPath(String s) {
+    		this.startingPathTrackNode = s;
+    	}
+    	
+    	public String getStartingPath() {
+    		return this.startingPathTrackNode;
+    	}
     }
     
     public static class TFBotNode extends Node { //node for tfbot spawners
-    	private String className;
+    	private String className = window.CLASSES[0];
     	private String name;
-    	private String icon;
-    	private String skill; //default easy
-    	private String wepRestrict;
+    	private String icon = "scout";
+    	private String skill = "Easy"; //default easy
+    	private String wepRestrict = "Any";
     	private ArrayList<String> tags = new ArrayList<String>();
     	private ArrayList<String> attr = new ArrayList<String>();
     	private String primary;
@@ -276,7 +322,6 @@ public class Tree {
     	//todo: add support for the niche use vars
     	
     	public TFBotNode() {
-    		
     	}
     	
     	public void setClassName(String className) {
@@ -326,6 +371,19 @@ public class Tree {
     	
     	public ArrayList<String> getTags() {
     		return this.tags;
+    	}
+    	
+    	public Map<String, Object> makeMap() {
+    		Map<String, Object> map = new HashMap<String, Object>();
+    		
+    		map.put("Class", this.className);
+    		map.put("Name", this.name);
+    		map.put("ClassIcon", this.icon);
+    		map.put("Skill", this.skill);
+    		map.put("WeaponRestrictions", this.skill);
+    		map.put("Tag", this.tags);
+    		
+    		return map;
     	}
     }
     

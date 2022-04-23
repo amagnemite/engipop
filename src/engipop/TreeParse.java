@@ -5,7 +5,7 @@ import java.io.*;
 import engipop.Tree.*;
 
 public class TreeParse { //it is time to parse
-	private static int indentCount  = 0;
+	private static int indentCount = 0;
 	private static String indent = "																				";
 	//20 indents
 	
@@ -52,39 +52,39 @@ public class TreeParse { //it is time to parse
 		PopNode node = (PopNode) tree.getRoot();
 			
 		if(node.getCurrency() > 0) {
-			pw.print(indent.substring(0, indentCount + 1) + "StartingCurrency ");
+			indentPrint(pw, "StartingCurrency ");
 			pw.println(node.getCurrency());
 		}
 		
 		if(node.getWaveTime() != 10) {
-			pw.print(indent.substring(0, indentCount + 1) + "RespawnWaveTime ");
+			indentPrint(pw, "RespawnWaveTime ");
 			pw.println(node.getWaveTime());
 		}
 		
 		if(node.getEventPop()) { //double check these escapes
-			pw.println(indent.substring(0, indentCount + 1) + "EventPopfile Halloween");
+			indentPrintln(pw, "EventPopfile Halloween");
 		}
 		
 		if(node.getFixedWaveTime()) {
-			pw.println(indent.substring(0, indentCount + 1) + "FixedRespawnWaveTime");
+			indentPrintln(pw, "FixedRespawnWaveTime");
 		}
 		
 		if(node.getBusterDmg() != 3000) {
-			pw.print(indent.substring(0, indentCount + 1) + "AddSentryBusterWhenDamageDealtExceeds ");
+			indentPrint(pw, "AddSentryBusterWhenDamageDealtExceeds ");
 			pw.println(node.getBusterDmg());
 		}
 		
 		if(node.getBusterKills() != 15) {
-			pw.print(indent.substring(0, indentCount + 1) + "AddSentryBusterWhenKillCountExceeds ");
+			indentPrint(pw, "AddSentryBusterWhenKillCountExceeds ");
 			pw.println(node.getBusterKills());
 		}
 		
 		if(!node.getAtkInSpawn()) {
-			pw.println(indent.substring(0, indentCount + 1) + "CanBotsAttackWhileInSpawnRoom no");
+			indentPrintln(pw, "CanBotsAttackWhileInSpawnRoom no");
 		} //double check if a nonexistent bots attack allows spawn attacks
 		
 		if(node.getAdvanced()) {
-			pw.println(indent.substring(0, indentCount + 1) + "Advanced");
+			indentPrintln(pw, "Advanced");
 		}
 		System.out.println("printed pop");
 	}
@@ -120,7 +120,9 @@ public class TreeParse { //it is time to parse
 		System.out.println("printed wave");
 	}
 	
-	private static void printWaveSpawn(PrintWriter pw, WaveSpawnNode node) { //a wavespawn
+	private static void printWaveSpawn(PrintWriter pw, WaveSpawnNode node) { //a wavespawn	
+		Node spawner = node.getSpawner();
+		
 		indentPrintln(pw, "WaveSpawn");
 		indentPrintln(pw, "{");
 		indentCount++;
@@ -128,17 +130,17 @@ public class TreeParse { //it is time to parse
 		if(!node.getName().equals("")) {
 			indentPrintln(pw, "Name \"" + node.getName() + "\"");
 		}
-		if(node.getWhere() != null) { //fix this once map support
+		if(node.getWhere() != null && !node.getWhere().equals("")){ //fix this once map support
 			indentPrintln(pw, "Where " + node.getWhere());
 		} 
-		else {
+		else if(spawner.getClass() != TankNode.class){ //no wheres for tanks
 			indentPrintln(pw, "Where spawnbot");
 		}
 		if(node.getTotalCount() > 0) {
 			indentPrint(pw, "TotalCount ");
 			pw.println(node.getTotalCount());
 		}
-		if(node.getMaxActive() < 999) { //very silly check since maxactive can't go above 22, should probably remove
+		if(node.getMaxActive() > 0) {
 			indentPrint(pw, "MaxActive ");
 			pw.println(node.getMaxActive());
 		}
@@ -163,17 +165,30 @@ public class TreeParse { //it is time to parse
 			indentPrint(pw, "TotalCurrency ");
 			pw.println(node.getCurrency());
 		}
-		if(!node.getWaitSpawned().equals("")) {
+		if(node.getWaitSpawned() != null && !node.getWaitSpawned().equals("")) {
 			indentPrintln(pw, "WaitForAllSpawned \"" + node.getWaitSpawned() + "\"");
 		}
-		if(!node.getWaitDead().equals("")) {
+		if(node.getWaitDead() != null && !node.getWaitDead().equals("")) {
 			indentPrintln(pw, "WaitForAllDead \"" + node.getWaitDead() + "\"");
 		}
 		
-		printTFBot(pw, (TFBotNode) node.getChildren().get(0)); //obviously fix this depending on subtree type
+		System.out.println("printed wavespawn");
+		
+		if(spawner.getClass() == TFBotNode.class) {
+			printTFBot(pw, (TFBotNode) spawner);
+		}
+		else if(spawner.getClass() == TankNode.class) {
+			printTank(pw, (TankNode) spawner);
+		}
+		else if(spawner.getClass() == SquadNode.class) {
+			printSquad(pw, (SquadNode) spawner);
+		}
+		else if(spawner.getClass() == RandomChoiceNode.class) {
+			printRandom(pw, (RandomChoiceNode) spawner);
+		}
+		
 		indentCount--;
 		indentPrintln(pw, "}");
-		System.out.println("printed wavespawn");
 	}
 	
 	private static void printTFBot(PrintWriter pw, TFBotNode node) {
@@ -184,13 +199,15 @@ public class TreeParse { //it is time to parse
 		if(!node.getClassName().equals("")) {
 			indentPrintln(pw, "Class " + node.getClassName());
 		}
-		if(!node.getName().equals("")) {
+		if(node.getName()!= null && !node.getName().equals("")) {
 			indentPrintln(pw, "Name \"" + node.getName() + "\"");
 		}
-		if(!node.getIcon().equals("") && node.getIcon().equalsIgnoreCase(node.getClassName())) {
+		if(!node.getIcon().equals("") && !node.getIcon().equalsIgnoreCase(node.getClassName())) {
 			//ignore default icons essentially
 			//change if case is ignored upstream
-			indentPrintln(pw, "ClassIcon" + node.getIcon());
+			if(!node.getIcon().equals("heavy")) { //dumb workaround to heavyweapons != heavy
+				indentPrintln(pw, "ClassIcon " + node.getIcon());
+			}	
 		}
 		if(!node.getSkill().equals("Easy")) {
 			indentPrintln(pw, "Skill " + node.getSkill());
@@ -207,6 +224,79 @@ public class TreeParse { //it is time to parse
 		indentCount--;
 		indentPrintln(pw, "}");
 		System.out.println("printed tfbot");
+	}
+	
+	private static void printTank(PrintWriter pw, TankNode node) {
+		//for now, print boss relay here
+		pw.println(indent.substring(0, indentCount + 1) + "FirstSpawnOutput");
+		pw.println(indent.substring(0, indentCount + 1) + "{");
+		indentCount++;
+		pw.println(indent.substring(0, indentCount + 1) + "Target boss_spawn_relay");
+		pw.println(indent.substring(0, indentCount + 1) + "Action Trigger");
+		indentCount--;
+		pw.println(indent.substring(0, indentCount + 1) + "}");
+		
+		indentPrintln(pw, "Tank");
+		indentPrintln(pw, "{");
+		indentCount++;
+		
+		indentPrintln(pw, "Name " + node.getName());
+		if(node.getHealth() != Values.tankDefaultHealth) {
+			indentPrint(pw, "Health ");
+			pw.println(node.getHealth());
+		}
+		if(node.getSkin()) {
+			indentPrintln(pw, "Skin 1");
+		}
+		if(node.getStartingPath() != null && !node.getStartingPath().equals("")) {
+			indentPrintln(pw, "StatingPathTrackNode \"" + node.getStartingPath() + "\"");
+		}
+		
+		pw.println(indent.substring(0, indentCount + 1) + "OnKilledOutput");
+		pw.println(indent.substring(0, indentCount + 1) + "{");
+		indentCount++;
+		pw.println(indent.substring(0, indentCount + 1) + "Target boss_dead_relay");
+		pw.println(indent.substring(0, indentCount + 1) + "Action Trigger");
+		indentCount--;
+		pw.println(indent.substring(0, indentCount + 1) + "}");
+		
+		pw.println(indent.substring(0, indentCount + 1) + "OnBombDroppedOutput");
+		pw.println(indent.substring(0, indentCount + 1) + "{");
+		indentCount++;
+		pw.println(indent.substring(0, indentCount + 1) + "boss_deploy_relay");
+		pw.println(indent.substring(0, indentCount + 1) + "Action Trigger");
+		indentCount--;
+		pw.println(indent.substring(0, indentCount + 1) + "}");
+		
+		indentCount--;
+		indentPrintln(pw, "}");
+		System.out.println("printed tank");
+	}
+	
+	private static void printSquad(PrintWriter pw, SquadNode node) {
+		indentPrintln(pw, "Squad");
+		indentPrintln(pw, "{");
+		indentCount++;
+		
+		for(Node n : node.getChildren()) {
+			printTFBot(pw, (TFBotNode) n);
+		}
+		indentCount--;
+		indentPrintln(pw, "}");
+		System.out.println("printed squad");
+	}
+	
+	private static void printRandom(PrintWriter pw, RandomChoiceNode node) {
+		indentPrintln(pw, "RandomChoice");
+		indentPrintln(pw, "{");
+		indentCount++;
+		
+		for(Node n : node.getChildren()) {
+			printTFBot(pw, (TFBotNode) n);
+		}
+		indentCount--;
+		indentPrintln(pw, "}");
+		System.out.println("printed random");
 	}
 	
 	private static void indentPrint(PrintWriter pw, String text) {

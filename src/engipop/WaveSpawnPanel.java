@@ -35,17 +35,6 @@ public class WaveSpawnPanel extends JPanel { //panel for creating wavespawns
 	
 	private int nodeCount = 0;
 	
-	//wavespawn models/docs
-	/*
-	SpinnerNumberModel totalModel = new SpinnerNumberModel(); //totalcount bots
-	SpinnerNumberModel spawnModel = new SpinnerNumberModel(); //spawncount
-	SpinnerNumberModel maxModel = new SpinnerNumberModel(); //maxactive
-	SpinnerNumberModel currModel = new SpinnerNumberModel(); //money
-	SpinnerNumberModel deadModel = new SpinnerNumberModel(); //foralldead
-	SpinnerNumberModel allSpawnedModel = new SpinnerNumberModel(); //forallspawned
-	ToggleButtonModel deathsToggleModel = new ToggleButtonModel(); 
-	*/
-	
 	public WaveSpawnPanel() {
 		int initial = 1, min = 0, totalMax = 999, activeMax = 22, incr = 1, currMax = 30000, currIncr = 50;
 		double initWait = 0.0, minWait = 0.0, maxWait = 1000.0, incrWait = 1.0;
@@ -137,31 +126,16 @@ public class WaveSpawnPanel extends JPanel { //panel for creating wavespawns
 		wsDeadField.setText(wsn.getWaitDead());
 		wsSpawnField.setText(wsn.getWaitSpawned());
 	}
-	
-	public void clearPanel() { //clears out the panel
-		//prob shouldn't be hard code
-		wsNameField.setText("");
-		wsSpawnField.setText("");
-		wsTotalSpin.setValue(1);
-		wsMaxSpin.setValue(1);
-		wsSpawnSpin.setValue(1);
-		wsStartSpin.setValue(0.0);
-		wsBetweenSpin.setValue(0.0);
-		wsDeaths.setSelected(false);
-		updateBetweenSpawns();
-		wsCurrSpin.setValue(0);
-		wsDeadField.setText("");
-		wsSpawnField.setText("");
-	}
-	
 	public void updateNode(WaveSpawnNode wsn) { //update node to reflect panel
+		/*
 		if(wsNameField.getText().equals("")) { //prevent funny unclickable list
 			wsn.setName(Integer.toString(nodeCount));
 			nodeCount++;
 		}
 		else {
 			wsn.setName(wsNameField.getText());
-		}	
+		} */
+		wsn.setName(wsNameField.getText());
 		wsn.setWhere((String) wsWhereField.getSelectedItem());
 		wsn.setTotalCount((int) wsTotalSpin.getValue());
 		wsn.setMaxActive((int) wsMaxSpin.getValue());
@@ -183,108 +157,5 @@ public class WaveSpawnPanel extends JPanel { //panel for creating wavespawns
 			wsBetwSpawns.setText("WaitBetweenSpawns: ");
 			//currentWSNode.setBetweenDeaths(false);
 		}
-	}
-	
-	void makeWSPanel() { //panel for ws creation
-		
-		
-		
-		
-		/*nameDoc.addDocumentListener(new DocumentListener() { //update the name based on user input/removal
-			public void insertUpdate(DocumentEvent d) {
-				currentWSNode.setName(wsNameField.getText());
-				getWaveSpawnList();
-			}
-
-			public void removeUpdate(DocumentEvent e) {
-				currentWSNode.setName(wsNameField.getText());
-				getWaveSpawnList();
-			}
-
-			public void changedUpdate(DocumentEvent e) {
-				//irrelevant here 
-			}
-		});*/
-		
-
-		
-		/*wsWhereField.addActionListener(new ActionListener() { //update where based on selection
-			public void actionPerformed(ActionEvent a) {
-				currentWSNode.setWhere((String) wsWhereField.getSelectedItem());
-			}
-		});*/
-		
-		
-		
-		/*
-		 * wsTotalSpin.addChangeListener(new ChangeListener() { //update totalcount
-		 * public void stateChanged(ChangeEvent c) { currentWSNode.setTotalCount((int)
-		 * wsTotalSpin.getValue()); } });
-		 */
-		
-		
-		
-		/*
-		 * wsMaxSpin.addChangeListener(new ChangeListener() { //update maxactive public
-		 * void stateChanged(ChangeEvent c) { currentWSNode.setMaxActive((int)
-		 * wsMaxSpin.getValue()); } });
-		 */	
-		
-		
-		
-		/*
-		 * wsCountSpin.addChangeListener(new ChangeListener() { //update spawncount
-		 * public void stateChanged(ChangeEvent c) { currentWSNode.setSpawnCount((int)
-		 * wsCountSpin.getValue()); } });
-		 */
-		
-		
-		/*
-		 * wsStartSpin.addChangeListener(new ChangeListener() { //update
-		 * waitbeforestarting public void stateChanged(ChangeEvent c) {
-		 * currentWSNode.setBeforeStarting((int) wsStartSpin.getValue()); } });
-		 */	
-		
-		
-		
-		/*
-		 * wsBetweenSpin.addChangeListener(new ChangeListener() { //update
-		 * waitbetweenspawns public void stateChanged(ChangeEvent c) {
-		 * currentWSNode.setBetweenSpawns((int) wsBetweenSpin.getValue()); } });
-		 */	
-		
-		
-		/*
-		 * wsCurrSpin.addChangeListener(new ChangeListener() { //update totalcurrency
-		 * public void stateChanged(ChangeEvent c) { currentWSNode.setCurrency((int)
-		 * wsCurrSpin.getValue()); } });
-		 */
-
-		
-		/*
-		 * deadDoc.addDocumentListener(new DocumentListener() { //update the
-		 * waitforalldead based on user input/removal public void
-		 * insertUpdate(DocumentEvent d) {
-		 * currentWSNode.setWaitDead(wsDeadField.getText()); }
-		 * 
-		 * public void removeUpdate(DocumentEvent e) {
-		 * currentWSNode.setWaitDead(wsDeadField.getText()); }
-		 * 
-		 * public void changedUpdate(DocumentEvent e) { //irrelevant here } });
-		 */
-		
-		
-		
-		/*
-		 * spawnDoc.addDocumentListener(new DocumentListener() { //update the
-		 * waitforalldead based on user input/removal public void
-		 * insertUpdate(DocumentEvent d) {
-		 * currentWSNode.setWaitSpawned(wsSpawnField.getText()); }
-		 * 
-		 * public void removeUpdate(DocumentEvent e) {
-		 * currentWSNode.setWaitSpawned(wsSpawnField.getText()); }
-		 * 
-		 * public void changedUpdate(DocumentEvent e) { //irrelevant here } });
-		 */
 	}
 }
