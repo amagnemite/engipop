@@ -6,6 +6,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.text.Position;
@@ -13,14 +14,9 @@ import javax.swing.text.Position;
 import engipop.Tree.TFBotNode;
 //import engipop.window;
 
-public class BotPanel extends JPanel { //class to make the panel for bot creation/editing
-
-	static final String[] CLASSES = {"Scout", "Soldier", "Pyro",
-			"Demoman", "HeavyWeapons", "Engineer",
-			"Medic", "Sniper", "Spy"};
-	//this is copied from window, fix later?
+public class BotPanel extends EngiPanel { //class to make the panel for bot creation/editing
 	
-	String[] tags = {"bot_giant", "bot_squad_member", "bot_gatebot"};
+	String[] tags = {"bot_giant", "bot_squad_member"}; //potentially move bot_giant
 	String[] attr = {"todo: big attr list goes here"};
 	
 	String[] primaries = {"todo: figure out how to store wep lists"};
@@ -31,10 +27,10 @@ public class BotPanel extends JPanel { //class to make the panel for bot creatio
 	String[] charAttr = {"todo: big char attr list goes here"};
 	
 	GridBagLayout gbLayout = new GridBagLayout();
-	GridBagConstraints gb = new GridBagConstraints();
 	
 	//DefaultComboBoxModel<String> classModel;
 	DefaultComboBoxModel<String> iconModel;
+	DefaultListModel<String> tagModel = new DefaultListModel<String>();
 	
 	JTextField nameField = new JTextField(30);
 	JComboBox<String> classBox;
@@ -63,10 +59,11 @@ public class BotPanel extends JPanel { //class to make the panel for bot creatio
 	JRadioButton melBut;
 	
 	public BotPanel() {
+		gb = new GridBagConstraints();
 		setLayout(gbLayout);
 		gb.anchor = GridBagConstraints.WEST;
 		
-		classBox = new JComboBox<String>(CLASSES);
+		classBox = new JComboBox<String>(EngiPanel.CLASSES);
 		iconBox = new JComboBox<String>();
 		
 		iconModel = (DefaultComboBoxModel<String>) iconBox.getModel();
@@ -141,8 +138,6 @@ public class BotPanel extends JPanel { //class to make the panel for bot creatio
 		wepGroup.add(melBut);
 		wepGroup.setSelected(anyBut.getModel(), true);
 		
-
-		
 		JLabel botClass = new JLabel("Class: ");
 		JLabel botName = new JLabel("Name: ");
 		JLabel botIcon = new JLabel("Icon: ");
@@ -164,13 +159,14 @@ public class BotPanel extends JPanel { //class to make the panel for bot creatio
 		addGB(new JScrollPane(iconBox), 3, 0); //fix size so it doesn't change for long lists
 		
 		addGB(botName, 0, 1);
+		addGB(nameField, 1, 1); 
 		
 		addGB(botSkill, 0, 3);
 		addGB(skillPanel, 1, 3);
 		addGB(botRestrict, 0, 4);
 		addGB(wepPanel, 1, 4);
 		addGB(botTags, 0, 5);
-		addGB(tagList, 1, 5);
+		addGB(new JScrollPane(tagList), 1, 5);
 		addGB(botAttributes, 0, 6);
 		addGB(attrList, 1, 6);
 		addGB(botPrimary, 0, 7);
@@ -187,8 +183,6 @@ public class BotPanel extends JPanel { //class to make the panel for bot creatio
 		addGB(meleeAttrList, 3, 9);	
 		addGB(botCharAttr, 0, 10);
 		addGB(charAttrList, 1, 10);
-		
-		addGB(nameField, 1, 1); 
 	}
 	
 	public void updatePanel(TFBotNode tf) {
@@ -234,15 +228,6 @@ public class BotPanel extends JPanel { //class to make the panel for bot creatio
 		}	
 	}
 	
-	public void clearPanel() { //clear panel
-		classBox.setSelectedItem("Scout");
-		setIconBox(iconBox, iconModel, "Scout");
-		nameField.setText("");
-		skillGroup.setSelected(easyBut.getModel(), true);
-		wepGroup.setSelected(anyBut.getModel(), true);
-		tagList.clearSelection();
-	}
-	
 	public void updateNode(TFBotNode tf) {
 		tf.setClassName((String) classBox.getSelectedItem());
 		tf.setIcon((String) iconBox.getSelectedItem());
@@ -254,12 +239,6 @@ public class BotPanel extends JPanel { //class to make the panel for bot creatio
 			tf.setTags((ArrayList<String>) tagList.getSelectedValuesList());
 		}
 	}
-	
-	private void addGB(Component comp, int x, int y) {
-		gb.gridx = x;
-		gb.gridy = y;
-		add(comp, gb);
-	}	
 	
 	void setIconBox(JComboBox<String> jb, DefaultComboBoxModel<String> model, String str) { //set icon list depending on class
 		//todo: load icons from 
@@ -332,5 +311,17 @@ public class BotPanel extends JPanel { //class to make the panel for bot creatio
 				break;
 		}
 		jb.setModel(model);
+	}
+	
+	public void updateTagList(List<String> list) { //add custom tags to list
+		tagModel.clear();
+		
+		for(String s : tags) { //add the constant tags
+			tagModel.addElement(s);
+		}
+		for(String s : list) { //then add the variable ones
+			tagModel.addElement(s);
+		}
+		tagList.setModel(tagModel);
 	}
 }

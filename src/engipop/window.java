@@ -41,6 +41,7 @@ public class window {
 	BotPanel botPanel;
 	WaveSpawnPanel wsPanel;
 	TankPanel tankPanel;
+	WavePanel wavePanel;
 	
 	JPanel spawnerPanel;
 	JPanel listPanel;
@@ -65,10 +66,6 @@ public class window {
 	DefaultListModel<String> waveSpawnListModel = new DefaultListModel<String>();
 	DefaultListModel<String> squadRandomListModel = new DefaultListModel<String>();
 	
-	public static final String[] CLASSES = {"Scout", "Soldier", "Pyro",
-									"Demoman", "Heavyweapons", "Engineer",
-									"Medic", "Sniper", "Spy"};
-	
 	PopNode popNode = new PopNode(); //minimum working pop
 	
 	WaveNode currentWaveNode = new WaveNode();
@@ -83,6 +80,8 @@ public class window {
 	
 	//int waveIndex = 0;
 	//int waveSpawnIndex = 0;
+	
+	MapInfo info = new MapInfo();
 	
 	Tree tree = new Tree(popNode);
 	
@@ -103,6 +102,7 @@ public class window {
 		
 		botPanel = new BotPanel();
 		wsPanel = new WaveSpawnPanel();
+		wavePanel = new WavePanel();
 		tankPanel = new TankPanel();
 		feedback = new JLabel("	");
 		
@@ -126,26 +126,27 @@ public class window {
 		addGB(frame, constraints, feedback, 0, 1);
 		constraints.anchor = GridBagConstraints.NORTHWEST;
 		
-		
-		addGB(frame, constraints, spawnerPanel, 0, 3);
-		addGB(frame, constraints, spawnerInfo, 1, 3);
+		addGB(frame, constraints, spawnerPanel, 0, 4);
+		addGB(frame, constraints, spawnerInfo, 1, 4);
 		
 		constraints.gridwidth = 2;
-		addGB(frame, constraints, wsPanel, 0, 2);
-		addGB(frame, constraints, botPanel, 0, 4);
-		addGB(frame, constraints, tankPanel, 0, 4);
+		addGB(frame, constraints, wavePanel, 0, 2);
+		addGB(frame, constraints, wsPanel, 0, 3);
+		addGB(frame, constraints, botPanel, 0, 5);
+		addGB(frame, constraints, tankPanel, 0, 5);
 		//tankPanel.setEnabled(false);
 		tankPanel.setVisible(false);
 		
 		constraints.gridwidth = 1;
 		constraints.gridheight = 3;
-		addGB(frame, constraints, listPanel, 2, 2);
+		addGB(frame, constraints, listPanel, 2, 3);
 
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
 	public static void main(String args[]) {
+		
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 	    	//meatloaf said nimbus is ugly  
@@ -154,9 +155,11 @@ public class window {
 		}
 		
 		window w = new window();
-		SecondaryWindow w2 = new SecondaryWindow(w.getPopNode());
+		SecondaryWindow w2 = new SecondaryWindow(w.getPopNode(), w);
 		
 		w.listen(w2);
+		
+		//w2.fillMap(info);
 	}
 	
 	public PopNode getPopNode() {
@@ -513,6 +516,7 @@ public class window {
 		JLabel listCurrentWave = new JLabel("Editing wave 1");
 		JButton addWave = new JButton(addWaveMsg);
 		JButton removeWave = new JButton("Remove wave");
+		JButton updateWave = new JButton("Update wave");
 		//removeWave.setEnabled(false);
 		
 		JList<String> waveSpawnList = new JList<String>(waveSpawnListModel);
@@ -552,7 +556,7 @@ public class window {
 					currentWaveNode = (WaveNode) popNode.getChildren().get(waveIndex); //populate subwave list, subwave panel with first subwave, first tfbot 
 					listCurrentWave.setText("Editing wave " + Integer.toString(waveIndex + 1));
 					//addWave.setText(addWaveMsg);
-					
+					wavePanel.updatePanel(currentWaveNode);
 					
 					if(currentWaveNode.getChildren().size() > 0) {
 						getWaveSpawnList();
@@ -626,6 +630,14 @@ public class window {
 				else { //set current wave and its subnodes
 					listWaveList.setSelectedIndex(list.size() - 1);	
 				}
+			}
+		});
+		
+		updateWave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent a) {
+				feedback.setText("Wave updated");
+				wavePanel.updateNode(currentWaveNode);
+				//don't update list since no name
 			}
 		});
 		
@@ -914,31 +926,33 @@ public class window {
 		
 		addGB(listPanel, gb, listCurrentWave, 0, 0);
 		addGB(listPanel, gb, addWave, 0, 1);
-		addGB(listPanel, gb, removeWave, 0, 2);
+		addGB(listPanel, gb, updateWave, 0, 2);
+		addGB(listPanel, gb, removeWave, 0, 3);
 		
-		addGB(listPanel, gb, listCurrentWSLabel, 0, 3);
-		addGB(listPanel, gb, listAddWaveSpawn, 0, 4);
-		addGB(listPanel, gb, listRemoveWaveSpawn, 0, 5);
+		addGB(listPanel, gb, listCurrentWSLabel, 0, 4);
+		addGB(listPanel, gb, listAddWaveSpawn, 0, 5);
 		addGB(listPanel, gb, listUpdateWaveSpawn, 0, 6);
+		addGB(listPanel, gb, listRemoveWaveSpawn, 0, 7);
 		
-		addGB(listPanel, gb, addBot, 0, 9);
-		addGB(listPanel, gb, updateBot, 0, 10);
-		addGB(listPanel, gb, removeBot, 0, 11);
+		addGB(listPanel, gb, addSquadRandom, 0, 8);
+		addSquadRandom.setVisible(false);
+		addGB(listPanel, gb, removeSquadRandom, 0, 9);
+		removeSquadRandom.setVisible(false);
+		
+		addGB(listPanel, gb, addBot, 0, 10);
+		addGB(listPanel, gb, updateBot, 0, 11);
+		addGB(listPanel, gb, removeBot, 0, 12);
 		updateBot.setEnabled(false);
 		removeBot.setEnabled(false);
 		
-		addGB(listPanel, gb, addSquadRandom, 0, 7);
-		addSquadRandom.setVisible(false);
-		addGB(listPanel, gb, removeSquadRandom, 0, 8);
-		removeSquadRandom.setVisible(false);
-		addGB(listPanel, gb, createPop, 0, 12);
+		addGB(listPanel, gb, createPop, 0, 13);
 		
 		gb.gridheight = 2;
 		addGB(listPanel, gb, listWaveList, 1, 1);
-		addGB(listPanel, gb, squadRandomList, 1, 7);
+		addGB(listPanel, gb, squadRandomList, 1, 8);
 		
 		gb.gridheight = 3;
-		addGB(listPanel, gb, waveSpawnList, 1, 4);		
+		addGB(listPanel, gb, waveSpawnList, 1, 5);		
 	} 
 	
 	void getFile() { //get filename/place to save pop at
@@ -1013,6 +1027,17 @@ public class window {
 				squadRandomListModel.addElement(t.getClassName()); //this is extremely awful
 			}		
 		}
+	}
+	
+	public void loadMap(int mapIndex) {
+		info.getMapData(mapIndex);
+		
+		wavePanel.setRelay(info.getWaveRelay());
+		wsPanel.setRelay(info.getWSRelay());
+		
+		wsPanel.setWhere(info.getBotSpawns());
+		botPanel.updateTagList(info.getTags());
+		tankPanel.setSpawnModel(info.getTankSpawns());
 	}
 	 
 	public void addGB(Container cont, GridBagConstraints gb, Component comp, int x, int y) {

@@ -20,6 +20,9 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 	GridBagConstraints gb = new GridBagConstraints();
 
 	JPanel popPanel;
+	DefaultComboBoxModel<String> mapsModel = new DefaultComboBoxModel<String>();
+	JComboBox<String> maps = new JComboBox<String>();
+	
 	JSpinner currSpinner = new JSpinner();
 	JSpinner respawnWaveSpinner = new JSpinner();
 	JCheckBox eventBox;
@@ -33,7 +36,7 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 	JLabel feedback;
 	PopNode pn;
 	
-	public SecondaryWindow(PopNode pn) {
+	public SecondaryWindow(PopNode pn, window w) {
 		super("Population settings");
 		setLayout(gbLayout);
 		gb.anchor = GridBagConstraints.NORTHWEST;
@@ -45,7 +48,7 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		
 		this.pn = pn;
 		popPanel = new JPanel();
-		makePopPanel();
+		makePopPanel(w);
 		
 		addGB(this, gb, popPanel, 0, 0);
 		
@@ -53,10 +56,12 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		requestFocus();
 	}
 	
-	void makePopPanel() { //makes population panel
+	void makePopPanel(window w) { //makes population panel
 		popPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		gb.anchor = GridBagConstraints.EAST;
+		
+		MapInfo mapinfo = new MapInfo();
 		
 		int min = 0, currMax = 99999, currIncr = 50, currInit = 400,
 				respawnInit = 6, respawnIncr = 1, respawnMax = 100,
@@ -74,7 +79,11 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		busterDmgSpinner.setModel(dmgModel);
 		busterKillSpinner.setModel(killModel);
 		
-		feedback = new JLabel();
+		
+		maps.setEditable(true);
+		maps.setPrototypeDisplayValue("mvm_waterlogged_rc4g");
+		
+		feedback = new JLabel(" ");
 		
 		eventBox = new JCheckBox("Halloween?");
 		waveTimeBox = new JCheckBox("Fixed respawn wave times?");
@@ -87,8 +96,16 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 			public void actionPerformed(ActionEvent a) {
 				updateNode();
 				feedback.setText("Population settings updated");
+				if(pn.getMapIndex() > -1) { //if user entered a map
+					w.loadMap(pn.getMapIndex());
+				}
 			}
 		});
+		
+		for(String s : mapinfo.getMapNames()) {
+			mapsModel.addElement(s);
+		}
+		maps.setModel(mapsModel);
 		
 		popPanel.addMouseListener(new MouseListener() { //this is wonky, fix
 			public void mousePressed(MouseEvent e) {
@@ -111,28 +128,33 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		JLabel respawnWaveLabel = new JLabel("RespawnWaveTime: ");
 		JLabel busterDmgLabel = new JLabel("AddSentryBusterWhenDamageDealtExceeds: ");
 		JLabel busterKillLabel = new JLabel("AddSentryBusterWhenKillCountExceeds: ");
+		JLabel mapLabel = new JLabel("Map ");
 		
 		addGB(popPanel, c, feedback, 0, 0);
-		addGB(popPanel, c, currLabel, 0, 1);
-		addGB(popPanel, c, currSpinner, 1, 1);
-		addGB(popPanel, c, respawnWaveLabel, 2, 1);
-		addGB(popPanel, c, respawnWaveSpinner, 3, 1);
-		addGB(popPanel, c, waveTimeBox, 4, 1);
 		
-		addGB(popPanel, c, busterDmgLabel, 0, 2);
-		addGB(popPanel, c, busterDmgSpinner, 1, 2);
-		addGB(popPanel, c, busterKillLabel, 2, 2);
-		addGB(popPanel, c, busterKillSpinner, 3, 2);
+		addGB(popPanel, c, mapLabel, 0, 1);
+		addGB(popPanel, c, new JScrollPane(maps), 1, 1);
 		
-		addGB(popPanel, c, eventBox, 0, 3);
-		addGB(popPanel, c, atkSpawnBox, 1, 3);
-		addGB(popPanel, c, advancedBox, 2, 3);
-		addGB(popPanel, c, updatePop, 2, 4);
+		addGB(popPanel, c, currLabel, 0, 2);
+		addGB(popPanel, c, currSpinner, 1, 2);
+		addGB(popPanel, c, respawnWaveLabel, 2, 2);
+		addGB(popPanel, c, respawnWaveSpinner, 3, 2);
+		addGB(popPanel, c, waveTimeBox, 4, 2);
+		
+		addGB(popPanel, c, busterDmgLabel, 0, 3);
+		addGB(popPanel, c, busterDmgSpinner, 1, 3);
+		addGB(popPanel, c, busterKillLabel, 2, 3);
+		addGB(popPanel, c, busterKillSpinner, 3, 3);
+		
+		addGB(popPanel, c, eventBox, 0, 4);
+		addGB(popPanel, c, atkSpawnBox, 1, 4);
+		addGB(popPanel, c, advancedBox, 2, 4);
+		addGB(popPanel, c, updatePop, 2, 5);
 	}
 	
 	private void clearFeedback() { //clears feedback so things don't get stuck on it
-		if(!feedback.getText().equals("")) {
-			feedback.setText("");
+		if(!feedback.getText().equals(" ")) {
+			feedback.setText(" ");
 		}
 	}
 	
@@ -143,6 +165,7 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 	}
 	
 	private void updateNode() {
+		pn.setMapIndex(maps.getSelectedIndex());
 		pn.setCurrency((int) currSpinner.getValue());
 		pn.setWaveTime((int) respawnWaveSpinner.getValue());
 		pn.setFixedWaveTime(waveTimeBox.isSelected());
@@ -163,4 +186,10 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		atkSpawnBox.setSelected(pn.getAtkInSpawn());
 		advancedBox.setSelected(pn.getAdvanced());
 	}
+	/*
+	public void fillMap(MapInfo info) {
+		for(String s : info.getMapNames()) {
+			mapsModel.addElement(s);
+		}
+	} */
 }

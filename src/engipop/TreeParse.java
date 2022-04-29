@@ -90,26 +90,20 @@ public class TreeParse { //it is time to parse
 	}
 	
 	private static void printWave(PrintWriter pw, WaveNode node) { //a wave
-		pw.println(indent.substring(0, indentCount + 1) + "Wave");
-		pw.println(indent.substring(0, indentCount + 1) + "{");
+		indentPrintln(pw, "Wave");
+		indentPrintln(pw, "{");
 		indentCount++;
 		
-		//todo: whenever relays are implemented, change these
-		pw.println(indent.substring(0, indentCount + 1) + "StartWaveOutput");
-		pw.println(indent.substring(0, indentCount + 1) + "{");
-		indentCount++;
-		pw.println(indent.substring(0, indentCount + 1) + "Target wave_start_relay");
-		pw.println(indent.substring(0, indentCount + 1) + "Action Trigger");
-		indentCount--;
-		pw.println(indent.substring(0, indentCount + 1) + "}");
+		//for now assume all input is good
+		printRelay(pw, "StartWaveOutput", node.getStart());
 		
-		pw.println(indent.substring(0, indentCount + 1) + "DoneOutput");
-		pw.println(indent.substring(0, indentCount + 1) + "{");
-		indentCount++;
-		pw.println(indent.substring(0, indentCount + 1) + "Target wave_finished_relay");
-		pw.println(indent.substring(0, indentCount + 1) + "Action Trigger");
-		indentCount--;
-		pw.println(indent.substring(0, indentCount + 1) + "}");
+		if(node.getDone().getTarget() != null || !node.getDone().getTarget().isEmpty()) {
+			printRelay(pw, "DoneOutput", node.getDone());
+		} //check here since doneoutput can be empty
+		
+		if(node.getInit() != null) {
+			printRelay(pw, "InitWaveOutput", node.getInit());
+		} //todo: catch empty inputs upstream
 		
 		for(int i = 0; i < node.getChildren().size(); i++) {
 			printWaveSpawn(pw, (WaveSpawnNode) node.getChildren().get(i));
@@ -120,6 +114,17 @@ public class TreeParse { //it is time to parse
 		System.out.println("printed wave");
 	}
 	
+	private static void printRelay(PrintWriter pw, String name, RelayNode node) {
+		indentPrintln(pw, name);
+		indentPrintln(pw, "{");
+		indentCount++;
+		
+		node.getMap().forEach((k, v) -> indentPrintln(pw, k + " " + "\"" + v + "\""));
+		
+		indentCount--;
+		indentPrintln(pw, "}");
+	}
+	
 	private static void printWaveSpawn(PrintWriter pw, WaveSpawnNode node) { //a wavespawn	
 		Node spawner = node.getSpawner();
 		
@@ -127,15 +132,15 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
-		if(!node.getName().equals("")) {
+		if(!node.getName().isEmpty()) {
 			indentPrintln(pw, "Name \"" + node.getName() + "\"");
 		}
-		if(node.getWhere() != null && !node.getWhere().equals("")){ //fix this once map support
+		if(node.getWhere() != null && !node.getWhere().isEmpty()){ //fix this once map support
 			indentPrintln(pw, "Where " + node.getWhere());
 		} 
 		else if(spawner.getClass() != TankNode.class){ //no wheres for tanks
 			indentPrintln(pw, "Where spawnbot");
-		}
+		} // catch upstream
 		if(node.getTotalCount() > 0) {
 			indentPrint(pw, "TotalCount ");
 			pw.println(node.getTotalCount());
@@ -171,6 +176,29 @@ public class TreeParse { //it is time to parse
 		if(node.getWaitDead() != null && !node.getWaitDead().equals("")) {
 			indentPrintln(pw, "WaitForAllDead \"" + node.getWaitDead() + "\"");
 		}
+		if(node.getSupport()) {
+			if(node.getSupportLimited()) {
+				indentPrintln(pw, "Support limited");
+			}
+			else {
+				indentPrintln(pw, "Support");
+			}
+		}
+		
+		if(node.getStart() != null) {
+			printRelay(pw, "StartWaveOutput", node.getStart());
+		} //todo: catch empty inputs upstream
+		
+		if(node.getFirst() != null) {
+			printRelay(pw, "FirstSpawnOutput", node.getFirst());
+		} //todo: catch empty inputs upstream
+		
+		if(node.getLast() != null) {
+			printRelay(pw, "LastSpawnOutput", node.getLast());
+		} //todo: catch empty inputs upstream
+		if(node.getDone() != null) {
+			printRelay(pw, "DoneOutput", node.getDone());
+		} //todo: catch empty inputs upstream
 		
 		System.out.println("printed wavespawn");
 		
@@ -241,7 +269,7 @@ public class TreeParse { //it is time to parse
 		indentCount++;
 		
 		indentPrintln(pw, "Name " + node.getName());
-		if(node.getHealth() != Values.tankDefaultHealth) {
+		if(node.getHealth() != EngiPanel.tankDefaultHealth) {
 			indentPrint(pw, "Health ");
 			pw.println(node.getHealth());
 		}

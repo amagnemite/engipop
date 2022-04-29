@@ -21,6 +21,8 @@ public class Tree {
     public static class Node {
         private Node parent;
         private List<Node> children = new ArrayList<Node>();
+        //children refers to waveschedule - wave - wavespawn - spawner connections
+        //side connections like relays are connected elsewhere
         
         public void connectNodes(Node parent) { //parents the calling node and adds calling node to parent's list
         	this.parent = parent; 
@@ -47,6 +49,7 @@ public class Tree {
     }
     
     public static class PopNode extends Node { //
+    	private int mapIndex = -1;
     	private int startingCurrency = 400; //default 0
     	private int respawnWaveTime = 6; //default 10
     	private boolean fixedRespawnWaveTime;
@@ -123,10 +126,15 @@ public class Tree {
         public boolean getAdvanced() {
         	return this.advanced;
         }
-    }
-    
- 
-    
+        
+        public void setMapIndex(int i) {
+        	this.mapIndex = i;
+        }
+        
+        public int getMapIndex() {
+        	return this.mapIndex;
+        }
+    }  
     
     public static class TemplateNode extends Node {
     	//templates can be wavespawns or tfbots
@@ -137,22 +145,79 @@ public class Tree {
     	
     }
     
-    public static class WaveNode extends Node {
+    public static class WaveNode extends Node { 
     	//todo: sound support
     	//description?
     	//waitwhendone and checkpoint are both vestigal
     	//initwaveoutput?
+    	private RelayNode start = new RelayNode();
+    	private RelayNode done = new RelayNode();
+    	private RelayNode init;
+    	
+    	public void setStart(RelayNode s) {
+    		this.start = s;
+    	}
+    	
+    	public RelayNode getStart() {
+    		return this.start;
+    	}
+    	
+    	public void setDone(RelayNode s) {
+    		this.done = s;
+    	}
+    	
+    	public RelayNode getDone() {
+    		return this.done;
+    	}
+    	
+    	public void setInit(RelayNode s) {
+    		this.init = s;
+    	}
+    	
+    	public RelayNode getInit() {
+    		return this.init;
+    	}
     }
     
-    public static class StartWaveOutputNode extends Node {
-    	private String target = "wave_start_relay";
-    	private String action = "trigger";
+    public static class RelayNode extends Node { //something experimental
+    	Map<String, String> map = new HashMap<String, String>();
+    	
+    	public RelayNode() { //for now, assume all actions are trigger
+			map.put("Action", "trigger");
+		}
+    	
+    	public void setTarget(String relay) {
+    		map.put("Target", relay);
+    	}
+    	
+    	public String getTarget() {
+    		return map.get("Target");
+    	}
+    	
+    	public Map<String, String> getMap() {
+    		return map;
+    	}
     }
     
-    public static class DoneOutputNode extends Node {
-    	private String target = "wave_finished_relay";
-    	private String action = "trigger";
-    }    
+    public static class StartWaveOutputNode extends RelayNode { 
+    	
+    }
+    
+    public static class DoneOutputNode extends RelayNode {
+   
+    }
+    
+    public static class InitWaveOutputNode extends RelayNode {
+    	   
+    }
+    
+    public static class FirstWaveOutputNode extends RelayNode {
+ 	   
+    }
+    
+    public static class LastWaveOutputNode extends RelayNode {
+  	   
+    }
     
     public static class WaveSpawnNode extends Node { //node for wavespawns
     	private String where = "spawnbot"; //todo: add support for the weird locations no one uses
@@ -167,9 +232,14 @@ public class Tree {
     	private String name;
     	private String waitForAllDead; 
     	private String waitForAllSpawned;
-    	private String support; //don't forget support limited
+    	private boolean support;
+    	private boolean supportLimited;
     	private boolean randomSpawn; //default 0, if true allows bot spawns to be randomized
     	//prob should be disabled for single spawn maps
+    	private RelayNode start;
+    	private RelayNode first;
+    	private RelayNode last;
+    	private RelayNode done;
     	
     	public WaveSpawnNode() {
     	}
@@ -262,13 +332,61 @@ public class Tree {
     		return this.waitForAllSpawned;
     	}
     	
+    	public void setSupport(boolean s) {
+    		this.support = s;
+    	}
+    	
+    	public boolean getSupport() {
+    		return this.support;
+    	}
+    	
+    	public void setSupportLimited(boolean s) {
+    		this.supportLimited = s;
+    	}
+    	
+    	public boolean getSupportLimited() {
+    		return this.supportLimited;
+    	}
+    	
+    	public void setStart(RelayNode s) {
+    		this.start = s;
+    	}
+    	
+    	public RelayNode getStart() {
+    		return this.start;
+    	}
+    	
+    	public void setFirst(RelayNode s) {
+    		this.first = s;
+    	}
+    	
+    	public RelayNode getFirst() {
+    		return this.first;
+    	}
+    	
+    	public void setLast(RelayNode s) {
+    		this.last = s;
+    	}
+    	
+    	public RelayNode getLast() {
+    		return this.last;
+    	}
+    	
+    	public void setDone(RelayNode s) {
+    		this.done = s;
+    	}
+    	
+    	public RelayNode getDone() {
+    		return this.done;
+    	}
+    	
     	public Node getSpawner() {
     		return this.getChildren().get(0);
     	}
     }
     
     public static class TankNode extends Node {
-    	private int health = Values.tankDefaultHealth;
+    	private int health = EngiPanel.tankDefaultHealth;
     	//private double speed = Values.tankDefaultHealth;
     	private String name = "tankboss";
     	private boolean skin = false;
@@ -305,7 +423,7 @@ public class Tree {
     }
     
     public static class TFBotNode extends Node { //node for tfbot spawners
-    	private String className = window.CLASSES[0];
+    	private String className = EngiPanel.CLASSES[0];
     	private String name;
     	private String icon = "scout";
     	private String skill = "Easy"; //default easy
@@ -387,6 +505,7 @@ public class Tree {
     	}
     }
     
+    //these two are mostly convenience 
     public static class SquadNode extends Node {
     	
     }
