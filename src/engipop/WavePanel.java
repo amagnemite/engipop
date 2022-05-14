@@ -72,9 +72,9 @@ public class WavePanel extends EngiPanel { //is basically only relays
 		addGB(doneLabel, 2, 1);
 		addGB(doneRelay, 3, 1);
 		
-		addGB(doInit, 0, 2);
-		addGB(initLabel, 1, 2);
-		addGB(initRelay, 2, 2);
+		addGB(doInit, 4, 1);
+		addGB(initLabel, 5, 1);
+		addGB(initRelay, 6, 1);
 	}
 	
 	public void setRelay(List<String> list) { //update relay list and attach to all the boxes

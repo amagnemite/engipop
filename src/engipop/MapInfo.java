@@ -146,6 +146,10 @@ public class MapInfo { //parse map info txt, load it into gui
 		return this.tankSpawns;
 	}
 	
+	public List<String> getTankRelays() {
+		return this.tankRelays;
+	}
+	
 	public List<String> getTags() {
 		return this.tags;
 	}

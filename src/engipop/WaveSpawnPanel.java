@@ -2,6 +2,7 @@ package engipop;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.List;
@@ -71,6 +72,7 @@ public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
 		gb = new GridBagConstraints();
 		setLayout(gbLayout);
 		gb.anchor = GridBagConstraints.WEST;
+		gb.insets = new Insets(0, 0, 0, 10);
 		
 		startRelay.setEditable(true);
 		firstRelay.setEditable(true);
@@ -193,15 +195,15 @@ public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
 		addGB(wsBetweenSpin, 1, 7);		
 		addGB(wsDeaths, 2, 7);
 		addGB(wsCurrency, 0, 8);
-		addGB(wsCurrSpin, 1, 8);	
+		addGB(wsCurrSpin, 1, 8);
+		
 		addGB(wsAllDead, 0, 9);
-
-		addGB(wsAllSpawned, 0, 10);
+		addGB(wsAllSpawned, 2, 9);
+		addGB(wsDeadField, 1, 9);	
+		addGB(wsSpawnField, 3, 9);
 			
 		addGB(wsNameField, 1, 1);
-		addGB(wsWhereBox, 3, 1);
-		addGB(wsDeadField, 1, 9);	
-		addGB(wsSpawnField, 1, 10);
+		addGB(wsWhereBox, 3, 1);	
 		
 		addGB(doFirst, 0, 11);
 		addGB(doStart, 1, 11);

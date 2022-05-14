@@ -9,11 +9,14 @@ import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 
 import engipop.Tree.*;
+import engipop.Tree.TFBotNode.TFBotKeys;
 import engipop.TreeParse.*;
 
 public class window {
@@ -35,8 +38,9 @@ public class window {
 	GridBagLayout frameGB = new GridBagLayout();
 	
 	JMenuBar menuBar = new JMenuBar();
-	JMenu options;
-	JMenuItem popSet;
+	JMenu options = new JMenu("Options");
+	JMenuItem popSet = new JMenuItem("Open population settings");
+	JMenuItem settings = new JMenuItem("Open Engipop settings");
 	
 	BotPanel botPanel;
 	WaveSpawnPanel wsPanel;
@@ -55,6 +59,10 @@ public class window {
 	JRadioButton randomBut;
 	JButton addSquadRandom;
 	JButton removeSquadRandom;
+	
+	ButtonListManager waveBLManager;
+	ButtonListManager waveSpawnBLManager;
+	ButtonListManager squadRandomBLManager;
 	
 	String noSpawner = "Current spawner type: none";
 	String botSpawner = "Current spawner type: TFBot";
@@ -75,15 +83,13 @@ public class window {
 	SquadNode currentSquadNode = new SquadNode();
 	RandomChoiceNode currentRCNode = new RandomChoiceNode();
 	
-	JLabel feedback;
+	JLabel feedback = new JLabel(" ");
 	JLabel spawnerInfo = new JLabel(noSpawner);
-	
-	//int waveIndex = 0;
-	//int waveSpawnIndex = 0;
 	
 	MapInfo info = new MapInfo();
 	
 	Tree tree = new Tree(popNode);
+	ItemParser itemParser;
 	
 	public window() {
 		
@@ -92,26 +98,22 @@ public class window {
 		frame.setIconImage(icon.getImage());
 		
 		frame.setLayout(frameGB);
-		frame.setSize(1000, 800);
+		frame.setSize(1300, 1000);
 		
-		popSet = new JMenuItem("Open population settings");
-		options = new JMenu("Options");
+		options.add(settings);
 		options.add(popSet);
 		menuBar.add(options);
 		frame.setJMenuBar(menuBar);
 		
-		botPanel = new BotPanel();
+		botPanel = new BotPanel(this);
 		wsPanel = new WaveSpawnPanel();
 		wavePanel = new WavePanel();
 		tankPanel = new TankPanel();
-		feedback = new JLabel("	");
 		
 		constraints.anchor = GridBagConstraints.WEST;
 		
 		currentWSNode.setName("default");
 		
-		//instead of immediately creating, allow user to create as necessary
-		//and at parse check if one of each exists
 		currentWaveNode.connectNodes(popNode);
 		currentWSNode.connectNodes(currentWaveNode);
 		
@@ -130,12 +132,14 @@ public class window {
 		addGB(frame, constraints, spawnerInfo, 1, 4);
 		
 		constraints.gridwidth = 2;
-		addGB(frame, constraints, wavePanel, 0, 2);
+		
 		addGB(frame, constraints, wsPanel, 0, 3);
 		addGB(frame, constraints, botPanel, 0, 5);
 		addGB(frame, constraints, tankPanel, 0, 5);
-		//tankPanel.setEnabled(false);
 		tankPanel.setVisible(false);
+		
+		constraints.gridwidth = 3;
+		addGB(frame, constraints, wavePanel, 0, 2);
 		
 		constraints.gridwidth = 1;
 		constraints.gridheight = 3;
@@ -146,31 +150,38 @@ public class window {
 	}
 	
 	public static void main(String args[]) {
-		
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-	    	//meatloaf said nimbus is ugly  
 		} catch (Exception e) {
 		    //
 		}
 		
 		window w = new window();
 		SecondaryWindow w2 = new SecondaryWindow(w.getPopNode(), w);
+		SettingsWindow setW = new SettingsWindow(w);
 		
-		w.listen(w2);
+		w.initConfig(setW);
 		
-		//w2.fillMap(info);
+		w.listen(w2, setW); //could change this
+		
 	}
 	
 	public PopNode getPopNode() {
 		return this.popNode;
 	}
 	
-	void listen(SecondaryWindow w) { //reshow pop settings if selected
-		popSet.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent a) {
-				w.updatePopPanel();
-				w.setVisible(true);
+	public TFBotNode getCurrentBotNode() {
+		return this.currentBotNode;
+	}
+	
+	void listen(SecondaryWindow w, SettingsWindow sw) { //reshow pop settings if selected
+		popSet.addActionListener(event -> {
+			w.updatePopPanel();
+			w.setVisible(true);
+		});
+		settings.addActionListener(event -> {
+			if(!sw.isVisible()) {
+				sw.setVisible(true);
 			}
 		});
 	}
@@ -186,33 +197,33 @@ public class window {
 			tankPanel.setVisible(false);
 			botPanel.setVisible(true);
 		}
-		if(tfbotBut.isSelected()) {
+		if(tfbotBut.isSelected()) { //don't clear if in squadrandom
 			squadRandomListModel.clear();
 			addSquadRandom.setVisible(false);
 			removeSquadRandom.setVisible(false);
 		}
 		
-		if(newNode) {
+		if(newNode) { //generate new tfbot
 			currentBotNode = new TFBotNode();
 			addBot.setText(addBotMsg);
-			addBot.setEnabled(true);
-			updateBot.setEnabled(false);
-			removeBot.setEnabled(false);
+			squadRandomBLManager.changeButtonState(ButtonListManager.States.EMPTY);
+			botPanel.getAttributesPanel().setAttrToBotButtonsStates(false, false, ButtonListManager.States.DISABLE);
 		}
-		else {
+		else { //load inputted tfbot
 			if(tfbotBut.isSelected()) {
-				addBot.setEnabled(false);
-				updateBot.setEnabled(true);
+				squadRandomBLManager.changeButtonState(ButtonListManager.States.SELECTED);
 			}
 			else { //let squadrandom add new bots
-				addBot.setEnabled(true);
-				updateBot.setEnabled(false); //explicit selection here
+				squadRandomBLManager.changeButtonState(ButtonListManager.States.NOSELECTION);
 			}
 			currentBotNode = (TFBotNode) node;
 			updateBot.setText(updateBotMsg);
 			removeBot.setText(removeBotMsg);
-			removeBot.setEnabled(true);
+			
+			botPanel.getAttributesPanel().setAttrToBotButtonsStates(true, false, ButtonListManager.States.NOSELECTION);		
 		}
+		botPanel.getAttributesPanel().updateItemAttrInfo(currentBotNode);
+		botPanel.setAttrNone(); //default to not showing any specific attribute
 		botPanel.updatePanel(currentBotNode);
 	}
 	
@@ -220,7 +231,7 @@ public class window {
 		loadBot(newNode, null);
 	}
 	
-	void loadTank(boolean newTank) {
+	void loadTank(boolean newTank) { //load tank info or create a new tank node and set panel visibility
 		botPanel.setVisible(false);
 		tankPanel.setVisible(true);
 		squadRandomListModel.clear();
@@ -230,15 +241,12 @@ public class window {
 		if(newTank) {
 			currentTankNode = new TankNode();
 			addBot.setText(addTankMsg);
-			addBot.setEnabled(true);
-			updateBot.setEnabled(false);
-			removeBot.setEnabled(false);
+			squadRandomBLManager.changeButtonState(ButtonListManager.States.EMPTY);
 		}
 		else {
 			currentTankNode = (TankNode) currentWSNode.getSpawner();
+			squadRandomBLManager.changeButtonState(ButtonListManager.States.SELECTED);
 			updateBot.setText(updateTankMsg);
-			updateBot.setEnabled(true);
-			removeBot.setEnabled(true);
 			removeBot.setText(removeTankMsg);
 		}
 		tankPanel.updatePanel(currentTankNode);
@@ -327,24 +335,20 @@ public class window {
 		ButtonGroup spawnerGroup = new ButtonGroup();
 		
 		spawnerPanel.add(tfbotBut = new JRadioButton("TFBot"));
-		tfbotBut.setActionCommand("TFBot");
-		spawnerGroup.add(tfbotBut);
 		spawnerPanel.add(tankBut = new JRadioButton("Tank"));
-		tankBut.setActionCommand("Tank");
-		spawnerGroup.add(tankBut);
 		spawnerPanel.add(squadBut = new JRadioButton("Squad"));
-		squadBut.setActionCommand("Squad");
+		spawnerPanel.add(randomBut = new JRadioButton("RandomChoice"));	
+		
+		spawnerGroup.add(tfbotBut);
+		spawnerGroup.add(tankBut);
 		spawnerGroup.add(squadBut);
-		spawnerPanel.add(randomBut = new JRadioButton("RandomChoice"));
-		randomBut.setActionCommand("RandomChoice");
 		spawnerGroup.add(randomBut);
 		spawnerGroup.setSelected(tfbotBut.getModel(), true);
 		//todo: add mob and sentrygun here
 		
 		tfbotBut.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				//System.out.println(c);
-				try {
+				try { //indexoutofbounds if no spawner
 					Node node = currentWSNode.getSpawner();
 					
 					if(node.getClass() == TFBotNode.class) {
@@ -505,7 +509,6 @@ public class window {
 		gb.insets = new Insets(5, 0, 5, 5);
 		
 		String addWaveMsg = "Add wave";
-		
 		String addWSMsg = "Add wavespawn"; //to population?
 		
 		//String updateSquadMsg = "Update squad";
@@ -517,17 +520,13 @@ public class window {
 		JButton addWave = new JButton(addWaveMsg);
 		JButton removeWave = new JButton("Remove wave");
 		JButton updateWave = new JButton("Update wave");
-		//removeWave.setEnabled(false);
+		waveBLManager = new ButtonListManager(listWaveList, addWave, updateWave, removeWave);
+		
+		JLabel listCurrentWSLabel = new JLabel("Editing " + currentWSNode.getName());
 		
 		JList<String> waveSpawnList = new JList<String>(waveSpawnListModel);
 		waveSpawnList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
-		JLabel listCurrentWSLabel = new JLabel("Editing " + currentWSNode.getName());
-		
-		JList<String> squadRandomList = new JList<String>(squadRandomListModel);
-		squadRandomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		addSquadRandom = new JButton(addSquadMsg);
-		removeSquadRandom = new JButton(removeSquadMsg);
 		
 		JButton listAddWaveSpawn = new JButton(addWSMsg);
 		//listAddWaveSpawn.setPreferredSize(new Dimension(159, 22));
@@ -537,7 +536,16 @@ public class window {
 		//listRemoveWaveSpawn.setEnabled(false);
 		
 		JButton listUpdateWaveSpawn = new JButton("Update wavespawn");
-		//listUpdateWaveSpawn.setEnabled(false);
+		//listUpdateWaveSpawn.setEnabled(false)
+		
+		waveSpawnBLManager = new ButtonListManager(waveSpawnList, listAddWaveSpawn, listUpdateWaveSpawn, listRemoveWaveSpawn);
+		
+		JList<String> squadRandomList = new JList<String>(squadRandomListModel);
+		squadRandomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		addSquadRandom = new JButton(addSquadMsg);
+		removeSquadRandom = new JButton(removeSquadMsg);
+		
+		squadRandomBLManager = new ButtonListManager(squadRandomList, addBot, updateBot, removeBot);
 		
 		JButton createPop = new JButton("Create popfile");
 		
@@ -546,6 +554,8 @@ public class window {
 		
 		listWaveList.setSelectedIndex(0); //on init, have the 1st wave selected
 		waveSpawnList.setSelectedIndex(0); //same here
+		waveBLManager.changeButtonState(ButtonListManager.States.SELECTED);
+		waveSpawnBLManager.changeButtonState(ButtonListManager.States.SELECTED);
 		
 		listWaveList.addListSelectionListener(new ListSelectionListener() { //when a wave is selected from list
 			 public void valueChanged(ListSelectionEvent l) {
@@ -557,19 +567,24 @@ public class window {
 					listCurrentWave.setText("Editing wave " + Integer.toString(waveIndex + 1));
 					//addWave.setText(addWaveMsg);
 					wavePanel.updatePanel(currentWaveNode);
+					waveBLManager.changeButtonState(ButtonListManager.States.SELECTED);	
 					
 					if(currentWaveNode.getChildren().size() > 0) {
 						getWaveSpawnList();
 						waveSpawnList.setSelectedIndex(0);
-						listAddWaveSpawn.setText(addWSMsg);
+						//listAddWaveSpawn.setText(addWSMsg);
 					}
 					else { //if user decided to add the wave before making a wavespawn 
+						waveSpawnBLManager.changeButtonState(ButtonListManager.States.EMPTY);
 						waveSpawnListModel.clear();
-						listRemoveWaveSpawn.setEnabled(false);
+						//listRemoveWaveSpawn.setEnabled(false);
 						loadBot(true);
 						tfbotBut.setSelected(true);
 						spawnerInfo.setText(noSpawner);
 					}
+				}
+				else { //remember that refreshing the list also causes index to be -1
+					waveBLManager.changeButtonState(ButtonListManager.States.NOSELECTION);
 				}
 			} 
 		});
@@ -603,7 +618,7 @@ public class window {
 				tfbotBut.setSelected(true);
 				spawnerInfo.setText(noSpawner);
 				
-				removeWave.setEnabled(true);
+				//removeWave.setEnabled(true);
 			} 
 		});
 		
@@ -623,12 +638,14 @@ public class window {
 				if(list.size() == 0) { //double check subnode states here
 					currentWaveNode = new WaveNode();
 					listCurrentWave.setText("Editing wave 1");
-					removeWave.setEnabled(false);
+					//removeWave.setEnabled(false);
 					waveSpawnListModel.clear();
-					listRemoveWaveSpawn.setEnabled(false);
+					//listRemoveWaveSpawn.setEnabled(false);
+					waveBLManager.changeButtonState(ButtonListManager.States.EMPTY);
+					waveSpawnBLManager.changeButtonState(ButtonListManager.States.EMPTY);
 				}
 				else { //set current wave and its subnodes
-					listWaveList.setSelectedIndex(list.size() - 1);	
+					listWaveList.setSelectedIndex(list.size() - 1);
 				}
 			}
 		});
@@ -653,8 +670,7 @@ public class window {
 					listCurrentWSLabel.setText("Editing wavespawn " + waveSpawnListModel.get(waveSpawnIndex));
 					
 					listAddWaveSpawn.setText(addWSMsg);
-					listUpdateWaveSpawn.setEnabled(true);
-					listRemoveWaveSpawn.setEnabled(true);
+					waveSpawnBLManager.changeButtonState(ButtonListManager.States.SELECTED);
 					wsPanel.updatePanel(currentWSNode);
 					
 					if(currentWSNode.hasChildren()) {
@@ -665,7 +681,7 @@ public class window {
 					}
 				}
 				else { //disable updating when there is not a subwave explicitly selected
-					listUpdateWaveSpawn.setEnabled(false);
+					waveSpawnBLManager.changeButtonState(ButtonListManager.States.NOSELECTION);
 				}
 			}
 		});
@@ -716,7 +732,7 @@ public class window {
 				getWaveSpawnList();
 				
 				if(list.size() == 0) { //if no wavespawns again
-					listRemoveWaveSpawn.setEnabled(false);
+					waveSpawnBLManager.changeButtonState(ButtonListManager.States.EMPTY);
 					currentWSNode = new WaveSpawnNode();
 					listCurrentWSLabel.setText("Editing new wavespawn");
 				}
@@ -751,11 +767,11 @@ public class window {
 						}
 						else {
 							currentBotNode.connectNodes(currentWSNode);
-							updateBot.setEnabled(true);
+							squadRandomBLManager.changeButtonState(ButtonListManager.States.SELECTED);
+							botPanel.getAttributesPanel().setAttrToBotButtonsStates(true, false, ButtonListManager.States.EMPTY);
+							botPanel.getAttributesPanel().updateItemAttrInfo(currentBotNode); //other place where you can enter bot added state
 							updateBot.setText(updateBotMsg);
-							removeBot.setEnabled(true);
 							removeBot.setText(removeBotMsg);
-							addBot.setEnabled(false);
 							spawnerInfo.setText(botSpawner);				
 						}
 						//currentBotNode = new TFBotNode();
@@ -770,11 +786,9 @@ public class window {
 					case (addTankMsg):
 						tankPanel.updateNode(currentTankNode);
 						currentTankNode.connectNodes(currentWSNode);
+						squadRandomBLManager.changeButtonState(ButtonListManager.States.SELECTED);
 						updateBot.setText(updateTankMsg);
-						updateBot.setEnabled(true);
 						removeBot.setText(removeTankMsg);
-						removeBot.setEnabled(true);
-						addBot.setEnabled(false);
 						spawnerInfo.setText(tankSpawner);
 						if(currentWSNode.getParent() == null) {
 							feedback.setText("Tank successfully created, but the wavespawn it is linked to is currently unadded");
@@ -815,8 +829,7 @@ public class window {
 					getSquadRandomList();
 					
 					if(list.size() == 0) { //if no wavespawns again
-						updateBot.setEnabled(false);
-						removeBot.setEnabled(false);
+						squadRandomBLManager.changeButtonState(ButtonListManager.States.EMPTY);
 						loadBot(true);
 					}
 					else {
@@ -884,21 +897,26 @@ public class window {
 						currentBotNode = (TFBotNode) currentRCNode.getChildren().get(squadRandomIndex);
 					}
 					loadBot(false, currentBotNode);
-					addBot.setEnabled(false);
-					updateBot.setEnabled(true);
+					squadRandomBLManager.changeButtonState(ButtonListManager.States.SELECTED);
 				}
 				else { //create a new bot 
 					loadBot(true);
-					updateBot.setEnabled(false);
-					removeBot.setEnabled(true);
+					squadRandomBLManager.changeButtonState(ButtonListManager.States.NOSELECTION);
 				}
 				//System.out.println(currentBotNode);
 			}
 		});
 		
-		createPop.addActionListener(new ActionListener() { //check if min valid pop
-			//this should be more thorough
-			public void actionPerformed(ActionEvent a) { 
+		createPop.addActionListener(event -> {
+			String error = TreeParse.treeCheck(tree, this);
+			if(error.isEmpty()) {
+				getFile();
+			}
+			else {
+				feedback.setText(error);
+			}
+				
+				/*
 				Node temp;
 				try {
 					temp = popNode.getChildren().get(0); //wave
@@ -918,8 +936,7 @@ public class window {
 				}
 				catch (IndexOutOfBoundsException i) {
 					feedback.setText("Popfile generation failed, no waves to generate");
-				}				
-			}
+				}	*/			 
 		});
 		
 		//todo: template list
@@ -1020,16 +1037,16 @@ public class window {
 		
 		for(int i = 0; i < length; i++) {
 			TFBotNode t = (TFBotNode) node.getChildren().get(i);
-			if(!t.getName().equals("")) {
-				squadRandomListModel.addElement(t.getName()); //this is extremely awful
+			if(!((String) t.getValue(TFBotKeys.NAME)).isEmpty()) {
+				squadRandomListModel.addElement((String) t.getValue(TFBotKeys.NAME)); //this is extremely awful
 			}
 			else {
-				squadRandomListModel.addElement(t.getClassName()); //this is extremely awful
+				squadRandomListModel.addElement((String) t.getValue(TFBotKeys.CLASSNAME)); //this is extremely awful
 			}		
 		}
 	}
 	
-	public void loadMap(int mapIndex) {
+	public void loadMap(int mapIndex) { //takes mapindex and passes map info to appropriate locations
 		info.getMapData(mapIndex);
 		
 		wavePanel.setRelay(info.getWaveRelay());
@@ -1037,12 +1054,76 @@ public class window {
 		
 		wsPanel.setWhere(info.getBotSpawns());
 		botPanel.updateTagList(info.getTags());
-		tankPanel.setSpawnModel(info.getTankSpawns());
+		tankPanel.setMapInfo(info.getTankSpawns(), info.getTankRelays());
 	}
 	 
 	public void addGB(Container cont, GridBagConstraints gb, Component comp, int x, int y) {
 		gb.gridx = x;
 		gb.gridy = y;
 		cont.add(comp, gb);
+	}
+	
+	public void updateFeedback(String string) {
+		feedback.setText(string);
+	}
+	
+	void initConfig(SettingsWindow sw) {
+		File cfg = new File("engiconfig.cfg");
+		try {
+			if(cfg.createNewFile()) { //if cfg doesn't exist
+				File itemsTxt = getItemsTxtPath(); //try to get item path, then parse
+				if(itemsTxt != null) {
+					sw.setItemsTxtPath(itemsTxt);
+					sw.writeToConfig();
+					parseItems(itemsTxt);
+				}
+			}
+			else { //if it does
+				//need to check if it's actually contained since there's a chance it's created then either emptied or something
+				if(sw.getItemsTxtPath() != null) {
+					itemParser = new ItemParser(new File(sw.getItemsTxtPath()));
+					botPanel.getItemParser(itemParser);
+				}
+			}
+		}
+		catch (IOException io) {
+			//print that an ioexception has occured
+		}
+	}
+	
+	void parseItems(File itemsTxt) { //check if this forces a string update
+		itemParser = new ItemParser(itemsTxt);
+		botPanel.getItemParser(itemParser);
+	}
+	
+	File getItemsTxtPath() { //get file object of items_game.txt
+		JFileChooser c;
+		File file = null; //prob shouldn't do this but no defaults for linux/osx
+		boolean selectingFile = true;
+		
+		if(System.getProperty("os.name").contains("Windows")) { //for windows, default to standard items_game path
+			file = new File("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf\\scripts\\items\\items_game.txt");
+			c = new JFileChooser(file);
+		}
+		else { //make linux and rare osx people suffer
+			//file = new File();
+			c = new JFileChooser();
+		}
+		
+		while(selectingFile) {
+			c.showOpenDialog(frame);
+			file = c.getSelectedFile();
+			if(!file.getName().equals("items_game.txt")) {
+				int op = JOptionPane.showConfirmDialog(frame, "File selected is not items_game.txt. Select a new file?");
+				if (op != JOptionPane.YES_OPTION) { //if cancelled or no, leave
+					selectingFile = false;
+					file = null; //clear out
+				} //otherwise it just opens the dialogue again
+			}
+			else { //if it turns out it's a different file named items_game.txt, the parser will handle it
+				selectingFile = false;
+			}
+		}
+		return file;
 	}
 }

@@ -1,8 +1,7 @@
 package engipop;
-import java.awt.Window;
 import java.util.*;
 
-import org.w3c.dom.Node;
+import engipop.EngiPanel.Classes;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
 public class Tree {
@@ -17,6 +16,15 @@ public class Tree {
     public Node getRoot() {
     	return this.root;
     }
+    /*
+    public static boolean checkIfNullOrEmpty(Object obj) {
+		boolean check = false;
+		
+		if(obj == null) {
+			check
+		}
+		
+	} */
 
     public static class Node {
         private Node parent;
@@ -34,12 +42,12 @@ public class Tree {
         }
         
      	public boolean hasChildren() {
-    		boolean hasSpawner = false;
+    		boolean hasChild = false;
     		
     		if(this.getChildren().size() > 0) {
-    			hasSpawner = true;
+    			hasChild = true;
     		}
-    		return hasSpawner;
+    		return hasChild;
     	}
         
         public Node getParent() {
@@ -149,7 +157,6 @@ public class Tree {
     	//todo: sound support
     	//description?
     	//waitwhendone and checkpoint are both vestigal
-    	//initwaveoutput?
     	private RelayNode start = new RelayNode();
     	private RelayNode done = new RelayNode();
     	private RelayNode init;
@@ -183,6 +190,7 @@ public class Tree {
     	Map<String, String> map = new HashMap<String, String>();
     	
     	public RelayNode() { //for now, assume all actions are trigger
+    		map.put("Target", null); //mostly for nice formatting
 			map.put("Action", "trigger");
 		}
     	
@@ -196,6 +204,18 @@ public class Tree {
     	
     	public Map<String, String> getMap() {
     		return map;
+    	}
+    	
+    	public boolean isTargetEmptyOrNull() {
+    		boolean check = false;
+    		
+    		if(map.get("Target") == null) {
+    			check = true;
+    		}
+    		else {
+    			check = map.get("Target").isEmpty() ? true : false;
+    		}
+    		return check;
     	}
     }
     
@@ -391,7 +411,8 @@ public class Tree {
     	private String name = "tankboss";
     	private boolean skin = false;
     	private String startingPathTrackNode; //default ""
-    	//add relays
+    	private RelayNode onKilled;
+    	private RelayNode onBomb;
     	
     	public String getName() {
     		return this.name;
@@ -420,88 +441,118 @@ public class Tree {
     	public String getStartingPath() {
     		return this.startingPathTrackNode;
     	}
+    	
+    	public void setOnKilled(RelayNode r) {
+    		this.onKilled = r;
+    	}
+    	
+    	public RelayNode getOnKilled() {
+    		return this.onKilled;
+    	}
+    	
+    	public void setOnBomb(RelayNode r) {
+    		this.onBomb = r;
+    	}
+    	
+    	public RelayNode getOnBomb() {
+    		return this.onBomb;
+    	}
+    	
+    	
+    	
     }
     
     public static class TFBotNode extends Node { //node for tfbot spawners
-    	private String className = EngiPanel.CLASSES[0];
-    	private String name;
-    	private String icon = "scout";
-    	private String skill = "Easy"; //default easy
-    	private String wepRestrict = "Any";
-    	private ArrayList<String> tags = new ArrayList<String>();
-    	private ArrayList<String> attr = new ArrayList<String>();
-    	private String primary;
-    	private ArrayList<String> priAttr = new ArrayList<String>();
-    	private String secondary;
-    	private ArrayList<String> secAttr = new ArrayList<String>();
-    	private String melee;
-    	private ArrayList<String> melAttr = new ArrayList<String>();  	
-    	private ArrayList<String> charAttr = new ArrayList<String>();  	
-    	//todo: add support for the niche use vars
     	
-    	public TFBotNode() {
+    	public enum TFBotKeys {
+    		CLASSNAME, CLASSICON, NAME,
+    		SKILL, WEAPONRESTRICT, TAGS,
+    		ATTRIBUTES, PRIMARY, SECONDARY,
+    		MELEE, BUILDING, HAT1, HAT2,
+    		HAT3, ITEMATTRIBUTES, CHARACTER
+    	}
+    	//classname - classes
+    	//classicon - string
+    	//name - string
+    	//skill - string
+    	//weaponrestrict - string
+    	//attributes - arraylist<string>
+    	//primary, secondary, melee, building, hat1, hat2, hat3 - string
+    	//character is always null, mostly just for printing purposes
+    	
+    	public static final String EASY = "Easy";
+    	public static final String NORMAL = "Normal";
+    	public static final String HARD = "Hard";
+    	public static final String EXPERT = "Expert";
+    	
+    	public static final String ANY = "Any";
+    	public static final String PRIMARYONLY = "PrimaryOnly";
+    	public static final String SECONDARYONLY = "SecondaryOnly";
+    	public static final String MELEEONLY = "MeleeOnly";
+    	//private ArrayList<String> attr = new ArrayList<String>();
+
+    	//todo: add support for the niche use vars 
+    	
+    	private List<String> tags = new ArrayList<String>();
+    	private Map<EngiPanel.ItemSlot, ItemAttributeNode> itemAttributeList;
+    	private Map<TFBotKeys, Object> keyVals = new HashMap<TFBotKeys, Object>();
+    	
+    	public TFBotNode() { //defaults
+    		keyVals.put(TFBotKeys.CLASSNAME, Classes.Scout);
+    		keyVals.put(TFBotKeys.CLASSICON, "scout");
+    		keyVals.put(TFBotKeys.SKILL, EASY);
+    		keyVals.put(TFBotKeys.WEAPONRESTRICT, ANY);
     	}
     	
-    	public void setClassName(String className) {
-    		this.className = className;
+    	public void putKey(TFBotKeys key, Object value) {
+    		keyVals.put(key, value);
     	}
     	
-    	public String getClassName() {
-    		return this.className;
+    	public Object getValue(TFBotKeys key) {
+    		return keyVals.get(key);
     	}
+    	/*
+    	public Map<TFBotKeys, Object> getMap() {
+    		return this.keyVals;
+    	} */
     	
-    	public void setName(String name) {
-    		this.name = name;
-    	}
+    	public Set<TFBotKeys> getKeySet() {
+    		return keyVals.keySet();
+    	} 
     	
-    	public String getName() {
-    		return this.name;
-    	}   	
-    	
-    	
-    	public void setIcon(String icon) {
-    		this.icon = icon;
-    	}
-    	
-    	public String getIcon() {
-    		return this.icon;
-    	}
-    	
-    	public void setSkill(String skill) {
-    		this.skill = skill;
-    	}
-    	
-    	public String getSkill() {
-    		return this.skill;
-    	}
-    	
-       	public void setWepRestrict(String wep) {
-    		this.wepRestrict = wep;
-    	}
-    	
-    	public String getWepRestrict() {
-    		return this.wepRestrict;
-    	}
-    	
-    	public void setTags(ArrayList<String> list) {
+    	public void setTags(List<String> list) {
     		this.tags = list;
     	}
     	
-    	public ArrayList<String> getTags() {
+    	public List<String> getTags() {
     		return this.tags;
     	}
     	
-    	public Map<String, Object> makeMap() {
-    		Map<String, Object> map = new HashMap<String, Object>();
-    		
-    		map.put("Class", this.className);
-    		map.put("Name", this.name);
-    		map.put("ClassIcon", this.icon);
-    		map.put("Skill", this.skill);
-    		map.put("WeaponRestrictions", this.skill);
-    		map.put("Tag", this.tags);
-    		
-    		return map;
+    	//updates the entire map
+    	public void setItemAttributeList(HashMap<EngiPanel.ItemSlot, ItemAttributeNode> list) {
+    		itemAttributeList = list;
+    	}
+    	
+    	//gets the entire map
+    	public Map<EngiPanel.ItemSlot, ItemAttributeNode> getItemAttributeList() {
+    		return this.itemAttributeList;
+    	}
+    }
+    
+    //only contains list of attributes, type is handled by tfbot node
+    public static class ItemAttributeNode extends Node {
+    	private Map<String, String> attributeMap = new HashMap<String, String>();
+    	
+    	public ItemAttributeNode(Map<String, String> list) {
+    		this.attributeMap = list;
+    	}
+
+    	public void setMap(Map <String, String> map) {
+    		attributeMap = map;
+    	}
+    	
+    	public Map <String, String> getMap() {
+    		return this.attributeMap;
     	}
     }
     
