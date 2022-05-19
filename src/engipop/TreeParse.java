@@ -465,27 +465,30 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
-		if(((String) botNode.getValue(slot)).isEmpty()) { //if the slot was stripped out by the precheck
-			switch (slot) {
-				case PRIMARY:
-					indentPrintln(pw, "ItemName \"" + tfClass.primary() + "\"");
-					break;
-				case SECONDARY:
-					indentPrintln(pw, "ItemName \"" + tfClass.secondary() + "\"");
-					break;
-				case MELEE:
-					indentPrintln(pw, "ItemName \"" + tfClass.melee() + "\"");
-					break;
-				case BUILDING:
-					indentPrintln(pw, "ItemName \"" + tfClass.building() + "\"");
-					break;
-				default:
-					break;
+		if(!slot.equals(TFBotKeys.CHARACTER)) {
+			if(botNode.getValue(slot) == null || ((String) botNode.getValue(slot)).isEmpty()) { //if the slot was stripped out by the precheck
+				switch (slot) {
+					case PRIMARY:
+						indentPrintln(pw, "ItemName \"" + tfClass.primary() + "\"");
+						break;
+					case SECONDARY:
+						indentPrintln(pw, "ItemName \"" + tfClass.secondary() + "\"");
+						break;
+					case MELEE:
+						indentPrintln(pw, "ItemName \"" + tfClass.melee() + "\"");
+						break;
+					case BUILDING:
+						indentPrintln(pw, "ItemName \"" + tfClass.building() + "\"");
+						break;
+					default:
+						break;
+				}
+			}
+			else {
+				indentPrintln(pw, "ItemName \"" + botNode.getValue(slot) + "\"");
 			}
 		}
-		else {
-			indentPrintln(pw, "ItemName \"" + botNode.getValue(slot) + "\"");
-		}
+		
 		
 		attrNode.getMap().forEach((k, v) -> 
 			indentPrintln(pw, "\"" + k + "\"" + " " + v)

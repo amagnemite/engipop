@@ -31,12 +31,12 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 	JPanel attributePanel = new JPanel();
 	
 	//DefaultComboBoxModel<String> classModel;
-	DefaultComboBoxModel<String> iconModel;
+	DefaultComboBoxModel<String> iconModel = new DefaultComboBoxModel<String>();
 	DefaultListModel<String> tagModel = new DefaultListModel<String>();
 	
 	JTextField nameField = new JTextField(30); //max bot name is ~32
 	JComboBox<Classes> classBox = new JComboBox<Classes>(Classes.values());
-	JComboBox<String> iconBox = new JComboBox<String>();
+	JComboBox<String> iconBox = new JComboBox<String>(iconModel);
 	JList<String> tagList;
 	JList<String> attrList;
 	
@@ -58,7 +58,7 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 	JList<String> charAttrList;
 	
 	ItemParser parser;
-	String[] itemAttributes;
+	//String[] itemAttributes;
 	
 	JLabel botBuilding = new JLabel("Sapper: ");
 	
@@ -97,20 +97,19 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		gb.anchor = GridBagConstraints.WEST;
 		
 		//this.parser = parser;
-		ItemAttributes ia = new ItemAttributes();
+		
 		this.window = window;
 		/*itemAttributes = ;
 		
 		primaryAttrList = new JComboBox<String>(itemAttributes);
 		primaryAttrList.setEditable(true); */
 		
-		attrPanel = new AttributesPanel(ia.getItemAttributes());
+		attrPanel = new AttributesPanel(ItemAttributes.getItemAttributes());
 		attrPanel.setVisible(false);
 		
 		initItemLists();
 		initAttributeRadio();
 		
-		iconModel = (DefaultComboBoxModel<String>) iconBox.getModel();
 		iconBox.setPrototypeDisplayValue("heavyweapons_healonkill_giant");
 		
 		//setIconBox(iconBox, iconModel, "Scout");
@@ -320,16 +319,26 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		List<String> tags = tf.getTags();
 		if(tags.size() > 0) {
 			for(int i = 0; i < tags.size(); i++) { //get indices so they can be selected
-				indices[i] = (tagList.getNextMatch(tags.get(i), 0, Position.Bias.Forward));
+				indices[i] = tagList.getNextMatch(tags.get(i), 0, Position.Bias.Forward);
 			}
 			tagList.setSelectedIndices(indices);
+		}
+		else {
+			tagList.clearSelection();
 		}
 		primaryList.setSelectedItem((String) tf.getValue(TFBotKeys.PRIMARY));
 		secList.setSelectedItem((String) tf.getValue(TFBotKeys.SECONDARY));
 		meleeList.setSelectedItem((String) tf.getValue(TFBotKeys.MELEE));
+		if(tf.getValue(TFBotKeys.CLASSNAME) == EngiPanel.Classes.Spy) {
+			buildingList.setSelectedItem((String) tf.getValue(TFBotKeys.BUILDING));
+		}
 		hat1List.setSelectedItem((String) tf.getValue(TFBotKeys.HAT1));
 		hat2List.setSelectedItem((String) tf.getValue(TFBotKeys.HAT2));
 		hat3List.setSelectedItem((String) tf.getValue(TFBotKeys.HAT3));
+		
+		setHatVisibility((String) tf.getValue(TFBotKeys.HAT1), hat1AttrBut);
+		setHatVisibility((String) tf.getValue(TFBotKeys.HAT2), hat2AttrBut);
+		setHatVisibility((String) tf.getValue(TFBotKeys.HAT3), hat3AttrBut);
 	}
 	
 	public void updateNode(TFBotNode tf) { //put values into node
@@ -344,10 +353,27 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		tf.putKey(TFBotKeys.PRIMARY, primaryList.getSelectedItem()); //strings
 		tf.putKey(TFBotKeys.SECONDARY, secList.getSelectedItem());
 		tf.putKey(TFBotKeys.MELEE, meleeList.getSelectedItem());
+		if(classBox.getSelectedItem() == EngiPanel.Classes.Spy) {
+			tf.putKey(TFBotKeys.BUILDING, buildingList.getSelectedItem());
+		}
 		tf.putKey(TFBotKeys.HAT1, hat1List.getSelectedItem());
 		tf.putKey(TFBotKeys.HAT2, hat2List.getSelectedItem());
 		tf.putKey(TFBotKeys.HAT3, hat3List.getSelectedItem());
 		//item attributes are added separately
+		
+		setHatVisibility((String) tf.getValue(TFBotKeys.HAT1), hat1AttrBut);
+		setHatVisibility((String) tf.getValue(TFBotKeys.HAT2), hat2AttrBut);
+		setHatVisibility((String) tf.getValue(TFBotKeys.HAT3), hat3AttrBut);
+	}
+	
+	//set visibility based on contents of string
+	private void setHatVisibility(String value, JRadioButton button) {
+		if(value == null || value.isEmpty()) {
+			button.setVisible(false);
+		}
+		else {
+			button.setVisible(true);
+		}
 	}
 	
 	void setIconBox(JComboBox<String> jb, DefaultComboBoxModel<String> model, Classes str) { //set icon list depending on class
@@ -420,9 +446,9 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 				}
 				break;
 		}
-		//jb.setModel(model);
 	}
 	
+	//update item lists
 	public void getItemParser(ItemParser parser) {
 		this.parser = parser;
 		setClassItems(0); //since force updating, just default to first class
@@ -438,46 +464,18 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 			
 		List<List<String>> lists = parser.updateModels(index);
 		
-		/*
-		for(int i = 0; i < lists.size(); i++) {
-			if(i < ItemParser.cosmetic) {
-				itemLists.get(i).setModel(new DefaultComboBoxModel<String>(lists.get(i)
-						.toArray(new String[lists.get(i).size()])));
-			}
-			else if(i == ItemParser.cosmetic) {
-				itemLists.get(i).setModel(new DefaultComboBoxModel<String>(lists.get(i)
-						.toArray(new String[lists.get(i).size()])));
-				itemLists.get(i + 1).setModel(new DefaultComboBoxModel<String>(lists.get(i)
-						.toArray(new String[lists.get(i).size()])));
-				itemLists.get(i + 2).setModel(new DefaultComboBoxModel<String>(lists.get(i)
-						.toArray(new String[lists.get(i).size()])));
-			}
-			else {
-				itemLists.get(i).setModel(new DefaultComboBoxModel<String>(lists.get(i)
-						.toArray(new String[lists.get(i).size()])));
-			}
-			
-		} */
-		
 		//set model(get the appropriate slot from lists, convert to a new string array of size inner list)
-		primaryList.setModel(new DefaultComboBoxModel<String>(lists.get(ItemParser.primary)
-				.toArray(new String[lists.get(ItemParser.primary).size()])));
-		secList.setModel(new DefaultComboBoxModel<String>(lists.get(ItemParser.secondary)
-				.toArray(new String[lists.get(ItemParser.secondary).size()])));
-		meleeList.setModel(new DefaultComboBoxModel<String>(lists.get(ItemParser.melee)
-				.toArray(new String[lists.get(ItemParser.melee).size()])));
+		primaryList.setModel(getNewModel(lists, ItemParser.primary));
+		secList.setModel(getNewModel(lists, ItemParser.secondary));
+		meleeList.setModel(getNewModel(lists, ItemParser.melee));
 		
-		hat1List.setModel(new DefaultComboBoxModel<String>(lists.get(ItemParser.cosmetic)
-				.toArray(new String[lists.get(ItemParser.cosmetic).size()])));
-		hat2List.setModel(new DefaultComboBoxModel<String>(lists.get(ItemParser.cosmetic)
-				.toArray(new String[lists.get(ItemParser.cosmetic).size()])));
-		hat3List.setModel(new DefaultComboBoxModel<String>(lists.get(ItemParser.cosmetic)
-				.toArray(new String[lists.get(ItemParser.cosmetic).size()])));
+		hat1List.setModel(getNewModel(lists, ItemParser.cosmetic));
+		hat2List.setModel(getNewModel(lists, ItemParser.cosmetic));
+		hat3List.setModel(getNewModel(lists, ItemParser.cosmetic));
 		
 		if(index == 8 && buildingList.getItemAt(0) == null) {
 			//only need to load once since there's only one possible building list
-			buildingList.setModel(new DefaultComboBoxModel<String>(lists.get(ItemParser.building)
-					.toArray(new String[lists.get(ItemParser.building).size()])));
+			buildingList.setModel(getNewModel(lists, ItemParser.building));
 			buildingList.setSelectedIndex(-1);
 		}
 		
@@ -488,6 +486,13 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		hat1List.setSelectedIndex(-1);
 		hat2List.setSelectedIndex(-1);
 		hat3List.setSelectedIndex(-1);
+	}
+	
+	//make new defaultcomboboxmodel from the sublist converted to string[] of sublist's size
+	private DefaultComboBoxModel<String> getNewModel(List<List<String>> lists, int slot) {
+		List<String> sublist = lists.get(slot);
+		
+		return new DefaultComboBoxModel<String>(sublist.toArray(new String[sublist.size()]));
 	}
 	
 	public void updateTagList(List<String> list) { //add custom tags to list
@@ -508,7 +513,6 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		attrButPanel.add(hat1AttrBut);
 		attrButPanel.add(hat2AttrBut);
 		attrButPanel.add(hat3AttrBut);
-		//attrButPanel.add(buiAttrBut);
 		attrButPanel2.add(charAttrBut);
 		attrButPanel2.add(priAttrBut);
 		attrButPanel2.add(secAttrBut);
@@ -536,6 +540,11 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		hat3AttrBut.setActionCommand(ItemSlot.HAT3.toString());
 		
 		setAttrButRed();
+		
+		//don't allow adding attributes with no hats set
+		hat1AttrBut.setVisible(false);
+		hat2AttrBut.setVisible(false);
+		hat3AttrBut.setVisible(false);
 		
 		noAttrBut.addItemListener(event -> {
 			if(event.getStateChange() == ItemEvent.SELECTED) {
@@ -633,7 +642,7 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		final int ATTRMAX = 2;
 		
 		DefaultListModel<String> userAttrListModel = new DefaultListModel<String>();
-		JList<String> attrSelectedList = new JList<String>(userAttrListModel);
+		JList<String> attrSelectedList = new JList<String>(userAttrListModel); //fix list box
 		JButton addAttributeToListButton = new JButton("Add attribute");
 		JButton updateAttributeValueButton = new JButton("Update attribute value");
 		JButton removeAttributeButton = new JButton("Remove attribute");
@@ -753,9 +762,15 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 					//get selected radio button and convert command back to itemslot
 					//also update radio color
 					
-					node.getItemAttributeList().put(selectedSlot, new ItemAttributeNode(addedAttributes));
-					window.updateFeedback("ItemAttributes list added to TFBot");
-					removeAttrFromBot.setEnabled(true);
+					if(addedAttributes.isEmpty() || addedAttributes.containsValue(null) 
+							|| addedAttributes.containsValue("")) {
+						window.updateFeedback("Failed to add ItemAttributes list, an attribute is missing a value");
+					}
+					else {
+						node.getItemAttributeList().put(selectedSlot, new ItemAttributeNode(addedAttributes));
+						window.updateFeedback("ItemAttributes list added to TFBot");
+						removeAttrFromBot.setEnabled(true);
+					}
 					//add type and the node to tfbot's itemattributes map
 					//possibly warn of overwrite
 				}
@@ -776,13 +791,16 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		}
 		
 		private void checkListSize() {
-			if(userAttrListModel.getSize() == ATTRMAX) {
-				attrBLManager.changeButtonState(ButtonListManager.States.REMOVEONLY);
-			}
+			if(userAttrListModel.getSize() == ATTRMAX) { //only allow as many attributes that can be fit
+				setAttrToBotButtonsStates(true, true, ButtonListManager.States.REMOVEONLY);
+			} 
+			else if(userAttrListModel.getSize() == 0) { //if nothing in list
+				setAttrToBotButtonsStates(false, false, ButtonListManager.States.EMPTY);
+			} 
 			else {
-				attrBLManager.changeButtonState(ButtonListManager.States.NOSELECTION);
+				setAttrToBotButtonsStates(true, true, ButtonListManager.States.NOSELECTION);
 			}
-			//only allow as many attributes that can be fit
+			
 		}
 		
 		public void setAttrToBotButtonsStates(boolean botState, boolean canRemove, ButtonListManager.States state) { //awful name
@@ -813,6 +831,7 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 			else { //otherwise just clear components
 				updateComponents(false);
 			}
+			
 		}
 		
 		//gets node from window and updates the radio colors 
@@ -838,12 +857,12 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 			userAttrListModel.clear();
 			attrValueField.setText(null);
 			if(loadList) {
-				addedAttributes.forEach((k, v) -> userAttrListModel.addElement(k + " " + v));
-				checkListSize();
+				addedAttributes.forEach((k, v) -> userAttrListModel.addElement(k + " " + v));		
 			}
 			else {
 				addedAttributes = new HashMap<String, String>();
 			}
+			checkListSize(); //force check in case list index never changes (stays at unselected)
 		}
 	}
 }

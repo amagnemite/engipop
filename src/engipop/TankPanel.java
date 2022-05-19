@@ -1,11 +1,8 @@
 package engipop;
 
-import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.List;
 
 import javax.swing.*;
@@ -14,6 +11,7 @@ import engipop.Tree.RelayNode;
 import engipop.Tree.TankNode;
 
 //panel for tank
+@SuppressWarnings("serial")
 public class TankPanel extends EngiPanel {
 	
 	JSpinner health; 
@@ -106,10 +104,10 @@ public class TankPanel extends EngiPanel {
 		finalTank.setSelected(node.getSkin());
 		startingNode.setSelectedItem(node.getStartingPath());
 		if(node.getOnKilled() != null) {
-			onKilledBox.setSelectedItem(node.getOnKilled());
+			onKilledBox.setSelectedItem(node.getOnKilled().getTarget());
 		}
 		if(node.getOnBomb() != null) {
-			onBombBox.setSelectedItem(node.getOnBomb());
+			onBombBox.setSelectedItem(node.getOnBomb().getTarget());
 		}
 	}
 	

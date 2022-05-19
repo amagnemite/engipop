@@ -4,21 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
-
-import javax.swing.ComboBoxModel;
-import javax.swing.DefaultComboBoxModel;
 
 import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParser;
 
 //todo: possibly add more filtering options
-//proper filepath support
 public class ItemParser { //parse item schema, get weapons and hats
 	static final int primary = 0;
 	static final int secondary = 1;
@@ -81,7 +75,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 	List<String> spyCosmetics = new ArrayList<String>();
 	List<List<String>> spyItems = new ArrayList<List<String>>();
 	
-	public ItemParser(File file) {
+	public ItemParser(File file, window window) {
 		//don't want to keep these three in memory
 		String schema = "";
 		VDFNode item;
@@ -96,13 +90,18 @@ public class ItemParser { //parse item schema, get weapons and hats
 			schema = readFile(path, StandardCharsets.US_ASCII);
 		}
 		catch (IOException i) {
-			//print file not found
+			window.updateFeedback("items_game.txt was moved or not found");
 		}
-		item = new VDFParser().parse(schema);	
-		allPrefabs = item.getSubNode("items_game").getSubNode("prefabs");
-		item = item.getSubNode("items_game").getSubNode("items");
-		parsePrefab(item, allPrefabs);
-		//System.out.println("done");
+		item = new VDFParser().parse(schema);
+		if(!item.containsKey("items_game")) {
+			//wrong items_game.txt
+			window.updateFeedback("The items_game.txt defined does not contain TF2 item definitions");
+		}
+		else {
+			allPrefabs = item.getSubNode("items_game").getSubNode("prefabs");
+			item = item.getSubNode("items_game").getSubNode("items");
+			parsePrefab(item, allPrefabs);
+		}
 	}
 	
 	private void initLists() { //mostly to declutter constructor
@@ -219,10 +218,6 @@ public class ItemParser { //parse item schema, get weapons and hats
 										equip = "shotgun";
 										//if(node.get("name") != null) {
 											addShotguns(node.getString("name"));
-										//}
-										/* else { 
-											addShotguns(wepPrefab.getString("item_name"));
-										} */
 									}
 									else { //normal rules
 										equip = wepPrefab.getString("item_slot");

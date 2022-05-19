@@ -1,23 +1,17 @@
 package engipop;
 
 import javax.swing.*;
-import javax.swing.JToggleButton.*;
-import javax.swing.UIManager.*;
 import javax.swing.event.*;
-import javax.swing.text.Document;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
-import java.util.*;
 import java.util.List;
 
 import engipop.Tree.*;
 import engipop.Tree.TFBotNode.TFBotKeys;
-import engipop.TreeParse.*;
 
 public class window {
 	static final String updateBotMsg = "Update bot";
@@ -33,9 +27,19 @@ public class window {
 	static final String addRandomMsg = "Add randomchoice";
 	static final String removeRandomMsg = "Remove randomchoice";
 	
+	static final String noSpawner = "Current spawner type: none";
+	static final String botSpawner = "Current spawner type: TFBot";
+	static final String tankSpawner = "Current spawner type: tank";
+	static final String squadSpawner = "Current spawner type: squad";
+	static final String randomSpawner = "Current spawner type: randomchoice";
+	
 	JFrame frame = new JFrame("Engipop main");
 	GridBagConstraints constraints = new GridBagConstraints();
 	GridBagLayout frameGB = new GridBagLayout();
+	
+	static URL iconURL = window.class.getResource("/icon.png");
+	static ImageIcon icon = new ImageIcon(iconURL);
+	//same icon across all windows
 	
 	JMenuBar menuBar = new JMenuBar();
 	JMenu options = new JMenu("Options");
@@ -48,7 +52,7 @@ public class window {
 	WavePanel wavePanel;
 	
 	JPanel spawnerPanel;
-	JPanel listPanel;
+	JPanel listPanel = new JPanel();
 	
 	JButton addBot = new JButton(addBotMsg);
 	JButton removeBot = new JButton(removeBotMsg);
@@ -63,12 +67,6 @@ public class window {
 	ButtonListManager waveBLManager;
 	ButtonListManager waveSpawnBLManager;
 	ButtonListManager squadRandomBLManager;
-	
-	String noSpawner = "Current spawner type: none";
-	String botSpawner = "Current spawner type: TFBot";
-	String tankSpawner = "Current spawner type: tank";
-	String squadSpawner = "Current spawner type: squad";
-	String randomSpawner = "Current spawner type: randomchoice";
 	
 	DefaultListModel<String> waveListModel = new DefaultListModel<String>();
 	DefaultListModel<String> waveSpawnListModel = new DefaultListModel<String>();
@@ -92,9 +90,6 @@ public class window {
 	ItemParser itemParser;
 	
 	public window() {
-		
-		URL iconURL = getClass().getResource("/icon.png");
-		ImageIcon icon = new ImageIcon(iconURL);
 		frame.setIconImage(icon.getImage());
 		
 		frame.setLayout(frameGB);
@@ -105,19 +100,18 @@ public class window {
 		menuBar.add(options);
 		frame.setJMenuBar(menuBar);
 		
+		constraints.anchor = GridBagConstraints.WEST;
+		
 		botPanel = new BotPanel(this);
 		wsPanel = new WaveSpawnPanel();
 		wavePanel = new WavePanel();
 		tankPanel = new TankPanel();
-		
-		constraints.anchor = GridBagConstraints.WEST;
 		
 		currentWSNode.setName("default");
 		
 		currentWaveNode.connectNodes(popNode);
 		currentWSNode.connectNodes(currentWaveNode);
 		
-		listPanel = new JPanel();
 		makeListPanel();
 		
 		spawnerSelector();
@@ -160,10 +154,14 @@ public class window {
 		SecondaryWindow w2 = new SecondaryWindow(w.getPopNode(), w);
 		SettingsWindow setW = new SettingsWindow(w);
 		
-		w.initConfig(setW);
+		w.initConfig(w.getFrame(), setW);
 		
 		w.listen(w2, setW); //could change this
 		
+	}
+	
+	JFrame getFrame() {
+		return this.frame;
 	}
 	
 	public PopNode getPopNode() {
@@ -174,7 +172,8 @@ public class window {
 		return this.currentBotNode;
 	}
 	
-	void listen(SecondaryWindow w, SettingsWindow sw) { //reshow pop settings if selected
+	//listeners that interact with other windows
+	void listen(SecondaryWindow w, SettingsWindow sw) {
 		popSet.addActionListener(event -> {
 			w.updatePopPanel();
 			w.setVisible(true);
@@ -678,6 +677,7 @@ public class window {
 					}
 					else {
 						loadBot(true);
+						tfbotBut.setSelected(true);
 					}
 				}
 				else { //disable updating when there is not a subwave explicitly selected
@@ -914,29 +914,7 @@ public class window {
 			}
 			else {
 				feedback.setText(error);
-			}
-				
-				/*
-				Node temp;
-				try {
-					temp = popNode.getChildren().get(0); //wave
-					try {
-						temp = temp.getChildren().get(0); //wavespawn
-						try {
-							temp = temp.getChildren().get(0); //tfbot
-							getFile();
-						}
-						catch (IndexOutOfBoundsException i) {
-							feedback.setText("Popfile generation failed, no spawners to generate");
-						}
-					}
-					catch (IndexOutOfBoundsException i) {
-						feedback.setText("Popfile generation failed, no wavespawns to generate");
-					}
-				}
-				catch (IndexOutOfBoundsException i) {
-					feedback.setText("Popfile generation failed, no waves to generate");
-				}	*/			 
+			}	 
 		});
 		
 		//todo: template list
@@ -1041,7 +1019,8 @@ public class window {
 				squadRandomListModel.addElement((String) t.getValue(TFBotKeys.NAME)); //this is extremely awful
 			}
 			else {
-				squadRandomListModel.addElement((String) t.getValue(TFBotKeys.CLASSNAME)); //this is extremely awful
+				squadRandomListModel.addElement(t.getValue(TFBotKeys.CLASSNAME).toString());
+				//classname is classname obj
 			}		
 		}
 	}
@@ -1051,7 +1030,6 @@ public class window {
 		
 		wavePanel.setRelay(info.getWaveRelay());
 		wsPanel.setRelay(info.getWSRelay());
-		
 		wsPanel.setWhere(info.getBotSpawns());
 		botPanel.updateTagList(info.getTags());
 		tankPanel.setMapInfo(info.getTankSpawns(), info.getTankRelays());
@@ -1067,32 +1045,34 @@ public class window {
 		feedback.setText(string);
 	}
 	
-	void initConfig(SettingsWindow sw) {
+	//on load, look for engiconfig and make one if there isn't one
+	void initConfig(JFrame windowFrame, SettingsWindow sw) {
 		File cfg = new File("engiconfig.cfg");
 		try {
-			if(cfg.createNewFile()) { //if cfg doesn't exist
-				File itemsTxt = getItemsTxtPath(); //try to get item path, then parse
-				if(itemsTxt != null) {
-					sw.setItemsTxtPath(itemsTxt);
-					sw.writeToConfig();
-					parseItems(itemsTxt);
+			if(cfg.createNewFile() || sw.getItemsTxtPath() == null) { //if no cfg existed or cfg existed but has no path set
+				int op = JOptionPane.showConfirmDialog(windowFrame, "items_game.txt path is currently unset. Set it?");
+				
+				if(op == JOptionPane.YES_OPTION) {
+					File itemsTxt = getItemsTxtPath(); //try to get item path, then parse
+					if(itemsTxt != null) {
+						sw.setItemsTxtPath(itemsTxt);
+						sw.writeToConfig();
+						parseItems(itemsTxt);
+					}
 				}
 			}
-			else { //if it does
-				//need to check if it's actually contained since there's a chance it's created then either emptied or something
-				if(sw.getItemsTxtPath() != null) {
-					itemParser = new ItemParser(new File(sw.getItemsTxtPath()));
-					botPanel.getItemParser(itemParser);
-				}
+			else {	
+				parseItems(new File(sw.getItemsTxtPath()));
 			}
 		}
 		catch (IOException io) {
-			//print that an ioexception has occured
+			updateFeedback("engiconfig.cfg was not found or unable to be written to");
 		}
 	}
 	
-	void parseItems(File itemsTxt) { //check if this forces a string update
-		itemParser = new ItemParser(itemsTxt);
+	//take file, parse it, let botpanel know
+	void parseItems(File itemsTxt) { 
+		itemParser = new ItemParser(itemsTxt, this);
 		botPanel.getItemParser(itemParser);
 	}
 	
