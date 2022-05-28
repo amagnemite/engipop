@@ -1,0 +1,41 @@
+alt fire teleport to spawn- press "Reload" key to decide to teleport to spawn or exit teleporter
+ammo becomes health- collected ammo packs instead add to the player's health
+ammo regen- affects how much ammo is regenerated per tick
+armor piercing- affects how much backstab damage does to a target if they have some form of resistance to backstab damage
+bidirectional teleport- teleporter can be used both ways
+currency bonus- 
+engineer building teleporting pickup- 
+engineer rage on dmg- identical to other rage attributes
+engy dispenser radius increased- affects how far an engineer's dispenser radius is
+robo sapper- 
+mod use metal ammo type- shots fired from the weapon directly come from the metal reserve rather than from traditional separate ammo
+mod see enemy health- allows the player to see the health of enemies while the weapon is equipped
+metal regen- affects how much metal is regenerated per tick
+hidden primary max ammo bonus- affects how much ammo the primary weapon has hidden from item description
+hidden secondary max ammo penalty- affects how much ammo the secondary weapon has hidden from item description
+hide enemy health- player cannot see enemy health while weapon is equipped
+health from packs decreased- clone
+health from packs increased- affects how much health is gained from health packs while the weapon is equipped
+maxammo metal increased- affects the amount of metal a player has
+maxammo metal reduced- clone
+maxammo primary increased- affects how much ammo the primary weapon has
+maxammo primary reduced- clone
+maxammo secondary increased- affects how much ammo the secondary weapon has
+maxammo secondary reduced- clone
+has pipboy build interface - uses an alternate building selection screen when equipped
+uses ammo while aiming- while revved up the player automatically consumed the specified amount of ammo per second 
+set bonus mystery solving time decrease- no actual effect joke
+set bonus chance of hunger decrease- no actual effect joke
+
+disable weapon hiding for animations- 
+electrical airblast display only- 
+fish damage override- 
+vision opt in flags-
+special taunt- 
+pyrovision only display only- 
+pyrovision opt in display only- 
+mod ammo per shot missed display only- unused
+medigun crit blast percent bar deplete- 
+medigun crit bullet percent bar deplete- 
+medigun crit fire percent bar deplete- 
+sniper rage display only- 

@@ -1,0 +1,418 @@
+accuracy scales damage- 
+active health degen- clone
+active health regen- adds or removes player health per tick while weapon is active
+add cloak on hit- adds or removes specified percentage of cloak on a succesful hit
+add cloak on kill- adds or removes specified percentage of cloak on a successful kill
+add jingle to footsteps- while worn/active the player will have audible jingling footsteps whenever they walk
+add onhit addammo- affects how much ammo the player gains or loses on a successful hit 
+add uber charge on hit- specified amount of ubercharge is added or subtracted whenever a target is successfully hit
+afterburn immunity- player is immune to afterburn
+aiming knockback resistance- affects how much knockback the player will take while zoomed in 
+aiming movespeed decreased-
+aiming movespeed increased- faster move speed when deployed
+aiming no flinch- player will not flinch when hit while zoomed in 
+air dash count-increases jump count (atomizer)
+airblast cost decreased- clone
+airblast cost increased- affects the amount of ammo an airblast takes up
+airblast disabled- affects whether or not the weapon can airblast
+airblast pushback scale- 
+airblast vertical pushback scale- affects how much upward a target can be airblasted
+airblast vertical vulnerability multiplier- affects how high the player can be airblasted upward
+airblast vulnerability multiplier- affects how much the player will be affected by airblast knockback
+airblast vulnerability multiplier hidden- clone hidden when inspected
+alt-fire disabled- disables any secondary fire input 
+applies snare effect- slows sodden victims
+apply look velocity on damage- 
+apply z velocity on damage- 
+arrow heals buildings- how much is healed to a building when a projectile hits it
+attach particle effect- item has specified unusual particle effect
+attach particle effect static- 
+attack not cancel charge- 
+attack projectiles- will shoot down certain projectiles while firing
+auto fires full clip- if the clip is full the weapon will automatically shoot
+auto fires full clip all at once- if the clip is full the weapon will fire all of their loaded ammo at once 
+backstab shield- does not allow the player to be backstabbed when worn and available
+become fireproof on hit by fire- when caught on fire with the weapon active the wearer is temporarily immune to direct fire damage and then afterburn
+blast radius decreased- clone
+blast radius increased- affects the radius of the explosion for weapons that deal splash damage
+bleeding duration- affects the number of seconds the bleed effect lasts
+bombinomicon effect on death- on death the player's body will explode into firey gibs
+boots falling stomp- when landing on a target's head damage is done depending on fall damage the player takes
+bot custom jump particle- 
+bot medic uber deploy delay duration- if the medic meets the conditions to deploy an ubercharge it will wait the specified seconds until doing so
+bot medic uber health threshold- the specified amount of health the medic or the target has to be at or below in order to forcefully deploy uber
+build rate bonus- affects the rate in which a building is constructed while hit with a wrench 
+building cost reduction- reduces the cost of buildings when equipped
+building instant upgrade- canteen type that instantly builds and repairs existing buildings to level 3
+bullets per shot bonus- affects the amount of bullets fired in a shotgun
+burn damage earns rage- when attacking an enemy the flamethrower gains rage
+can overload- if the player reloads too much in a clip the weapon will cause self damage from the location of the gun
+cancel falling damage- player does not take fall damage
+cannonball push back- specifies if the projectile deals immense knockback
+cannot be backstabbed- wearer is unable to be backstabbed
+cannot disguise- player is unable to disguise 
+cannot pick up buildings- wearer is unable to pickup and move buildings
+cannot pick up intelligence- player cannot carry the intelligence
+canteen specialist- allows the player to buy canteens for cheaper and share with medi gun target
+card damage bonus- 
+card dmg taken from bullets reduced- 
+card health regen- 
+card move speed bonus- 
+centerfire projectile- projectiles when fired come from slightly under the center of the player's view
+charge impact damage increased- affects how much damage colliding with a target while charging does
+charge recharge rate increased- 
+charge time increased- 
+charged airblast- 
+clip size bonus- clone
+clip size bonus upgrade- clone
+clip size penalty- affects clip size
+clip size penalty hidden- clone hidden when inspected
+clip size upgrade atomic- affects the size of the clip by the specified amount
+cloak consume rate decreased- clone
+cloak consume rate increased- affects the rate in which cloak is consumed
+cloak regen rate decreased- clone
+cloak regen rate increased- affects the rate in which cloak is regenerated
+construction rate decreased- clone
+construction rate increased- affects how long it takes for buildings to build on their own
+assister in Pyrovision- lmao
+crit does no damage- when a successful critical hit is landed it will deal no damage
+crit forces victim to laugh- upon a successful critical hit the player will be forced to laugh
+crit from behind- if the weapon hits a target's back it will deal critical damage
+crit kill will gib- if the weapon deals lethal critical damage the target will gib
+crit mod disabled- no random critical hits
+crit mod disabled hidden- clone hidden when inspected
+crit vs burning players- damage becomes critical when the target is currently on fire
+crit vs disguised players- if the target is disguised the hit will deal critical damage
+crit vs non burning players- if the target is not currently on fire the hit will deal critical damage
+crit vs stunned players- if the targer is under a stunned status condition the damage will be critical
+crit vs wet players- if the target is wet the damage will be critical
+critboost- canteen type that grants critical boost
+critboost on kill- crits are granted for the specified amount of seconds on a kill
+custom desc attr- 
+custom name attr- 
+custom texture hi- hello 
+custom texture lo- 
+damage all connected- when a victim is hit any medic beams connected to them will have themselves damaged
+damage bonus- clone
+damage bonus hidden- clone hidden when inspected
+damage bonus while disguised- 
+damage causes airblast- damage causes harsh airblast knockback
+damage force increase- affects how much knockback a player suffers from knockback
+damage force increase hidden- clone hidden
+damage force increase text- 
+damage force reduction- reduces knockback done by incoming damage
+damage penalty- affects damage
+damage penalty applies to sappers- will apply the existing damage penalty to sapper buildings
+damage penalty on bodyshot- if a successful hit is a bodyshot the player will have their damage affected by this amount
+decapitate type- 
+deflection size multiplier- affects the size of an airblast hitbox 
+deploy time decreased- clone
+deploy time increased- affects how long it takes for a weapon to fully deploy and become usable
+disguise damage reduction- 
+disguise no burn- 
+disguise on backstab- forces the identity of the backstabbed victim onto the player immediately after a successful backstab
+disguise speed penalty- 
+dmg bonus from ranged reduced- affects the damage taken from weapons that have a type that is not melee
+dmg bonus vs buildings- affects the amount of damage done to buildings but not to players
+dmg bonus while half dead- damage modifier that is active when the player reaches under 50% health
+dmg falloff decreased- clone
+dmg falloff increased- affects the rate in which distance from a target affects damage done to them
+dmg from melee increased- affects the damage taken from melee weapons
+dmg penalty vs nonburning- damage becomes affected by specified amount when the player is not currently on fire
+dmg penalty vs nonstunned- affects the damage done to a target when they are not in a stunned status effect
+dmg penalty vs players- affects the amount of damage done to players but not to buildings
+dmg penalty while half alive- damage modifier that is active when the player is above 50% health
+dmg taken from blast increased- clone
+dmg taken from blast reduced- affects the amount of damage taken from crit damage
+dmg taken from bullets increased- clone
+dmg taken from bullets reduced- affects the amount of damage taken from crit damage
+dmg taken from crit increased- clone
+dmg taken from crit reduced- affects the amount of damage taken from crit damage
+dmg taken from fire increased- clone
+dmg taken from fire reduced- affects the amount of damage taken from fire damage
+dmg taken increased- affects how much damage a target will take
+drop health pack on kill- killed targets drop a small health kit
+effect bar recharge rate increased- affects the percentage of the rate the item recharges
+enables aoe heal- 
+energy weapon charged shot- 
+energy weapon no ammo- weapon requires no ammo
+energy weapon no deflect- projectile cannot be deflected
+energy weapon no drain- 
+energy weapon no hurt building- shots cannot deal damage to buildings
+energy weapon penetration- projectile penetrates multiple player
+engineer build rate multiplier- affects amount of time it takes for a sentry to be built
+engineer teleporter build rate multiplier- affects the amount of time it takes for a teleporter to be built
+engy building health bonus- affects the amount of health the buildings have by a specified percentage
+engy disposable sentries- 
+engy sentry fire rate increased- affects how fast an engineer's sentry fires
+engy sentry radius increased- affects how far an engineer's sentry can see
+explosive sniper shot- upon a successful headshot enemies around and along with the target will be damaged and slowed
+extinguish earns revenge crits- when a target is extinguished the weapon will gain bonus critical shots
+faster reload rate- clone
+fire rate bonus- clone
+fire rate bonus hidden- clone hidden when inspected
+fire rate penalty- affects fire rate
+fire rate penalty hidden- clone hidden when inspected
+fire retardant- does not allow the player to be burned
+fires healing bolts- shoots bolts instead of regular ammo that does more healing or harming as distance increases to teammates and enemies respectively
+fists have radial buff- on kill teammates gain health and some crit chance
+flame ammopersec decreased- clone
+flame ammopersec increased- affects the amount of ammo constantly holding the primary fire of a flamethrower consumes
+flame life bonus- 
+flame life penalty- 
+flame size bonus- clone
+flame size penalty- 
+freeze backstab victim- upon a successful backstab the victim's ragdoll turns into an ice statue
+generate rage on damage- upon a successful hit the player will gain rage for weapons that use a rage function
+generate rage on heal- projectile shield fueled by heal target dealing and taking damage 2 is better shield
+gesture speed increase- affects the speed of taunts
+grenade damage reduction on world contact- affects the damage the grenade does after it bounces off world geometry
+grenade launcher mortar mode- 
+grenade not explode on impact- grenades will not detonate when they touch the target while midair
+halloween fire rate bonus- 
+halloween increased jump height- 
+halloween item- appends "Holiday Restriction Halloween / Full Moon" to description
+halloween opt in display only- 
+halloween reload time decreased- 
+halloweenvision filter display only- 
+head scale- affects the size of the head by the specified percentage
+headshot damage increase- affects the damage done by a successful headshot
+heal on hit for rapidfire- gain up to the specified number on hit
+heal on hit for slowfire- 
+heal on kill- adds or removes the specified amount of health when a target is killed
+heal rate bonus- clone
+heal rate penalty- affects rate in which a target can be healed
+healing mastery- point determines how fast a player's target is healed
+healing received bonus- affects how much healing a player gains from healing sources
+health drain- clone
+health from healers increased- clone
+health from healers reduced- affects the rate in which incoming healing heals the player
+health regen- affects how much health the player gains or loses per tick
+hidden maxhealth nonbuffed- clone hidden
+hit self on miss- missed shots deal damage to the player
+honorbound- if the weapon does not gain a kill while active it will damage the player for 50 health when holstered
+hype decays over time- hype rage slowly reduces over time
+hype on damage- identical to rage generation
+hype resets on jump- if the player jumps they lose all gained hype- 
+increase buff duration- affects the amount of time a banner's buff duration lasts
+increase buff duration hidden- clone hidden in weapon description
+increase player capture value- affects the rate in which the player can capture points
+increased jump height- multiplies jump height by specified percentage
+increased jump height from weapon- 
+is australium item- specifies the item as australium or not
+item name text override- 
+item style override- if the item has an alternate skin or style it will be changed to whichever is specified
+jarate backstabber- 
+jarate description- appends the description of the jarate to item
+jarate duration- affects how long victims are sodden when successfully hit
+kill forces attacker to laugh- if the player successfully kills a target they will be forced to laugh
+killstreak effect- specifies an effect that the eyes glow during a killstreak
+killstreak idleeffect- specifies the sheen of a weapon 
+killstreak tier- specifies the killstreak weapon to be basic specialized or professional
+lunchbox adds maxhealth bonus- gives or takes the specified amount of health from the player when consumed
+lunchbox adds minicrits- gives the player mini crits for the specified amount of seconds when consumed
+mad milk syringes- projectiles cause target to experience the mad milk effect temporarily
+major increased jump height- 
+major move speed bonus- 
+mark for death- force the target to take minicrit damage temporarily after a successful hit
+mark for death on building pickup- when the player picks up a building they are temporarily marked for death until a bit after placement
+max health additive bonus- increases or decreases maximum health by value specified
+max health additive penalty- clone
+max pipebombs decreased- clone
+max pipebombs increased- affects the maximum number of placed sticky bombs active at a time
+maxammo grenades1 increased- affects how many baseballs ornaments or etc the player can hold at one time
+medic regen bonus- affects the natural health regeneration rate for medics 
+medic regen penalty- clone
+medigun blast resist deployed- sets the resistance to bullet damage as a percentage when charged
+medigun blast resist passive- sets the resistance to blast damage as a percentage when not charged but simply healing with it selected
+medigun bullet resist deployed- sets the resistance to bullet damage as a percentage when charged
+medigun bullet resist passive- sets the resistance to bullet damage as a percentage when not charged but simply healing with it selected
+medigun charge is crit boost- uber becomes the kritzkrieg ubercharge regardless of medi gun
+medigun charge is megaheal- uber becomes the quick fix ubercharge regardless of medi gun
+medigun charge is resists- specifies which resistance the medi gun uses
+medigun fire resist deployed- sets the resistance to bullet damage as a percentage when charged
+medigun fire resist passive- sets the resistance to fire damage as a percentage when not charged but simply healing with it selected
+melee attack rate bonus- affects the rate in which a melee weapon attacks
+melee bounds multiplier- 
+melee range multiplier- 
+melts in fire- when caught on fire with the weapon active the weapon will temporarily become unavailable
+minicrit vs burning player- always deal mini crit damage when it would not be critical damage to players who are burning
+minicrits become crits- successful hits that would normally become minicrit damage become critical damage
+minigun no spin sounds- mini gun does not emit sounds while revving up
+minigun spinup time decreased- clone
+minigun spinup time increased- affects how long it takes for a mini gun to rev up
+mod ammo per shot- affects the amount of ammo consumed every time the weapon is fired
+mod bat launches balls- enables the melee weapon to launch baseballs as an alt-fire effect
+mod bat launches ornaments- launch ornaments instead of baseballs
+mod crit while airborne- weapon deals critical damage while the player is airborne
+mod demo buff type- 
+mod flamethrower back crit- if flames hit the target's back it deals critical damage
+mod flamethrower push- no airblast
+mod flaregun fires pellets with knockback- when a target is directly hit they will experience knockback
+mod max primary clip override- 
+mod medic healed damage bonus- weapon deals more damage while healed by a medic
+mod medic healed deploy time penalty- weapon deploys slower while healed by a medic
+mod medic killed mark for death- 
+mod medic killed minicrit boost- 
+mod medic killed revenge- 
+mod mini crit airborne- shots become mini crit while the target is in air
+mod mini-crit airborne deploy- 
+mod no reload display only- no reload needed
+mod rage on hit bonus- 
+mod rage on hit penalty- 
+mod sentry killed revenge- gives the weapon a number of crits pertaining to the success of the player's sentry when the sentry is destroyed
+mod shovel damage boost- increases damage as the user becomes more injured
+mod shovel speed boost- 
+mod soldier buff type- 
+mod stun waist high airborne- 
+mod weapon blocks healing- player cannot be healed while weapon is active 
+mod wrench builds minisentry- built sentries are mini sentries
+move speed bonus- clone
+move speed penalty- affects the move speed of a player
+mult airblast refire time- affects how long it takes to be able to airblast again
+mult charge turn control- affects how much the player can turn while charging
+mult cloak meter consume rate- affects the rate in which cloak is consumed when moving
+mult cloak meter regen rate- affects the rate in which cloak is regenerated when remaining still
+mult cloak rate- 
+mult decloak rate- 
+mult sniper charge after bodyshot- affects the rate of the sniper rifle recharge after a bodyshot
+mult sniper charge after headshot- affects the charge rate of a sniper rifle after a headshot kill
+mult sniper charge after miss- affects the rate of the sniper rifle charge after a missed shot
+mult sniper charge penalty display only- 
+multiple sentries- player can build more than one sentry
+no charge impact range- 
+no crit boost- weapon cannot deal critical damage 
+no crit vs nonburning- damage cannot be critical when the target is not currently on fire
+no double jump- does not allow the player to jump twice while equipping the weapon
+no primary ammo from dispensers- while active the primary weapon cannot gain ammo from dispensers
+no self blast dmg- player does not take self damage from their weapon splash
+overheal bonus- affects how much a target can be overhealed
+overheal decay bonus- clone
+overheal decay disabled- overheal cannot be subtracted naturally
+overheal decay penalty- affects the speed in which overheal goes away
+overheal expert- specified value determines the rate in which overheal decays and the value it is capped at
+overheal fill rate reduces- affects the rate in which overheal is gained
+overheal penalty- affects how much overheal a medi gun can apply
+override footstep sound set- changes the footstep soundset a player emits
+override projectile type- when fired change what becomes shot out of the weapon
+paint decal enum- 
+particle effect use head origin- unusual effect emits from the center of the head
+particle effect vertical offset- affects how far or close to the head an unusual effect is
+player skin override- 
+powerup charges- the current selected powerup charge
+powerup duration- how long the powerup lasts when activated
+powerup max charges- how many of a powerup can be held at a time
+preserve ubercharge- ubercharge is preserved by specified amount every successful hit
+projectile penetration- 
+projectile penetration- allows the minigun to penetrate the specified number of enemies
+projectile range decreased- 
+projectile range increased- 
+projectile speed increased hidden- affects the speed of projectiles hidden
+projectile spread angle penalty- 
+ragdolls become ash- upon a successful kill the ragdoll will vaporize in ashes
+ragdolls plasma effect- upon a successful kill the ragdoll will vaporize in plasma
+rage giving scale- determines how much rage the player gives enemies when hit
+rage on assists- gains rage upon a successful kill assist
+rage on kill- gains rage upon a successful kill
+recall- canteen type that grants the ability to teleport to spawn and gain a speed boost
+reload time decreased- clone
+reload time decreased while healed- affects the reload rate of a weapon while being healed by a medic
+reload time increased- affects how long it takes to reload a weapon
+reload time increased hidden- affects the reload rate hidden in item description
+repair rate decreased- clone
+repair rate increased- affects how much health buildings are given when hit
+restore health on kill- clone
+reveal cloaked victim on hit- 
+reveal disguised victim on hit-
+revolver use hit locations- crit on headshot
+ring of fire while aiming- while revved up the player emits rings of fire that deal afterburn damage
+rocket jump damage reduction- affects the self damage a player takes when hit by their rocket
+rocket specialist- point determines how fast and wide the radius of the explosion of the projectile is and if it stuns the target temporarily upon a direct hit
+sanguisuge- kunai backstab health
+sapper damage bonus- affects the damage done by a sapper
+sapper damage leaches health- the sapper gains the amount of health it steals from a building
+sapper damage penalty- clone
+sapper damage penalty hidden- clone hidden
+sapper degenerates buildings- instead of slowly draining health the sapper will instead slowly downgrade the building
+sapper kills collect crits- when a building is successfully sapped and destroyed the weapon gains crits
+scattergun has knockback- gives the weapon knockback affects when hitting a target
+scattergun knockback mult- specifies the strength of scattergun knockback by the specified percentage when hit
+scattergun no reload single- makes the weapon reload its entire clip at once
+self dmg push force decreased- clone
+self dmg push force increased- affects how much a player is affected by knockback they cause
+self mark for death- while the weapon is active the player is forced to 
+selfdmg on hit for rapidfire- 
+selfdmg on hit for slowfire- 
+set bonus calling card on kill- 
+set bonus cloak blink time penalty- the player blinks for a longer duration when touched while disguised
+set bonus custom taunt particle attr- speciied unusual effect plays while taunting
+set bonus dmg from sentry reduced- damage taken from sentries reduced
+set bonus dmg taken from bullets increased- affects the amount of damage taken from hitscan as a specified percentage
+set bonus dmg taken from crit reduced set bonus- affects the player's reception to critical damage
+set bonus dmg taken from fire reduced set bonus- affects the player's reception to fire damage 
+set bonus health regen set bonus- affects health gained or lost per tick
+set bonus max health additive bonus- adds or removes health from the player by the specified amount
+set bonus move speed set bonus- affects move speed
+set bonus no death from headshots- unable to be killed by headshots
+set bonus quiet unstealth- disguise sound volume reduced 
+set bonus special dsp- engie pitch change
+set cloak is feign death- uses the dead ringer version of cloaking fake corpse gain speed boost invisibility and resistance when hit
+set cloak is movement based- cloak becomes the cloak and dagger watch regardless of watch variation
+set damagetype ignite- successful hits cause them to experience afterburn
+set icicle knife mode- 
+set item tint rgb- changes the appearance of the item on a RGB 0-255 0-255 0-255 scale 
+set throwable type- 
+share consumable with patient- wearer can share canteens with their heal target
+shot penetrate all players- the weapon can penetrate any amount of players
+silent killer- weapon emits no sound when a specified action is taken currently used on mini gun rev up sound and screams of victim hiding the killfeed notice on the latter 
+single wep deploy time decreased- 
+slow enemy on hit- slows the target when hit
+slow enemy on hit major- 
+sniper aiming movespeed decreased- 
+sniper charge per sec- specifies the rate the sniper rifle attains while zoomed in
+sniper fires tracer- when fired a tracer appears between where the shot lands and the player
+sniper fires tracer hidden-
+sniper full charge damage bonus- when fully charged the specified percentage is applied to the predetermined damage when a target is hit
+sniper no charge- does not allow the sniper rifle to gain charge while zoomed in
+sniper no headshot without full charge- sniper rifle cannot deal headshot damage until fully charged
+sniper only fire zoomed- sniper rifle will only fire when zoomed in
+sniper penetrate players when charged- when fully charged shots penetrate players
+sniper zoom penalty- does not allow the sniper rifle to zoom 
+spawn with physics toy- 
+speed boost when active- affects the speed of a player when the weapon is active
+speed buff ally- give a teammate a speedboost when hit 
+spell halloween death ghosts- enables the weapon to use exorcism
+spell halloween green flames- enables the weapon to use halloween fire
+spell halloween pumpkin explosions- enables the weapon to use pumpkin bombs
+spell halloween voice modulation- changes the voice pitch of the player
+spell set halloween footstep type- adds new footsteps to the player
+spell set item tint rgb- 
+spread penalty- if applicable affects the distance on average between bullets in a weapon that fires multiple at a time
+srifle charge rate decreased- clone
+srifle charge rate increased- affects the rate in which a sniper rifle gains charge
+stickies detonate stickies- stickybombs can destroy other stickybombs when detonated
+sticky air burst mode- launched stickies shatter when hitting a surface
+sticky arm time bonus- clone
+sticky arm time penalty- affects how long it takes for a stickybomb to become ready to detonate
+sticky detonate mode- if 1 detonates stickies near crosshair and feet
+stun enemies wielding same weapon- 
+subtract victim medigun charge on hit- when hit the target gets the specified percentage of their uber removed or added
+taunt is highfive- forces the weapon taunt to be the high five taunt
+taunt is press and hold- 
+taunt success sound- 
+tickle enemies wielding same weapon- if the target has the same weapon active as the player hitting them will force them to laugh
+tmp dmgbuff on hit- gain specified percentage of damage bonus on hit
+turn to gold- likely "imbued with an ancient power"
+uber duration bonus- adds or removes specified seconds from ubercharges
+ubercharge- canteen type that grants ubercharge
+ubercharge rate bonus- clone
+ubercharge rate bonus for healer- affects rate of ubercharge gained for a medic while healing the player
+ubercharge rate penalty- affects rate in which a medic can gain ubercharge
+use large smoke explosion- explosions produce a large dense smoke that is hard to see through
+weapon burn dmg increased- affects how much afterburn damage a weapon does
+weapon burn dmg reduced- clone
+weapon burn time increased- affects how long the afterburn of a weapon lasts
+weapon burn time reduced- clone
+weapon spread bonus- more accurate by the specified percentage
+zombiezombiezombiezombie- lmao
+zoom speed mod disabled- while cloaked absorb the specified amount of damage when hit
