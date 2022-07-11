@@ -1,23 +1,26 @@
 package engipop;
 
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.*;
 
 import engipop.Tree.RelayNode;
 import engipop.Tree.WaveSpawnNode;
+import engipop.Tree.WaveSpawnNode.WaveSpawnKeys;
 
 @SuppressWarnings("serial")
-public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
+public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener { //panel for creating wavespawns
 	
 	JTextField wsNameField = new JTextField(20);
 	JTextField wsDeadField = new JTextField(20);
 	JTextField wsSpawnField = new JTextField(20);
+	JTextField templateField = new JTextField(20);
 	
 	DefaultComboBoxModel<String> whereModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> startModel = new DefaultComboBoxModel<String>();
@@ -48,9 +51,11 @@ public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
 	JCheckBox doLast = new JCheckBox("LastSpawnOutput?");
 	JCheckBox doDone = new JCheckBox("DoneOutput?");
 	
-	public WaveSpawnPanel() {
+	public WaveSpawnPanel(SecondaryWindow secondaryWindow) {
 		int initial = 1, min = 0, totalMax = 999, activeMax = 22, incr = 1, currMax = 30000, currIncr = 50;
 		double initWait = 0.0, minWait = 0.0, maxWait = 1000.0, incrWait = 1.0;
+		
+		secondaryWindow.addPropertyChangeListener(this);
 		
 		JLabel label = new JLabel("WaveSpawn editor");
 		
@@ -91,6 +96,7 @@ public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
 		JLabel firstLabel = new JLabel("FirstSpawnOutput: ");
 		JLabel lastLabel = new JLabel("LastSpawnOutput: ");
 		JLabel doneLabel = new JLabel("DoneOutput: ");
+		JLabel tempalteLabel = new JLabel("Template: ");
 		
 		wsDeaths.addItemListener(event -> { //update betweenspawns as appropriate
 			updateBetweenSpawns();
@@ -155,6 +161,11 @@ public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
 			}
 		});
 		
+		wsNameField.setMinimumSize(wsNameField.getPreferredSize());
+		wsWhereBox.setMinimumSize(wsWhereBox.getPreferredSize());
+		wsDeadField.setMinimumSize(wsDeadField.getPreferredSize());
+		wsSpawnField.setMinimumSize(wsSpawnField.getPreferredSize());
+		
 		addGB(label, 0, 0);
 		
 		addGB(wsName, 0, 1);
@@ -203,46 +214,46 @@ public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
 	}
 	
 	public void updatePanel(WaveSpawnNode wsn) { //sets panel components to reflect the node
-		wsNameField.setText(wsn.getName());
-		wsWhereBox.setSelectedItem(wsn.getWhere());
-		wsTotalSpin.setValue(wsn.getTotalCount());
-		wsMaxSpin.setValue(wsn.getMaxActive());
-		wsSpawnSpin.setValue(wsn.getSpawnCount());
-		wsStartSpin.setValue(wsn.getBeforeStarting());
-		wsBetweenSpin.setValue(wsn.getBetweenSpawns());
-		wsDeaths.setSelected(wsn.getBetweenDeaths());
+		wsNameField.setText((String) wsn.getValue(WaveSpawnKeys.NAME));
+		wsWhereBox.setSelectedItem(wsn.getValue(WaveSpawnKeys.WHERE));
+		wsTotalSpin.setValue(wsn.getValue(WaveSpawnKeys.TOTALCOUNT));
+		wsMaxSpin.setValue(wsn.getValue(WaveSpawnKeys.MAXACTIVE));
+		wsSpawnSpin.setValue(wsn.getValue(WaveSpawnKeys.SPAWNCOUNT));
+		wsStartSpin.setValue(wsn.getValue(WaveSpawnKeys.WAITBEFORESTARTING));
+		wsBetweenSpin.setValue(wsn.getValue(WaveSpawnKeys.WAITBETWEENSPAWNS));
+		wsDeaths.setSelected((Boolean) wsn.getValue(WaveSpawnKeys.WAITBETWEENDEATHS));
 		updateBetweenSpawns();
-		wsCurrSpin.setValue(wsn.getCurrency());
-		wsDeadField.setText(wsn.getWaitDead());
-		wsSpawnField.setText(wsn.getWaitSpawned());
-		isSupport.setSelected(wsn.getSupport());
-		isLimited.setSelected(wsn.getSupportLimited());
+		wsCurrSpin.setValue(wsn.getValue(WaveSpawnKeys.TOTALCURRENCY));
+		wsDeadField.setText((String) wsn.getValue(WaveSpawnKeys.WAITFORALLDEAD));
+		wsSpawnField.setText((String) wsn.getValue(WaveSpawnKeys.WAITFORALLSPAWNED));
+		isSupport.setSelected((Boolean) wsn.getValue(WaveSpawnKeys.SUPPORT));
+		isLimited.setSelected((Boolean) wsn.getValue(WaveSpawnKeys.SUPPORTLIMITED));
 		
 		//relays aren't mandatory, so only show them if they exist
-		if(wsn.getStart() != null) {
+		if(wsn.getValue(WaveSpawnKeys.WAVESTARTOUTPUT) != null) {
 			doStart.setSelected(true);
-			startRelay.setSelectedItem(wsn.getStart().getTarget());
+			startRelay.setSelectedItem(((RelayNode) wsn.getValue(WaveSpawnKeys.WAVESTARTOUTPUT)).getTarget());
 		}
 		else {
 			doStart.setSelected(false);
 		}
-		if(wsn.getFirst() != null) { //first
+		if(wsn.getValue(WaveSpawnKeys.FIRSTSPAWNOUTPUT) != null) { //first
 			doFirst.setSelected(true);
-			firstRelay.setSelectedItem(wsn.getFirst().getTarget());
+			firstRelay.setSelectedItem(((RelayNode) wsn.getValue(WaveSpawnKeys.FIRSTSPAWNOUTPUT)).getTarget());
 		}
 		else {
 			doFirst.setSelected(false);
 		}
-		if(wsn.getLast() != null) { //last
+		if(wsn.getValue(WaveSpawnKeys.LASTSPAWNOUTPUT) != null) { //last
 			doLast.setSelected(true);
-			lastRelay.setSelectedItem(wsn.getLast().getTarget());
+			lastRelay.setSelectedItem(((RelayNode) wsn.getValue(WaveSpawnKeys.LASTSPAWNOUTPUT)).getTarget());
 		}
 		else {
 			doLast.setSelected(false);
 		}
-		if(wsn.getDone() != null) { //done
+		if(wsn.getValue(WaveSpawnKeys.DONEOUTPUT) != null) { //done
 			doDone.setSelected(true);
-			doneRelay.setSelectedItem(wsn.getDone().getTarget());
+			doneRelay.setSelectedItem(((RelayNode) wsn.getValue(WaveSpawnKeys.DONEOUTPUT)).getTarget());
 		}
 		else {
 			doDone.setSelected(false);
@@ -250,55 +261,57 @@ public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
 	}
 	
 	public void updateNode(WaveSpawnNode wsn) { //update node to reflect panel
-		wsn.setName(wsNameField.getText());
-		wsn.setWhere((String) wsWhereBox.getSelectedItem());
-		wsn.setTotalCount((int) wsTotalSpin.getValue());
-		wsn.setMaxActive((int) wsMaxSpin.getValue());
-		wsn.setSpawnCount((int) wsSpawnSpin.getValue());
-		wsn.setBeforeStarting((double) wsStartSpin.getValue());
-		wsn.setBetweenSpawns((double) wsBetweenSpin.getValue());
-		wsn.setBetweenDeaths(wsDeaths.isSelected()); //this needs sanity checking
-		wsn.setCurrency((int) wsCurrSpin.getValue());
-		wsn.setWaitDead(wsDeadField.getText());
-		wsn.setWaitSpawned(wsSpawnField.getText());
-		wsn.setSupport(isSupport.isSelected());
-		wsn.setSupportLimited(isLimited.isSelected());
+		wsn.putKey(WaveSpawnKeys.NAME, wsNameField.getText());
+		wsn.putKey(WaveSpawnKeys.WHERE, wsWhereBox.getSelectedItem());
+		wsn.putKey(WaveSpawnKeys.TOTALCOUNT, wsTotalSpin.getValue());
+		wsn.putKey(WaveSpawnKeys.MAXACTIVE, wsMaxSpin.getValue());
+		wsn.putKey(WaveSpawnKeys.SPAWNCOUNT, wsSpawnSpin.getValue());
+		wsn.putKey(WaveSpawnKeys.WAITBEFORESTARTING, wsStartSpin.getValue());
+		wsn.putKey(WaveSpawnKeys.WAITBETWEENSPAWNS, wsBetweenSpin.getValue());
+		wsn.putKey(WaveSpawnKeys.WAITBETWEENDEATHS, wsDeaths.isSelected()); //this needs sanity checking
+		wsn.putKey(WaveSpawnKeys.TOTALCURRENCY, wsCurrSpin.getValue());
+		wsn.putKey(WaveSpawnKeys.WAITFORALLDEAD, wsDeadField.getText());
+		wsn.putKey(WaveSpawnKeys.WAITFORALLSPAWNED, wsSpawnField.getText());
+		wsn.putKey(WaveSpawnKeys.SUPPORT, isSupport.isSelected());
+		wsn.putKey(WaveSpawnKeys.SUPPORTLIMITED, isLimited.isSelected());
 		
 		if(doStart.isSelected()) {
-			if(wsn.getStart() == null) { //make relays if data is entered and no relay exists
-				wsn.setStart(new RelayNode()); 
+			if(wsn.getValue(WaveSpawnKeys.WAVESTARTOUTPUT) == null) { //make relays if data is entered and no relay exists
+				wsn.putKey(WaveSpawnKeys.WAVESTARTOUTPUT, new RelayNode()); 
 			}
-			wsn.getStart().setTarget((String) startRelay.getSelectedItem());
+			((RelayNode) wsn.getValue(WaveSpawnKeys.WAVESTARTOUTPUT)).setTarget((String) startRelay.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
-			wsn.setStart(null); 
+			//this does mean the node itself is now thrown out, so may consider removing checking if the
+			//node is null above
+			wsn.putKey(WaveSpawnKeys.WAVESTARTOUTPUT, null);
 		}
 		if(doFirst.isSelected()) { //first
-			if(wsn.getFirst() == null) {
-				wsn.setFirst(new RelayNode()); 
+			if(wsn.getValue(WaveSpawnKeys.FIRSTSPAWNOUTPUT) == null) {
+				wsn.putKey(WaveSpawnKeys.FIRSTSPAWNOUTPUT, new RelayNode()); 
 			}
-			wsn.getFirst().setTarget((String) firstRelay.getSelectedItem());
+			((RelayNode) wsn.getValue(WaveSpawnKeys.FIRSTSPAWNOUTPUT)).setTarget((String) firstRelay.getSelectedItem());
 		}
 		else { 
-			wsn.setFirst(null); 
+			wsn.putKey(WaveSpawnKeys.FIRSTSPAWNOUTPUT, null);
 		}
 		if(doLast.isSelected()) { //last
-			if(wsn.getLast() == null) {
-				wsn.setLast(new RelayNode()); 
+			if(wsn.getValue(WaveSpawnKeys.LASTSPAWNOUTPUT) == null) {
+				wsn.putKey(WaveSpawnKeys.LASTSPAWNOUTPUT, new RelayNode());
 			}
-			wsn.getLast().setTarget((String) lastRelay.getSelectedItem());
+			((RelayNode) wsn.getValue(WaveSpawnKeys.LASTSPAWNOUTPUT)).setTarget((String) lastRelay.getSelectedItem());
 		}
 		else {
-			wsn.setLast(null);
+			wsn.putKey(WaveSpawnKeys.LASTSPAWNOUTPUT, null);
 		}
 		if(doDone.isSelected()) { //done
-			if(wsn.getDone() == null) {
-				wsn.setDone(new RelayNode()); 
+			if(wsn.getValue(WaveSpawnKeys.DONEOUTPUT) == null) {
+				wsn.putKey(WaveSpawnKeys.DONEOUTPUT, new RelayNode());
 			}
-			wsn.getDone().setTarget((String) doneRelay.getSelectedItem());
+			((RelayNode) wsn.getValue(WaveSpawnKeys.DONEOUTPUT)).setTarget((String) doneRelay.getSelectedItem());
 		}
 		else {
-			wsn.setDone(null);
+			wsn.putKey(WaveSpawnKeys.DONEOUTPUT, null);
 		}
 	}
 	
@@ -330,6 +343,17 @@ public class WaveSpawnPanel extends EngiPanel { //panel for creating wavespawns
 			firstModel.addElement(s);
 			lastModel.addElement(s);
 			doneModel.addElement(s);
+		}
+	}
+
+	//get ws relay and where from secondarywindow
+	//once again consider checking casts
+	public void propertyChange(PropertyChangeEvent evt) {
+		if(evt.getPropertyName().equals(SecondaryWindow.WAVESPAWNRELAY)) {
+			setRelay((List<String>) evt.getNewValue());
+		}
+		else if(evt.getPropertyName().equals(SecondaryWindow.BOTSPAWNS)) {
+			setWhere((List<String>) evt.getNewValue());
 		}
 	}
 }

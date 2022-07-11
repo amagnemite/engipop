@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -27,10 +28,7 @@ import javax.swing.JTextField;
 //window for managing settings/config
 //todo: unjank this
 @SuppressWarnings("serial")
-public class SettingsWindow extends JFrame {
-	GridBagLayout gbLayout = new GridBagLayout();
-	GridBagConstraints gb = new GridBagConstraints();
-	
+public class SettingsWindow extends EngiWindow {
 	static File cfgFileName = new File("engiconfig.cfg");
 	static final String itemsPath = "items_path.txt path";
 	
@@ -39,15 +37,12 @@ public class SettingsWindow extends JFrame {
 	Map<String, String> oldConfig = new HashMap<String, String>();
 	
 	JTextField itemsTxtBox = new JTextField();
-	window window;
+	MainWindow window;
 	
-	public SettingsWindow(window window) {
+	public SettingsWindow(MainWindow window) {
 		super("Settings");
-		setLayout(gbLayout);
-		gb.anchor = GridBagConstraints.WEST;
+		gbConstraints.anchor = GridBagConstraints.WEST;
 		setSize(800, 200);
-		
-		this.setIconImage(engipop.window.icon.getImage());
 		
 		this.window = window;
 		JLabel itemsTxtLabel = new JLabel("items_game.txt path: ");
@@ -66,7 +61,7 @@ public class SettingsWindow extends JFrame {
 		//update map
 		JButton updateItemsPath = new JButton("...");
 		updateItemsPath.addActionListener(event -> {
-			File file = window.getItemsTxtPath();
+			File file = getItemsTxtFile();
 			setItemsTxtPath(file);
 		});
 		
@@ -84,11 +79,11 @@ public class SettingsWindow extends JFrame {
 		
 		windowClosing();
 		
-		addGB(this, gb, itemsTxtLabel, 0, 0);
-		addGB(this, gb, itemsTxtBox, 1, 0);
-		addGB(this, gb, updateItemsPath, 2, 0);
+		addGB(itemsTxtLabel, 0, 0);
+		addGB(itemsTxtBox, 1, 0);
+		addGB(updateItemsPath, 2, 0);
 		
-		addGB(this, gb, updateConfig, 2, 1);
+		addGB(updateConfig, 2, 1);
 		
 		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		//makes it so canceling in windowClosing() does nothing
@@ -206,9 +201,60 @@ public class SettingsWindow extends JFrame {
 		oldConfig.putAll(modifiedConfig);
 	}
 	
-	private void addGB(Container cont, GridBagConstraints gb, Component comp, int x, int y) {
-		gb.gridx = x;
-		gb.gridy = y;
-		cont.add(comp, gb);
+	//check for itemstxtpath on load
+	public void initConfig(MainWindow mw) {
+		File cfg = new File("engiconfig.cfg");
+		try {
+			if(cfg.createNewFile() || this.getItemsTxtPath() == null) { //if no cfg existed or cfg existed but has no path set
+				int op = JOptionPane.showConfirmDialog(this, "items_game.txt path is currently unset. Set it?");
+				
+				if(op == JOptionPane.YES_OPTION) {
+					File itemsTxt = getItemsTxtFile(); //try to get item path, then parse
+					if(itemsTxt != null) {
+						setItemsTxtPath(itemsTxt);
+						writeToConfig();
+						//sw.updateWindow();
+						mw.parseItems(itemsTxt);
+					}
+				}
+			}
+			else {	
+				mw.parseItems(new File(getItemsTxtPath()));
+			}
+		}
+		catch (IOException io) {
+			mw.updateFeedback("engiconfig.cfg was not found or is unable to be written to");
+		}
+	}
+	
+	private File getItemsTxtFile() { //get file object of items_game.txt
+		JFileChooser c;
+		File file = null; //prob shouldn't do this but no defaults for linux/osx
+		boolean selectingFile = true;
+		
+		if(System.getProperty("os.name").contains("Windows")) { //for windows, default to standard items_game path
+			file = new File("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf\\scripts\\items\\items_game.txt");
+			c = new JFileChooser(file);
+		}
+		else { //make linux and rare osx people suffer
+			//file = new File();
+			c = new JFileChooser();
+		}
+		
+		while(selectingFile) {
+			c.showOpenDialog(this);
+			file = c.getSelectedFile();
+			if(file != null && !file.getName().equals("items_game.txt")) {
+				int op = JOptionPane.showConfirmDialog(this, "File selected is not items_game.txt. Select a new file?");
+				if (op != JOptionPane.YES_OPTION) { //if cancelled or no, leave
+					selectingFile = false;
+					file = null; //clear out
+				} //otherwise it just opens the dialogue again
+			}
+			else { //if it turns out it's a different file named items_game.txt, the parser will handle it
+				selectingFile = false;
+			}
+		}
+		return file;
 	}
 }

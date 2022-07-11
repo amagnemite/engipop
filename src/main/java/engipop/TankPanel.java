@@ -3,6 +3,8 @@ package engipop;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.*;
@@ -12,7 +14,7 @@ import engipop.Tree.TankNode;
 
 //panel for tank
 @SuppressWarnings("serial")
-public class TankPanel extends EngiPanel {
+public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	
 	JSpinner health; 
 	JSpinner speed;
@@ -31,8 +33,8 @@ public class TankPanel extends EngiPanel {
 	JLabel killedLabel = new JLabel("OnKilledOutput");
 	JLabel bombLabel = new JLabel("OnBombDroppedOutput");
 	
-	public TankPanel() {
-		setLayout(new GridBagLayout());
+	public TankPanel(SecondaryWindow SecondaryWindow) {
+		setLayout(gbLayout);
 		gb.anchor = GridBagConstraints.WEST;
 		gb.insets = new Insets(0, 0, 0, 5);
 		
@@ -135,17 +137,31 @@ public class TankPanel extends EngiPanel {
 		}
 	}
 	
-	public void setMapInfo(List<String> spawns, List<String> relays){ 
+	public void setPathModel(List<String> spawns){ 
 		pathTrackModel.removeAllElements();
-		onKilledModel.removeAllElements();
-		onBombModel.removeAllElements();
 		
 		for(String s : spawns) {
 			pathTrackModel.addElement(s);
 		}
+	}
+	
+	public void setRelays(List<String> relays) {
+		onKilledModel.removeAllElements();
+		onBombModel.removeAllElements();
+		
 		for(String s : relays) {
 			onKilledModel.addElement(s);
 			onBombModel.addElement(s);
+		}
+	}
+
+	//get tankspawn and tankrelays from secondarywindow
+	public void propertyChange(PropertyChangeEvent evt) {
+		if(evt.getPropertyName().equals(SecondaryWindow.TANKSPAWNS)) {
+			setPathModel((List<String>) evt.getNewValue());
+		}
+		else if(evt.getPropertyName().equals(SecondaryWindow.TANKRELAY)) {
+			setRelays((List<String>) evt.getNewValue());
 		}
 	}
 }

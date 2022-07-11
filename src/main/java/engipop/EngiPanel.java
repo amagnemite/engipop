@@ -4,17 +4,17 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 //convenience class for reused methods / static variables
 public class EngiPanel extends JPanel {
-	GridBagLayout gbLayout = new GridBagLayout();
-	GridBagConstraints gb = new GridBagConstraints();
+	protected GridBagLayout gbLayout = new GridBagLayout();
+	protected GridBagConstraints gb = new GridBagConstraints();
 	
 	public enum Classes { //class names + their default weps
+		None ("n/a", "n/a", "n/a"),
 		Scout ("TF_WEAPON_SCATTERGUN", "TF_WEAPON_PISTOL_SCOUT", "TF_WEAPON_BAT"), 
 		Soldier ("TF_WEAPON_ROCKETLAUNCHER", "TF_WEAPON_SHOTGUN_SOLDIER", "TF_WEAPON_SHOVEL"),
 		Pyro ("TF_WEAPON_FLAMETHROWER", "TF_WEAPON_SHOTGUN_PYRO", "TF_WEAPON_FIREAXE"),
@@ -51,12 +51,39 @@ public class EngiPanel extends JPanel {
 		 HAT2 (6),
 		 HAT3 (7);
 		 
-		 private final int type;
-		 ItemSlot(int type) {
-			 this.type = type;
+		 private final int slot;
+		 ItemSlot(int slot) {
+			 this.slot = slot;
 		 }
-		 public int getType() { return type; }
+		 public int getSlot() { return slot; }
 	}
+	
+	/*
+	//simplified version of the above
+	public enum ItemSlotAlternate {
+		//NONE (-1),
+		PRIMARY (0),
+		SECONDARY (1),
+		MELEE (2),
+		COSMETIC (3),
+		COSMETIC2 (4),
+		COSMETIC3 (5),
+		BUILDING (6);
+		
+		private final int slot;
+		ItemSlotAlternate(int slot) {
+			this.slot = slot;
+		}
+		public int getSlot() { return slot; }
+	} */
+	
+	public static final int PRIMARY = 0;
+	public static final int SECONDARY = 1;
+	public static final int MELEE = 2;
+	public static final int COSMETIC = 3;
+	public static final int COSMETIC2 = 4;
+	public static final int COSMETIC3 = 5;
+	public static final int BUILDING = 6;
 	
 	public static int tankDefaultHealth = 50000;
 	public static double tankDefaultSpeed = 75.0;

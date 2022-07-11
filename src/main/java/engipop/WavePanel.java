@@ -1,47 +1,45 @@
 package engipop;
 
-import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 import engipop.Tree.RelayNode;
 import engipop.Tree.WaveNode;
 
-public class WavePanel extends EngiPanel { //is basically only relays
+@SuppressWarnings("serial")
+//panel for wave
+public class WavePanel extends EngiPanel implements PropertyChangeListener { //is basically only relays
+	private DefaultComboBoxModel<String> startModel = new DefaultComboBoxModel<String>();
+	private DefaultComboBoxModel<String> doneModel = new DefaultComboBoxModel<String>();
+	private DefaultComboBoxModel<String> initModel = new DefaultComboBoxModel<String>();
 	
-	GridBagLayout gbLayout = new GridBagLayout();
+	private JComboBox<String> startRelay = new JComboBox<String>(startModel);
+	private JComboBox<String> doneRelay = new JComboBox<String>(doneModel);
+	private JComboBox<String> initRelay = new JComboBox<String>(initModel);
 	
-	DefaultComboBoxModel<String> startModel = new DefaultComboBoxModel<String>();
-	DefaultComboBoxModel<String> doneModel = new DefaultComboBoxModel<String>();
-	DefaultComboBoxModel<String> initModel = new DefaultComboBoxModel<String>();
-	
-	JComboBox<String> startRelay = new JComboBox<String>(startModel);
-	JComboBox<String> doneRelay = new JComboBox<String>(doneModel);
-	JComboBox<String> initRelay = new JComboBox<String>(initModel);
-	
-	JCheckBox doInit = new JCheckBox("InitWaveOutput?");
+	private JCheckBox doInit = new JCheckBox("InitWaveOutput?");
 	
 	//String sound; 
 	
-	public WavePanel() {
-		gb = new GridBagConstraints();
+	public WavePanel(SecondaryWindow secondaryWindow) {
 		setLayout(gbLayout);
 		gb.anchor = GridBagConstraints.WEST;
-		gb.insets = new Insets(0, 0, 0, 10);
+		gb.insets = new Insets(0, 0, 0, 5);
+		
+		secondaryWindow.addPropertyChangeListener(SecondaryWindow.WAVERELAY, this);
 		
 		JLabel waveLabel = new JLabel("Wave editor");
-		
-		
 		JLabel startLabel = new JLabel("StartWaveOutput: ");
 		JLabel doneLabel = new JLabel("DoneOutput: ");
 		JLabel initLabel = new JLabel("InitWaveOutput: ");
@@ -115,5 +113,11 @@ public class WavePanel extends EngiPanel { //is basically only relays
 		else { //if it isn't selected, throw out old data
 			wave.setInit(null); 
 		}
+	}
+	
+	//get relay list from secondarywindow
+	public void propertyChange(PropertyChangeEvent evt) {
+		setRelay((List<String>) evt.getNewValue()); //this should always be a list<string>, may want to sanity check though
+		this.invalidate();
 	}
 }

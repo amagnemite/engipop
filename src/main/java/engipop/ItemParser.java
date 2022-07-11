@@ -14,12 +14,6 @@ import net.platinumdigitalgroup.jvdf.VDFParser;
 
 //todo: possibly add more filtering options
 public class ItemParser { //parse item schema, get weapons and hats
-	static final int primary = 0;
-	static final int secondary = 1;
-	static final int melee = 2;
-	static final int cosmetic = 3;
-	static final int building = 4;
-	
 	List<String> scoutPrimary = new ArrayList<String>();
 	List<String> scoutSecondary = new ArrayList<String>();
 	List<String> scoutMelee = new ArrayList<String>();
@@ -75,7 +69,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 	List<String> spyCosmetics = new ArrayList<String>();
 	List<List<String>> spyItems = new ArrayList<List<String>>();
 	
-	public ItemParser(File file, window window) {
+	public ItemParser(File file, MainWindow window) {
 		//don't want to keep these three in memory
 		String schema = "";
 		VDFNode item;
@@ -85,7 +79,6 @@ public class ItemParser { //parse item schema, get weapons and hats
 		
 		initLists();
 		
-		//System.out.println(path);
 		try {
 			schema = readFile(path, StandardCharsets.US_ASCII);
 		}
@@ -103,7 +96,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 			parsePrefab(item, allPrefabs);
 		}
 	}
-	
+    
 	private void initLists() { //mostly to declutter constructor
 		scoutItems.add(scoutPrimary);
 		scoutItems.add(scoutSecondary);
@@ -300,16 +293,16 @@ public class ItemParser { //parse item schema, get weapons and hats
 		
 		switch (slot) {
 			case "primary":
-				type = primary;
+				type = EngiPanel.PRIMARY;
 				break;
 			case "secondary":
-				type = secondary;
+				type = EngiPanel.SECONDARY;
 				break;
 			case "melee":
-				type = melee;
+				type = EngiPanel.MELEE;
 				break;
 			case "cosmetic":
-				type = cosmetic;
+				type = EngiPanel.COSMETIC;
 				break;
 		}
 		
@@ -342,38 +335,55 @@ public class ItemParser { //parse item schema, get weapons and hats
 		}
 	}
 	
-	public List<List<String>> updateModels(int index) {
+	//get class items based on input class
+	public List<List<String>> getClassList(EngiPanel.Classes selected) {
 		List<List<String>> classList = new ArrayList<List<String>>();
 		
-		switch (index) {
-			case 0:
+		switch (selected) {
+			case Scout:
 				classList = scoutItems;
 				break;
-			case 1:
+			case Soldier:
 				classList = soldierItems;
 				break;
-			case 2:
+			case Pyro:
 				classList = pyroItems;
 				break;
-			case 3:
+			case Demoman:
 				classList = demomanItems;
 				break;
-			case 4:
+			case Heavyweapons:
 				classList = heavyItems;
 				break;
-			case 5:
+			case Engineer:
 				classList = engineerItems;
 				break;
-			case 6:
+			case Medic:
 				classList = medicItems;
 				break;
-			case 7:
+			case Sniper:
 				classList = sniperItems;
 				break;	
-			case 8:
+			case Spy:
 				classList = spyItems;
+				break;
+			case None:
+			default:
 				break;
 		}
 		return classList;
+	}
+	
+	//returns set containing only items that are in the slot list
+	public List<String> checkIfItemInSlot(List<String> items, EngiPanel.Classes selected, int slot) throws IndexOutOfBoundsException {
+		List<String> list = getClassList(selected).get(slot);
+		//Set<String> subset = new HashSet<String>(list);
+		//Set<String> itemSet = new HashSet<String>(items);
+		
+		list.retainAll(items);
+		
+		//subset.retainAll(itemSet);
+		
+		return list;
 	}
 }

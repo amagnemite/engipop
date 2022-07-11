@@ -1,8 +1,11 @@
 package engipop;
 import java.util.*;
+import java.util.Map.Entry;
 
 import engipop.EngiPanel.Classes;
 import engipop.EngiPanel.ItemSlot;
+import net.platinumdigitalgroup.jvdf.VDFBindField;
+import net.platinumdigitalgroup.jvdf.VDFNode;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
 public class Tree {
@@ -26,6 +29,10 @@ public class Tree {
 		}
 		
 	} */
+    
+    public enum SpawnerType {
+    	TFBOT, TANK, SQUAD, RANDOMCHOICE
+    }
 
     public static class Node {
         private Node parent;
@@ -42,6 +49,10 @@ public class Tree {
         	return this.children;
         }
         
+        public void setChildren(List<Node> children) {
+        	this.children = children;
+        }
+        
      	public boolean hasChildren() {
     		boolean hasChild = false;
     		
@@ -53,6 +64,10 @@ public class Tree {
         
         public Node getParent() {
         	return this.parent;
+        }
+        
+        public void setParent(Node parent) {
+        	this.parent = parent;
         }
  
     }
@@ -67,6 +82,10 @@ public class Tree {
     	private int busterKills = 15; //default 15
     	private boolean botsAtkInSpawn; //another string
     	private boolean advanced;
+    	private Map<String, WaveSpawnNode> wsTemplateMap;
+    	//= new HashMap<String, WaveSpawnNode>();
+    	private Map<String, TFBotNode> botTemplateMap;
+    	//= new HashMap<String, TFBotNode>();
         
         public PopNode() {
         	
@@ -129,7 +148,7 @@ public class Tree {
         }
         
         public void setAdvanced(boolean a) {
-        	this.advanced = a ;
+        	this.advanced = a;
         }
         
         public boolean getAdvanced() {
@@ -143,11 +162,43 @@ public class Tree {
         public int getMapIndex() {
         	return this.mapIndex;
         }
-    }  
+        
+        public void setWSTemplateMap(Map<String, WaveSpawnNode> map) {
+        	this.wsTemplateMap = map;
+        }
+        
+        public Map<String, WaveSpawnNode> getWSTemplateMap() {
+        	return this.wsTemplateMap;
+        }
+        
+        public void setBotTemplateMap(Map<String, TFBotNode> map) {
+        	this.botTemplateMap = map;
+        }
+        
+        public Map<String, TFBotNode> getBotTemplateMap() {
+        	return this.botTemplateMap;
+        }
+    }
     
+    //node for template info
     public static class TemplateNode extends Node {
-    	//templates can be wavespawns or tfbots
-    	//may be able to use a generic node instead
+    	private Map<String, Node> templateMap = new TreeMap<String, Node>();
+    	
+    	public void putTemplate(String name, Node template) {
+    		templateMap.put(name, template);
+    	}
+    	
+    	public Map<String, Node> getMap() {
+    		return this.templateMap;
+    	}
+    }
+    
+    public static class TemplateInfoNode extends Node {
+    	private String nodename;
+    	
+    	public TemplateInfoNode(String nodename) {
+    		this.nodename = nodename;
+    	}
     }
     
     public static class MissionNode extends Node {
@@ -241,6 +292,25 @@ public class Tree {
     }
     
     public static class WaveSpawnNode extends Node { //node for wavespawns
+    	
+    	public enum WaveSpawnKeys {
+    		WHERE, TOTALCOUNT, MAXACTIVE,
+    		SPAWNCOUNT, WAITBEFORESTARTING,
+    		WAITBETWEENSPAWNS, WAITBETWEENDEATHS,
+    		TOTALCURRENCY, NAME, WAITFORALLDEAD,
+    		WAITFORALLSPAWNED, SUPPORT, SUPPORTLIMITED,
+    		WAVESTARTOUTPUT, FIRSTSPAWNOUTPUT, LASTSPAWNOUTPUT,
+    		DONEOUTPUT, TEMPLATE
+    	}
+    	
+    	//where, name, waitforalldead, waitforallspawned, template = string
+    	//totalcount, maxactive, spawncount, totalcurrency = int
+    	//waitbeforestarting, waitbetweenspawns = double
+    	//waitbetweendeaths, support, supportlimited = boolean
+    	
+    	private Map<WaveSpawnKeys, Object> keyVals = new HashMap<WaveSpawnKeys, Object>();
+    	
+    	/*
     	private String where = "spawnbot"; //todo: add support for the weird locations no one uses
     	private int totalCount = 1; //default 0
     	private int maxActive = 1; //default 999
@@ -255,16 +325,67 @@ public class Tree {
     	private String waitForAllSpawned;
     	private boolean support;
     	private boolean supportLimited;
-    	private boolean randomSpawn; //default 0, if true allows bot spawns to be randomized
+    	//private boolean randomSpawn; //default 0, if true allows bot spawns to be randomized
     	//prob should be disabled for single spawn maps
     	private RelayNode start;
     	private RelayNode first;
     	private RelayNode last;
-    	private RelayNode done;
+    	private RelayNode done; */
     	
     	public WaveSpawnNode() {
+    		keyVals.put(WaveSpawnKeys.WHERE, "spawnbot");
+    		keyVals.put(WaveSpawnKeys.TOTALCOUNT, 1);
+    		keyVals.put(WaveSpawnKeys.MAXACTIVE, 1);
+    		keyVals.put(WaveSpawnKeys.SPAWNCOUNT, 1);
+    		keyVals.put(WaveSpawnKeys.WAITBEFORESTARTING, 0.0);
+    		keyVals.put(WaveSpawnKeys.WAITBETWEENSPAWNS, 0.0);
+    		keyVals.put(WaveSpawnKeys.WAITBETWEENDEATHS, false);
+    		keyVals.put(WaveSpawnKeys.TOTALCURRENCY, 0);
+    		keyVals.put(WaveSpawnKeys.SUPPORT, false);
+    		keyVals.put(WaveSpawnKeys.SUPPORTLIMITED, false);
     	}
     	
+    	public WaveSpawnNode(VDFNode node) {
+    		for(Entry<String, Object[]> entry : node.entrySet()) {
+    			if(!entry.getKey().equals("WaveStartOutput") && !entry.getKey().equals("FirstSpawnOutput") &&
+    				!entry.getKey().equals("LastSpawnOutput") && !entry.getKey().equals("DoneOutput")) {
+    			//if not complex keyvalue type
+    				keyVals.put(WaveSpawnKeys.valueOf(entry.getKey()), entry.getValue());
+    				
+    				
+    				
+    			}
+    		}
+    	}
+    	
+    	//put key into map assuming it's not null or empty, otherwise remove it
+    	public void putKey(WaveSpawnKeys key, Object value) {
+    		if(value != null) {
+    			if((value.getClass() == String.class && !value.equals("")) || 
+    					value.getClass() != String.class) {
+    				//if it is a string that is not empty or it is not a string
+    				keyVals.put(key, value);
+    			}
+    			else { //remove key does nothing if key doesn't exist
+    				keyVals.remove(key);
+    			}
+    		}
+    		else {
+    			keyVals.remove(key);
+    		}
+    	}
+    	
+    	//if you only need one value
+    	public Object getValue(WaveSpawnKeys key) {
+    		return keyVals.get(key);
+    	}
+    	
+    	//entire map
+    	public Map<WaveSpawnKeys, Object> getMap() {
+    		return this.keyVals;
+    	}
+    	
+    	/*
     	public void setName(String name) {
     		this.name = name;
     	}
@@ -399,10 +520,38 @@ public class Tree {
     	
     	public RelayNode getDone() {
     		return this.done;
+    	} */
+    	
+    	//copy input node to calling
+    	public void copyWaveSpawn(WaveSpawnNode copyFrom) {
+    		this.setParent(copyFrom.getParent()); //double check parent doesn't interfere with anything
+    		this.setChildren(copyFrom.getChildren());
+    		this.getMap().putAll(copyFrom.getMap());
     	}
     	
     	public Node getSpawner() {
     		return this.getChildren().get(0);
+    	}
+    	
+    	//precheck spawner type
+    	//this assumes the child is valid
+    	public SpawnerType getSpawnerType() {
+    		Node node = getSpawner();
+    		SpawnerType type = null;
+    		
+    		if(node.getClass() == TFBotNode.class) {
+    			type = SpawnerType.TFBOT;
+    		}
+    		else if(node.getClass() == TankNode.class) {
+    			type = SpawnerType.TANK;
+    		}
+    		else if(node.getClass() == SquadNode.class) {
+    			type = SpawnerType.SQUAD;
+    		}
+    		else if(node.getClass() == RandomChoiceNode.class) {
+    			type = SpawnerType.RANDOMCHOICE;
+    		}
+    		return type;
     	}
     }
     
@@ -470,16 +619,21 @@ public class Tree {
     		SKILL, WEAPONRESTRICT, TAGS,
     		ATTRIBUTES, PRIMARY, SECONDARY,
     		MELEE, BUILDING, HAT1, HAT2,
-    		HAT3, ITEMATTRIBUTES, CHARACTER
+    		HAT3, ITEMATTRIBUTES, CHARACTER,
+    		TEMPLATE, HEALTH, SCALE, AUTOJUMPMIN,
+    		AUTOJUMPMAX, BEHAVIORMODIFIERS,
+    		MAXVISIONRANGE
     	}
     	//classname - classes
     	//classicon - string
     	//name - string
     	//skill - string
+    	//template - string
     	//weaponrestrict - string
-    	//attributes - arraylist<string>
     	//primary, secondary, melee, building, hat1, hat2, hat3 - string
     	//character is always null, mostly just for printing purposes
+    	
+    	public static final int itemCount = 7;
     	
     	public static final String EASY = "Easy";
     	public static final String NORMAL = "Normal";
@@ -490,20 +644,93 @@ public class Tree {
     	public static final String PRIMARYONLY = "PrimaryOnly";
     	public static final String SECONDARYONLY = "SecondaryOnly";
     	public static final String MELEEONLY = "MeleeOnly";
-    	//private ArrayList<String> attr = new ArrayList<String>();
-
     	//todo: add support for the niche use vars 
     	
-    	private List<String> tags = new ArrayList<String>();
-    	//private Map<EngiPanel.ItemSlot, ItemAttributeNode> itemAttributeList;
-    	private Map<ItemSlot, HashMap<String, String>> itemAttributeList;
     	private Map<TFBotKeys, Object> keyVals = new HashMap<TFBotKeys, Object>();
+    	private List<String> tags;
+    	private List<String> attributes;
+    	private String[] items;
+    	private boolean isItemsSorted;
+    	private Map<ItemSlot, HashMap<String, String>> itemAttributeList;
     	
     	public TFBotNode() { //defaults
     		keyVals.put(TFBotKeys.CLASSNAME, Classes.Scout);
     		keyVals.put(TFBotKeys.CLASSICON, "scout");
     		keyVals.put(TFBotKeys.SKILL, EASY);
     		keyVals.put(TFBotKeys.WEAPONRESTRICT, ANY);
+    	}
+    	
+    	//alternate complex constructor for read in tfbots
+    	public TFBotNode(VDFNode parsedNode, ItemParser itemparser) {   		
+    		for(Entry<String, Object[]> entry : parsedNode.entrySet()) {
+    			VDFNode subNode;
+    			
+    			switch (entry.getKey()) {
+    				case "Template":
+    					keyVals.put(TFBotKeys.TEMPLATE, entry.getValue()[0]);
+    					break;
+    				case "Class":
+    					keyVals.put(TFBotKeys.CLASSNAME, entry.getValue()[0]);
+    					break;
+    				case "ClassIcon":
+    					keyVals.put(TFBotKeys.CLASSICON, entry.getValue()[0]);
+    					break;
+    				case "Name":
+    					keyVals.put(TFBotKeys.NAME, entry.getValue()[0]);
+    					break;
+    				case "Skill":
+    					keyVals.put(TFBotKeys.SKILL, entry.getValue()[0]);
+    					break;
+    				case "WeaponRestrictions":
+    					keyVals.put(TFBotKeys.WEAPONRESTRICT, entry.getValue()[0]);
+    					break;
+    				case "Attributes":
+    					attributes = new ArrayList<String>(5); //arbitrary 
+    					attributes.addAll(Arrays.asList(Arrays.copyOf(entry.getValue(), entry.getValue().length, String[].class)));
+    					//convert object array into string array, convert that into a list and add to attributes
+    					break;
+    				case "ItemName":
+    					//pain
+    					
+    					items = Arrays.copyOf(entry.getValue(), itemCount, String[].class);
+    					//make sure this is a unique copy
+    					//handle slots later
+    					
+    					/*
+    					List<String> itemsList = new ArrayList<String>(Arrays.asList(Arrays.copyOf(entry.getValue(), entry.getValue().length, String[].class)));
+    					Classes className = (Classes) keyVals.get(TFBotKeys.CLASSNAME);
+    					List<String> sublist = itemparser.checkIfItemInSlot(itemsList, className, ItemParser.primary);
+    					//checkifiteminslot returns only things that's in that list
+    					//so pri/sec/mel/build only return one item
+    					*/  			
+    					break;
+    				case "ItemAttributes":
+    					subNode = parsedNode.getSubNode(entry.getKey());
+    					//itemattribute node
+    					//keyval name - itemname
+    					//attributename - value
+    					if(itemAttributeList == null) {
+    						itemAttributeList = new HashMap<ItemSlot, HashMap<String, String>>();
+    					}
+    					itemAttributeList.put(ItemSlot.NONE, new HashMap<String, String>());
+    					subNode.forEach((k2, v2) -> { //awful
+    						itemAttributeList.get(ItemSlot.NONE).put(k2, subNode.getString(k2));
+    					});
+    					//handle none type upon botpanel load
+    					break;
+    				case "CharacterAttributes":
+    					subNode = parsedNode.getSubNode(entry.getKey());
+    					
+    					if(itemAttributeList == null) {
+    						itemAttributeList = new HashMap<ItemSlot, HashMap<String, String>>();
+    					}
+    					itemAttributeList.put(ItemSlot.CHARACTER, new HashMap<String, String>());
+    					
+    					subNode.keySet().forEach((k) -> {
+    						itemAttributeList.get(ItemSlot.CHARACTER).put(k, subNode.getString(k));
+    					});
+    			}
+    		}
     	}
     	
     	//put key into map assuming it's not null or empty, otherwise remove it
@@ -539,6 +766,14 @@ public class Tree {
     		return this.tags;
     	}
     	
+    	public void setAttributes(List<String> list) {
+    		this.attributes = list;
+    	}
+    	
+    	public List<String> getAttributes() {
+    		return this.attributes;
+    	}
+    	
     	//updates the entire itemattribute map
     	public void setItemAttributeList(HashMap<EngiPanel.ItemSlot, HashMap<String, String>> list) {
     		this.itemAttributeList = list;
@@ -549,29 +784,27 @@ public class Tree {
     		return this.itemAttributeList;
     	}
     	
+    	public void setItemArray(String[] items) {
+    		this.items = items;
+    	}
+    	
+    	public String[] getItemArray() {
+    		return this.items;
+    	}
+    	
+    	public void setItemsSorted(boolean isItemsSorted) {
+    		this.isItemsSorted = isItemsSorted;
+    	}
+    	
+    	public boolean isItemsSorted() {
+    		return this.isItemsSorted;
+    	}
+    	
     	//puts a specific item attribute map into the overall map
     	//public void putItemAttributesIntoMap(EngiPanel.ItemSlot slot, HashMap<String, String> map) {
     	//	this.itemAttributeList.put(slot, map);
     	//}
     }
-    
-    //only contains list of attributes, type is handled by tfbot node
-    /*
-    public static class ItemAttributeNode extends Node {
-    	private Map<String, String> attributeMap = new HashMap<String, String>();
-    	
-    	public ItemAttributeNode(Map<String, String> list) {
-    		this.attributeMap = list;
-    	}
-
-    	public void setMap(Map <String, String> map) {
-    		attributeMap = map;
-    	}
-    	
-    	public Map <String, String> getMap() {
-    		return this.attributeMap;
-    	}
-    } */
     
     //these two are mostly convenience 
     public static class SquadNode extends Node {

@@ -1,25 +1,29 @@
 package engipop;
 
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.net.URL;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
 import javax.swing.*;
 
 import engipop.Tree.PopNode;
 
-public class SecondaryWindow extends JFrame { //window for less important/one off deals
+@SuppressWarnings("serial")
+public class SecondaryWindow extends EngiWindow { //window for less important/one off deals
 	
-	GridBagLayout gbLayout = new GridBagLayout();
-	GridBagConstraints gb = new GridBagConstraints();
-
-	JPanel popPanel;
+	public static final String WAVERELAY = "waverelay";
+	public static final String WAVESPAWNRELAY = "wavespawnrelay";
+	public static final String BOTSPAWNS = "botspawn";
+	public static final String TAGS = "tags";
+	public static final String TANKSPAWNS = "tankspawn";
+	public static final String TANKRELAY = "tankrelay";
+	
+	EngiPanel popPanel = new EngiPanel();
 	DefaultComboBoxModel<String> mapsModel = new DefaultComboBoxModel<String>();
 	JComboBox<String> maps = new JComboBox<String>();
 	
@@ -33,31 +37,54 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 	JCheckBox advancedBox;
 	
 	JButton updatePop;
-	JLabel feedback;
 	PopNode pn;
 	
-	public SecondaryWindow(PopNode pn, window w) {
+	private PropertyChangeSupport support = new PropertyChangeSupport(this);
+	
+	public SecondaryWindow(PopNode pn, MainWindow w) {
 		super("Population settings");
 		setLayout(gbLayout);
-		gb.anchor = GridBagConstraints.NORTHWEST;
+		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		setSize(800, 200);
 		
-		this.setIconImage(window.icon.getImage());
-		
 		this.pn = pn;
-		popPanel = new JPanel();
 		makePopPanel(w);
 		
-		addGB(this, gb, popPanel, 0, 0);
+		addGB(popPanel, 0, 0);
 		
 		setVisible(true);
-		requestFocus();
+		//requestFocus();
 	}
 	
-	void makePopPanel(window w) { //makes population panel
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+        support.addPropertyChangeListener(listener);
+    }
+	
+	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        support.addPropertyChangeListener(propertyName, listener);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        support.removePropertyChangeListener(listener);
+    }
+	
+    //take map info index, get map's info and tell the relevant listeners
+    private void loadMapInfo(int index) {
+    	MapInfo info = new MapInfo();
+    	info.getMapData(index);
+    	
+    	support.firePropertyChange(WAVERELAY, null, info.getWaveRelay());
+    	support.firePropertyChange(WAVESPAWNRELAY, null, info.getWSRelay());
+    	support.firePropertyChange(BOTSPAWNS, null, info.getBotSpawns());
+    	support.firePropertyChange(TAGS, null, info.getTags());
+    	support.firePropertyChange(TANKSPAWNS, null, info.getTankSpawns());
+    	support.firePropertyChange(TANKRELAY, null, info.getTankRelays());
+    }
+    
+	private void makePopPanel(MainWindow w) { //makes population panel
 		popPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		gb.anchor = GridBagConstraints.EAST;
+		c.anchor = GridBagConstraints.EAST;
 		
 		MapInfo mapinfo = new MapInfo();
 		
@@ -77,7 +104,6 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		busterDmgSpinner.setModel(dmgModel);
 		busterKillSpinner.setModel(killModel);
 		
-		
 		maps.setEditable(true);
 		maps.setPrototypeDisplayValue("mvm_waterlogged_rc4g");
 		
@@ -90,13 +116,11 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		
 		updatePop = new JButton("Update population settings");
 		
-		updatePop.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent a) {
-				updateNode();
-				feedback.setText("Population settings updated");
-				if(pn.getMapIndex() > -1) { //if user entered a map
-					w.loadMap(pn.getMapIndex());
-				}
+		updatePop.addActionListener(event -> {
+			updateNode();
+			feedback.setText("Population settings updated");
+			if(pn.getMapIndex() > -1) { //if user entered a map
+				loadMapInfo(pn.getMapIndex());
 			}
 		});
 		
@@ -126,40 +150,34 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		JLabel respawnWaveLabel = new JLabel("RespawnWaveTime: ");
 		JLabel busterDmgLabel = new JLabel("AddSentryBusterWhenDamageDealtExceeds: ");
 		JLabel busterKillLabel = new JLabel("AddSentryBusterWhenKillCountExceeds: ");
-		JLabel mapLabel = new JLabel("Map ");
+		JLabel mapLabel = new JLabel("Map: ");
 		
-		addGB(popPanel, c, feedback, 0, 0);
+		popPanel.addGB(feedback, 0, 0);
 		
-		addGB(popPanel, c, mapLabel, 0, 1);
-		addGB(popPanel, c, new JScrollPane(maps), 1, 1);
+		popPanel.addGB(mapLabel, 0, 1);
+		popPanel.addGB(maps, 1, 1);
 		
-		addGB(popPanel, c, currLabel, 0, 2);
-		addGB(popPanel, c, currSpinner, 1, 2);
-		addGB(popPanel, c, respawnWaveLabel, 2, 2);
-		addGB(popPanel, c, respawnWaveSpinner, 3, 2);
-		addGB(popPanel, c, waveTimeBox, 4, 2);
+		popPanel.addGB(currLabel, 0, 2);
+		popPanel.addGB(currSpinner, 1, 2);
+		popPanel.addGB(respawnWaveLabel, 2, 2);
+		popPanel.addGB(respawnWaveSpinner, 3, 2);
+		popPanel.addGB(waveTimeBox, 4, 2);
 		
-		addGB(popPanel, c, busterDmgLabel, 0, 3);
-		addGB(popPanel, c, busterDmgSpinner, 1, 3);
-		addGB(popPanel, c, busterKillLabel, 2, 3);
-		addGB(popPanel, c, busterKillSpinner, 3, 3);
+		popPanel.addGB(busterDmgLabel, 0, 3);
+		popPanel.addGB(busterDmgSpinner, 1, 3);
+		popPanel.addGB(busterKillLabel, 2, 3);
+		popPanel.addGB(busterKillSpinner, 3, 3);
 		
-		addGB(popPanel, c, eventBox, 0, 4);
-		addGB(popPanel, c, atkSpawnBox, 1, 4);
-		addGB(popPanel, c, advancedBox, 2, 4);
-		addGB(popPanel, c, updatePop, 2, 5);
+		popPanel.addGB(eventBox, 0, 4);
+		popPanel.addGB(atkSpawnBox, 1, 4);
+		popPanel.addGB(advancedBox, 2, 4);
+		popPanel.addGB(updatePop, 2, 5);
 	}
 	
 	private void clearFeedback() { //clears feedback so things don't get stuck on it
 		if(!feedback.getText().equals(" ")) {
 			feedback.setText(" ");
 		}
-	}
-	
-	private void addGB(Container cont, GridBagConstraints gb, Component comp, int x, int y) {
-		gb.gridx = x;
-		gb.gridy = y;
-		cont.add(comp, gb);
 	}
 	
 	private void updateNode() {
@@ -184,10 +202,4 @@ public class SecondaryWindow extends JFrame { //window for less important/one of
 		atkSpawnBox.setSelected(pn.getAtkInSpawn());
 		advancedBox.setSelected(pn.getAdvanced());
 	}
-	/*
-	public void fillMap(MapInfo info) {
-		for(String s : info.getMapNames()) {
-			mapsModel.addElement(s);
-		}
-	} */
 }
