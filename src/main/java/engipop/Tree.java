@@ -615,14 +615,51 @@ public class Tree {
     public static class TFBotNode extends Node { //node for tfbot spawners
     	
     	public enum TFBotKeys {
-    		CLASSNAME, CLASSICON, NAME,
-    		SKILL, WEAPONRESTRICT, TAGS,
-    		ATTRIBUTES, PRIMARY, SECONDARY,
-    		MELEE, BUILDING, HAT1, HAT2,
-    		HAT3, ITEMATTRIBUTES, CHARACTER,
-    		TEMPLATE, HEALTH, SCALE, AUTOJUMPMIN,
-    		AUTOJUMPMAX, BEHAVIORMODIFIERS,
-    		MAXVISIONRANGE
+    		CLASSNAME ("Class"), //class 
+    		CLASSICON ("ClassIcon"), //string
+    		NAME ("Name"),
+    		SKILL ("Skill"), //skill
+    		WEAPONRESTRICT ("WeaponRestriction"), //weaponrestriction
+    		TAGS ("Tag"), //string
+    		ATTRIBUTES ("Attribute"), 
+    		PRIMARY ("ItemPrimary"), 
+    		SECONDARY ("ItemSecondary"),
+    		MELEE ("ItemMelee"), 
+    		BUILDING ("ItemBuilding"), 
+    		HAT1 ("ItemCosmetic1"), 
+    		HAT2 ("ItemCosmetic2"),
+    		HAT3 ("ItemCosmetic3"),
+    		ACTION ("Action"),
+    		ITEM ("Item"),
+    		ITEMATTRIBUTES ("ItemAttributes"),
+    		ITEMATTRIBUTESPRIMARY ("ItemAttributesPrimary"),
+    		ITEMATTRIBUTESSECONDARY ("ItemAttributesSecondary"),
+    		ITEMATTRIBUTESMELEE ("ItemAttributesMelee"),
+    		ITEMATTRIBUTESHAT1 ("ItemAttributesCosmetic1"),
+    		ITEMATTRIBUTESHAT2 ("ItemAttributesCosmetic2"),
+    		ITEMATTRIBUTESHAT3 ("ItemAttributesCosmetic3"),
+    		ITEMATTRIBUTESACTION ("ItemAttributesAction"),
+    		CHARACTERATTRIBUTES ("CharacterAttributes"),
+    		TEMPLATE ("Template"), 
+    		HEALTH ("Health"), 
+    		SCALE ("Scale"), 
+    		AUTOJUMPMIN ("AutoJumpMin"),
+    		AUTOJUMPMAX ("AutoJumpMax"), 
+    		BEHAVIORMODIFIERS ("BehaviorModifiers"),
+    		MAXVISIONRANGE ("MaxVisionRange"),
+    		TELEPORTWHERE ("TeleportWhere"),
+    		EVENTCHANGEATTRIBUTES ("EventChangeAttributes");
+    		
+    		private String keyName;
+    		
+    		TFBotKeys(String keyName) {
+    			this.keyName = keyName;
+    		}
+    		
+    		@Override
+    		public String toString() {
+    			return keyName;
+    		}
     	}
     	//classname - classes
     	//classicon - string
@@ -631,115 +668,99 @@ public class Tree {
     	//template - string
     	//weaponrestrict - string
     	//primary, secondary, melee, building, hat1, hat2, hat3 - string
-    	//character is always null, mostly just for printing purposes
     	
-    	public static final int itemCount = 7;
+    	public static final int ITEMCOUNT = 7;
     	
-    	public static final String EASY = "Easy";
-    	public static final String NORMAL = "Normal";
-    	public static final String HARD = "Hard";
-    	public static final String EXPERT = "Expert";
-    	
-    	public static final String ANY = "Any";
-    	public static final String PRIMARYONLY = "PrimaryOnly";
-    	public static final String SECONDARYONLY = "SecondaryOnly";
-    	public static final String MELEEONLY = "MeleeOnly";
-    	//todo: add support for the niche use vars 
-    	
-    	private Map<TFBotKeys, Object> keyVals = new HashMap<TFBotKeys, Object>();
-    	private List<String> tags;
-    	private List<String> attributes;
-    	private String[] items;
-    	private boolean isItemsSorted;
-    	private Map<ItemSlot, HashMap<String, String>> itemAttributeList;
-    	
-    	public TFBotNode() { //defaults
-    		keyVals.put(TFBotKeys.CLASSNAME, Classes.Scout);
-    		keyVals.put(TFBotKeys.CLASSICON, "scout");
-    		keyVals.put(TFBotKeys.SKILL, EASY);
-    		keyVals.put(TFBotKeys.WEAPONRESTRICT, ANY);
+    	public enum Skill {
+    		EASY ("Easy"),
+    		NORMAL ("Normal"),
+    		HARD ("Hard"),
+    		EXPERT ("Expert");
+    		
+    		private String name;
+    		
+    		Skill(String name) {
+    			this.name = name;
+    		}
+    		
+    		@Override
+    		public String toString() {
+    			return name;
+    		}
     	}
     	
+    	public enum WeaponRestriction {
+    		ANY ("Any"),
+    		PRIMARYONLY ("PrimaryOnly"),
+    		SECONDARYONLY ("SecondaryOnly"),
+    		MELEEONLY ("MeleeOnly");
+    		
+    		private String name;
+    		
+    		WeaponRestriction(String name) {
+    			this.name = name;
+    		}
+    		
+    		@Override
+    		public String toString() {
+    			return name;
+    		}
+    	}
+    	
+    	//todo: add support for the niche use vars 
+    	
+    	private Map<String, Object[]> keyVals = new HashMap<String, Object[]>(8);
+    	//private List<String> tags;
+    	//private List<String> attributes;
+    	//private String[] items;
+    	private boolean isItemsSorted;
+    	//private Map<ItemSlot, HashMap<String, String>> itemAttributeList;
+    	
+    	public TFBotNode() { //defaults
+    		keyVals.put(TFBotKeys.CLASSNAME.name(), new Object[] {Classes.Scout});
+    		keyVals.put(TFBotKeys.CLASSICON.name(), new Object[] {"scout"});
+    		keyVals.put(TFBotKeys.SKILL.name(), new Object[] {Skill.EASY});
+    		keyVals.put(TFBotKeys.WEAPONRESTRICT.name(), new Object[] {WeaponRestriction.ANY});
+    		isItemsSorted = true;
+    	}
+    	 
     	//alternate complex constructor for read in tfbots
-    	public TFBotNode(VDFNode parsedNode, ItemParser itemparser) {   		
+    	public TFBotNode(VDFNode parsedNode) {   		
+    		isItemsSorted = false;
+    		
     		for(Entry<String, Object[]> entry : parsedNode.entrySet()) {
     			VDFNode subNode;
     			
-    			switch (entry.getKey()) {
-    				case "Template":
-    					keyVals.put(TFBotKeys.TEMPLATE, entry.getValue()[0]);
-    					break;
-    				case "Class":
-    					keyVals.put(TFBotKeys.CLASSNAME, entry.getValue()[0]);
-    					break;
-    				case "ClassIcon":
-    					keyVals.put(TFBotKeys.CLASSICON, entry.getValue()[0]);
-    					break;
-    				case "Name":
-    					keyVals.put(TFBotKeys.NAME, entry.getValue()[0]);
-    					break;
-    				case "Skill":
-    					keyVals.put(TFBotKeys.SKILL, entry.getValue()[0]);
-    					break;
-    				case "WeaponRestrictions":
-    					keyVals.put(TFBotKeys.WEAPONRESTRICT, entry.getValue()[0]);
-    					break;
-    				case "Attributes":
-    					attributes = new ArrayList<String>(5); //arbitrary 
-    					attributes.addAll(Arrays.asList(Arrays.copyOf(entry.getValue(), entry.getValue().length, String[].class)));
-    					//convert object array into string array, convert that into a list and add to attributes
-    					break;
-    				case "ItemName":
-    					//pain
-    					
-    					items = Arrays.copyOf(entry.getValue(), itemCount, String[].class);
-    					//make sure this is a unique copy
-    					//handle slots later
-    					
-    					/*
-    					List<String> itemsList = new ArrayList<String>(Arrays.asList(Arrays.copyOf(entry.getValue(), entry.getValue().length, String[].class)));
-    					Classes className = (Classes) keyVals.get(TFBotKeys.CLASSNAME);
-    					List<String> sublist = itemparser.checkIfItemInSlot(itemsList, className, ItemParser.primary);
-    					//checkifiteminslot returns only things that's in that list
-    					//so pri/sec/mel/build only return one item
-    					*/  			
-    					break;
-    				case "ItemAttributes":
-    					subNode = parsedNode.getSubNode(entry.getKey());
-    					//itemattribute node
-    					//keyval name - itemname
-    					//attributename - value
-    					if(itemAttributeList == null) {
-    						itemAttributeList = new HashMap<ItemSlot, HashMap<String, String>>();
-    					}
-    					itemAttributeList.put(ItemSlot.NONE, new HashMap<String, String>());
-    					subNode.forEach((k2, v2) -> { //awful
-    						itemAttributeList.get(ItemSlot.NONE).put(k2, subNode.getString(k2));
-    					});
-    					//handle none type upon botpanel load
-    					break;
-    				case "CharacterAttributes":
-    					subNode = parsedNode.getSubNode(entry.getKey());
-    					
-    					if(itemAttributeList == null) {
-    						itemAttributeList = new HashMap<ItemSlot, HashMap<String, String>>();
-    					}
-    					itemAttributeList.put(ItemSlot.CHARACTER, new HashMap<String, String>());
-    					
-    					subNode.keySet().forEach((k) -> {
-    						itemAttributeList.get(ItemSlot.CHARACTER).put(k, subNode.getString(k));
-    					});
+    			//need to convert array of vdfnodes to array of hashmaps
+    			if(entry.getValue()[0].getClass() == VDFNode.class) {
+    				Object[] nodeArray = new Object[entry.getValue().length];
+    				
+    				for(int i = 0; i < nodeArray.length; i++) {
+    					Map<String, Object[]> subMap = new HashMap<String, Object[]>(4);
+    					subMap.putAll((VDFNode) entry.getValue()[i]);
+    					nodeArray[i] = subMap;
+    				}
+    				
+    				keyVals.put(entry.getKey().toUpperCase(), nodeArray);
+    			}
+    			else if(entry.getValue().length > 1) {
+    				//converts an array to a list to an array containing a singular list
+    				List<Object> list = Arrays.asList(entry.getValue());
+    				keyVals.put(entry.getKey(), new Object[] {list});
+    			}
+    			else {
+    				keyVals.put(entry.getKey().toUpperCase(), entry.getValue());
     			}
     		}
     	}
     	
     	//put key into map assuming it's not null or empty, otherwise remove it
-    	public void putKey(TFBotKeys key, Object value) {
+    	public void putKey(String key, Object value) {
     		if(value != null) {
     			if((value.getClass() == String.class && !value.equals("")) || 
     					value.getClass() != String.class) {
     				//if it is a string that is not empty or it is not a string
-    				keyVals.put(key, value);
+    				keyVals.put(key, new Object[] {value});
     			}
     			else { //remove key does nothing if key doesn't exist
     				keyVals.remove(key);
@@ -750,14 +771,42 @@ public class Tree {
     		}
     	}
     	
-    	public Object getValue(TFBotKeys key) {
+    	//array value ver of above
+    	public void putKey(String key, Object[] value) {
+    		if(value.length > 0) {
+    			keyVals.put(key, value);
+    		}
+    		else {
+    			keyVals.remove(key);
+    		}
+    	}
+    	
+    	public Object getValueSingular(TFBotKeys key) {
+    		//if(keyVals.get(key).length == 1) {
+    		//	return keyVals.get(key);
+    		//}
+    		
+    		return keyVals.get(key)[0];
+    	}
+    	
+    	public Object[] getValueArray(TFBotKeys key) {
     		return keyVals.get(key);
     	}
     	
-    	public Map<TFBotKeys, Object> getMap() {
+    	public boolean isItemsSorted() {
+    		return isItemsSorted;
+    	}
+    	
+    	public void setItemsSorted(boolean isItemsSorted) {
+    		this.isItemsSorted = isItemsSorted;
+    	}
+    	
+    	//reconsider this
+    	public Map<String, Object[]> getMap() {
     		return this.keyVals;
     	}
     	
+    	/*
     	public void setTags(List<String> list) {
     		this.tags = list;
     	}
@@ -791,19 +840,7 @@ public class Tree {
     	public String[] getItemArray() {
     		return this.items;
     	}
-    	
-    	public void setItemsSorted(boolean isItemsSorted) {
-    		this.isItemsSorted = isItemsSorted;
-    	}
-    	
-    	public boolean isItemsSorted() {
-    		return this.isItemsSorted;
-    	}
-    	
-    	//puts a specific item attribute map into the overall map
-    	//public void putItemAttributesIntoMap(EngiPanel.ItemSlot slot, HashMap<String, String> map) {
-    	//	this.itemAttributeList.put(slot, map);
-    	//}
+    	*/
     }
     
     //these two are mostly convenience 

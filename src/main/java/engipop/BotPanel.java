@@ -66,15 +66,15 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	ButtonGroup wepGroup = new ButtonGroup();
 	ButtonGroup skillGroup = new ButtonGroup();
 	
-	JRadioButton easyBut = new JRadioButton(TFBotNode.EASY);
-	JRadioButton normalBut = new JRadioButton(TFBotNode.NORMAL);
-	JRadioButton hardBut = new JRadioButton(TFBotNode.HARD);
-	JRadioButton expBut = new JRadioButton(TFBotNode.EXPERT);
+	JRadioButton easyBut = new JRadioButton(Skill.EASY.toString());
+	JRadioButton normalBut = new JRadioButton(Skill.NORMAL.toString());
+	JRadioButton hardBut = new JRadioButton(Skill.HARD.toString());
+	JRadioButton expBut = new JRadioButton(Skill.EXPERT.toString());
 	
-	JRadioButton anyBut = new JRadioButton(TFBotNode.ANY);
-	JRadioButton priBut = new JRadioButton(TFBotNode.PRIMARYONLY);
-	JRadioButton secBut = new JRadioButton(TFBotNode.SECONDARYONLY);
-	JRadioButton melBut = new JRadioButton(TFBotNode.MELEEONLY);
+	JRadioButton anyBut = new JRadioButton(WeaponRestriction.ANY.toString());
+	JRadioButton priBut = new JRadioButton(WeaponRestriction.PRIMARYONLY.toString());
+	JRadioButton secBut = new JRadioButton(WeaponRestriction.SECONDARYONLY.toString());
+	JRadioButton melBut = new JRadioButton(WeaponRestriction.MELEEONLY.toString());
 	
 	//radio buttons to select active attribute editing
 	JPanel attrButPanel = new JPanel();
@@ -149,32 +149,32 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		JPanel skillPanel = new JPanel();
 		
 		skillPanel.add(easyBut);
-		easyBut.setActionCommand(TFBotNode.EASY);
+		easyBut.setActionCommand(Skill.EASY.toString());
 		skillGroup.add(easyBut);
 		skillPanel.add(normalBut);
-		normalBut.setActionCommand(TFBotNode.NORMAL);
+		normalBut.setActionCommand(Skill.NORMAL.toString());
 		skillGroup.add(normalBut);
 		skillPanel.add(hardBut);
-		hardBut.setActionCommand(TFBotNode.HARD);
+		hardBut.setActionCommand(Skill.HARD.toString());
 		skillGroup.add(hardBut);
 		skillPanel.add(expBut);
-		expBut.setActionCommand(TFBotNode.EXPERT);
+		expBut.setActionCommand(Skill.EXPERT.toString());
 		skillGroup.add(expBut);
 		skillGroup.setSelected(easyBut.getModel(), true);
 		
 		//wep restrict radio buttons
 		JPanel wepPanel = new JPanel();
 		wepPanel.add(anyBut);
-		anyBut.setActionCommand(TFBotNode.ANY);
+		anyBut.setActionCommand(WeaponRestriction.ANY.toString());
 		wepGroup.add(anyBut);
 		wepPanel.add(priBut);
-		priBut.setActionCommand(TFBotNode.PRIMARYONLY);
+		priBut.setActionCommand(WeaponRestriction.PRIMARYONLY.toString());
 		wepGroup.add(priBut);
 		wepPanel.add(secBut);
-		secBut.setActionCommand(TFBotNode.SECONDARYONLY);
+		secBut.setActionCommand(WeaponRestriction.SECONDARYONLY.toString());
 		wepGroup.add(secBut);		
 		wepPanel.add(melBut);
-		melBut.setActionCommand(TFBotNode.MELEEONLY);
+		melBut.setActionCommand(WeaponRestriction.MELEEONLY.toString());
 		wepGroup.add(melBut);
 		wepGroup.setSelected(anyBut.getModel(), true);
 		
@@ -279,40 +279,40 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		String[] itemslots; 
 		Classes cclass;
 		
-		classBox.setSelectedItem(tf.getValue(TFBotKeys.CLASSNAME));
-		setIconBox(iconBox, iconModel, (Classes) tf.getValue(TFBotKeys.CLASSNAME)); //values of classname are classes from enum
-		iconBox.setSelectedItem(tf.getValue(TFBotKeys.CLASSICON));
-		nameField.setText((String) tf.getValue(TFBotKeys.NAME));
-		switch ((String) tf.getValue(TFBotKeys.SKILL)) {
-			case TFBotNode.EASY:
+		classBox.setSelectedItem(tf.getValueSingular(TFBotKeys.CLASSNAME));
+		setIconBox(iconBox, iconModel, (Classes) tf.getValueSingular(TFBotKeys.CLASSNAME)); //values of classname are classes from enum
+		iconBox.setSelectedItem(tf.getValueSingular(TFBotKeys.CLASSICON));
+		nameField.setText((String) tf.getValueSingular(TFBotKeys.NAME));
+		switch ((Skill) tf.getValueSingular(TFBotKeys.SKILL)) {
+			case EASY:
 				skillGroup.setSelected(easyBut.getModel(), true);
 				break;
-			case TFBotNode.NORMAL:
+			case NORMAL:
 				skillGroup.setSelected(normalBut.getModel(), true);
 				break;
-			case TFBotNode.HARD:
+			case HARD:
 				skillGroup.setSelected(hardBut.getModel(), true);
 				break;
-			case TFBotNode.EXPERT:
+			case EXPERT:
 				skillGroup.setSelected(expBut.getModel(), true);
 				break;
 		}
-		switch ((String) tf.getValue(TFBotKeys.WEAPONRESTRICT)) {
-			case TFBotNode.ANY:
+		switch ((WeaponRestriction) tf.getValueSingular(TFBotKeys.WEAPONRESTRICT)) {
+			case ANY:
 				wepGroup.setSelected(anyBut.getModel(), true);
 				break;
-			case TFBotNode.PRIMARYONLY:
+			case PRIMARYONLY:
 				wepGroup.setSelected(priBut.getModel(), true);
 				break;
-			case TFBotNode.SECONDARYONLY:
+			case SECONDARYONLY:
 				wepGroup.setSelected(secBut.getModel(), true);
 				break;
-			case TFBotNode.MELEEONLY:
+			case MELEEONLY:
 				wepGroup.setSelected(melBut.getModel(), true);
 				break;
 		}
-		List<String> tags = tf.getTags();
-		if(tags != null && tags.size() > 0) {
+		List<String> tags = (List<String>) tf.getValueSingular(TFBotKeys.TAGS);
+		if(tags != null) {
 			for(int i = 0; i < tags.size(); i++) { //get indices so they can be selected
 				indices[i] = tagList.getNextMatch(tags.get(i), 0, Position.Bias.Forward);
 			}
@@ -324,9 +324,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		//sort items here if bot isn't sorted already
 		//skip if we don't have a class to compare to
-		if(tf.getItemArray() != null && tf.getValue(TFBotKeys.CLASSNAME) != Classes.None && !tf.isItemsSorted()) {
-			cclass = (Classes) tf.getValue(TFBotKeys.CLASSNAME);
-			itemslots = new String[TFBotNode.itemCount];
+		if(tf.getValueSingular(TFBotKeys.CLASSNAME) != Classes.None && !tf.isItemsSorted()) {
+			cclass = (Classes) tf.getValueSingular(TFBotKeys.CLASSNAME);
+			itemslots = new String[TFBotNode.ITEMCOUNT];
 			
 			itemsList = new ArrayList<String>(Arrays.asList(tf.getItemArray()));
 			
@@ -339,16 +339,16 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 					if(!sublist.isEmpty()) { //if not empty, something matched the list
 						if(slot == EngiPanel.COSMETIC) {
 							switch(sublist.size()) { 
-							case 3: //flow down
-								itemslots[EngiPanel.COSMETIC3] = sublist.get(2);
-							case 2:
-								itemslots[EngiPanel.COSMETIC2] = sublist.get(1);
-							case 1:
-								itemslots[slot] = sublist.get(0);
-								break;
-							default:
-								break;
-								//4 hats or something silly
+								case 3: //flow down
+									itemslots[EngiPanel.COSMETIC3] = sublist.get(2);
+								case 2:
+									itemslots[EngiPanel.COSMETIC2] = sublist.get(1);
+								case 1:
+									itemslots[slot] = sublist.get(0);
+									break;
+								default:
+									break;
+									//4 hats or something silly
 							}
 						}
 					}
@@ -371,7 +371,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			primaryList.setSelectedItem(tf.getItemArray()[EngiPanel.PRIMARY]);
 			secList.setSelectedItem(tf.getItemArray()[EngiPanel.SECONDARY]);
 			meleeList.setSelectedItem(tf.getItemArray()[EngiPanel.MELEE]);
-			if(tf.getValue(TFBotKeys.CLASSNAME) == EngiPanel.Classes.Spy) {
+			if(tf.getValueSingular(TFBotKeys.CLASSNAME) == EngiPanel.Classes.Spy) {
 				buildingList.setSelectedItem(tf.getItemArray()[EngiPanel.BUILDING]);
 			}
 			hat1List.setSelectedItem(tf.getItemArray()[EngiPanel.COSMETIC]);
@@ -853,14 +853,17 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			
 			//add the attribute map to the tfbot node
 			addAttrToBot.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {			
-					if(tfbotnode.getItemAttributeList() == null) { //init map if there isn't one
-						tfbotnode.setItemAttributeList(new HashMap<EngiPanel.ItemSlot, HashMap<String, String>>());
-					}
+				public void actionPerformed(ActionEvent e) {
 					ItemSlot selectedSlot = ItemSlot.valueOf(attrGroup.getSelection().getActionCommand());
 					setAttrButGreen(selectedSlot);
 					//get selected radio button and convert command back to itemslot
 					//also update radio color
+					
+					
+					if(tfbotnode.getItemAttributeList() == null) { //init map if there isn't one
+						tfbotnode.setItemAttributeList(new HashMap<EngiPanel.ItemSlot, HashMap<String, String>>());
+					}
+					
 					
 					if(addedAttributes.isEmpty() || addedAttributes.containsValue(null) 
 							|| addedAttributes.containsValue("")) {
