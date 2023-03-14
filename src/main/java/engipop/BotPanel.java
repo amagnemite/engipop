@@ -100,7 +100,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		this.window = window;
 		secondaryWindow.addPropertyChangeListener(SecondaryWindow.TAGS, this);
-		mainWindow.addPropertyChangeListener(MainWindow.ITEMPARSE, this);
+		mainWindow.addPropertyChangeListener(this);
 		
 		attrPanel = new AttributesPanel(ItemAttributes.getItemAttributes());
 		attrPanel.setVisible(false);
@@ -731,6 +731,18 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		else if(evt.getPropertyName().equals(MainWindow.ITEMPARSE)) {
 			setItemParser((ItemParser) evt.getNewValue());
 		}
+		else if(evt.getPropertyName().equals(MainWindow.BOTTEMPLATELISTFIXED)) {
+			if(evt.getNewValue() instanceof List<?>) {
+				addPermanentTemplates((List<String>) evt.getNewValue());
+			}
+			
+		}
+	}
+	
+	private void addPermanentTemplates(List<String> list) {
+		templateBox.setModel(new DefaultComboBoxModel<String>(list.toArray(new String[list.size()])));
+		templateBox.setSelectedIndex(-1);
+		templateBox.revalidate();
 	}
 	
 	//class for the attribute panel
