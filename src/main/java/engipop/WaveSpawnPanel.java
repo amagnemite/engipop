@@ -96,7 +96,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		JLabel firstLabel = new JLabel("FirstSpawnOutput: ");
 		JLabel lastLabel = new JLabel("LastSpawnOutput: ");
 		JLabel doneLabel = new JLabel("DoneOutput: ");
-		JLabel tempalteLabel = new JLabel("Template: ");
+		JLabel templateLabel = new JLabel("Template: ");
 		
 		wsDeaths.addItemListener(event -> { //update betweenspawns as appropriate
 			updateBetweenSpawns();

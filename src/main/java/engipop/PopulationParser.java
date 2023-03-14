@@ -3,10 +3,12 @@ package engipop;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -27,6 +29,10 @@ public class PopulationParser { //parse .pop
 	//that parses any population put into it
 	private MainWindow window;
 	private Node templateTreeRoot = new Node();
+	private List<String> botTemplateList = new ArrayList<String>();
+	private List<String> wsTemplateList = new ArrayList<String>();
+	private Map<Integer, String> botLengthPopMap = new HashMap<Integer, String>();
+	private Map<Integer, String> wsLengthPopMap = new HashMap<Integer, String>();
 	
 	public PopulationParser(MainWindow window) {
 		this.window = window;
@@ -90,6 +96,7 @@ public class PopulationParser { //parse .pop
 					if(subset.retainAll(botKeys)) { //keep all keys that are also in botkeys
 						//contains tfbot keys	
 						botTemplateParent.putTemplate(entry.getKey(), new TFBotNode(node, itemparser));
+						botTemplateList.add(entry.getKey());
 						//this is dumb
 					}
 					else if(overlapSet.retainAll(overlappingKeys)) { //contains template, name or both, handle later
@@ -105,6 +112,7 @@ public class PopulationParser { //parse .pop
 				//connect nodes only if they exist
 				if(!botTemplateParent.getMap().isEmpty()) {
 					botTemplateParent.connectNodes(popTemplateRoot);
+					botLengthPopMap.put(botTemplateList.size() - 1, filename); //last index with related templates, inclusive
 				}
 				if(!wsTemplateParent.getMap().isEmpty()) {
 					wsTemplateParent.connectNodes(popTemplateRoot);
@@ -114,5 +122,13 @@ public class PopulationParser { //parse .pop
 				}
 			}
 		}
+	}
+	
+	public List<String> getBotTemplateList() {
+		return this.botTemplateList;
+	}
+	
+	public List<String> getWaveSpawnTemplateList() {
+		return this.wsTemplateList;
 	}
 }
