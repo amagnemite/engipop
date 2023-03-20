@@ -88,12 +88,12 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	}
 	
 	public void updatePanel(WaveNode wave) { 
-		startRelay.setSelectedItem(wave.getStart().getTarget());
-		doneRelay.setSelectedItem(wave.getDone().getTarget()); //possibly make this not mandatory
+		startRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.STARTWAVEOUTPUT)).getValueSingular(RelayNode.TARGET));
+		doneRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.DONEOUTPUT)).getValueSingular(RelayNode.TARGET)); //possibly make this not mandatory
 		
-		if(wave.getInit() != null) { //not mandatory, so may not exist
+		if(wave.getValueSingular(WaveNode.INITWAVEOUTPUT) != null) { //not mandatory, so may not exist
 			doInit.setSelected(true);
-			initRelay.setSelectedItem(wave.getInit().getTarget());
+			initRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.INITWAVEOUTPUT)).getValueSingular(RelayNode.TARGET));
 		}
 		else {
 			doInit.setSelected(false);
@@ -101,17 +101,17 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	}
 	
 	public void updateNode(WaveNode wave) {
-		wave.getStart().setTarget((String) startRelay.getSelectedItem());
-		wave.getDone().setTarget((String) doneRelay.getSelectedItem());
+		((RelayNode) wave.getValueSingular(WaveNode.STARTWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) startRelay.getSelectedItem());
+		((RelayNode) wave.getValueSingular(WaveNode.DONEOUTPUT)).putKey(RelayNode.TARGET, (String) doneRelay.getSelectedItem());
 		
 		if(doInit.isSelected()) {
-			if(wave.getInit() == null) { //make relay if data is entered and no relay exists
-				wave.setInit(new RelayNode()); 
+			if(wave.getValueSingular(WaveNode.INITWAVEOUTPUT) == null) { //make relay if data is entered and no relay exists
+				wave.putKey(WaveNode.INITWAVEOUTPUT, new RelayNode());
 			}
-			wave.getInit().setTarget((String) initRelay.getSelectedItem());
+			((RelayNode) wave.getValueSingular(WaveNode.INITWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) initRelay.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
-			wave.setInit(null); 
+			wave.putKey(WaveNode.INITWAVEOUTPUT, null);
 		}
 	}
 	

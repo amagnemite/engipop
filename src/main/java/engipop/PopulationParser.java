@@ -3,10 +3,13 @@ package engipop;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +17,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import engipop.Tree.Node;
-import engipop.Tree.TFBotNode;
-import engipop.Tree.TFBotNode.TFBotKeys;
-import engipop.Tree.TemplateInfoNode;
-import engipop.Tree.TemplateNode;
-import engipop.Tree.WaveSpawnNode;
+import engipop.Tree.*;
 import net.platinumdigitalgroup.jvdf.VDFBinder;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParser;
@@ -33,38 +31,45 @@ public class PopulationParser { //parse .pop
 	private List<String> wsTemplateList = new ArrayList<String>();
 	private Map<Integer, String> botLengthPopMap = new HashMap<Integer, String>();
 	private Map<Integer, String> wsLengthPopMap = new HashMap<Integer, String>();
+	private Set<String> waveKeys = new HashSet<String>(Arrays.asList(WaveNode.DONEOUTPUT, WaveNode.INITWAVEOUTPUT, WaveNode.STARTWAVEOUTPUT));
+	private Set<String> waveKeysCaps = new HashSet<String>(Arrays.asList(WaveNode.DONEOUTPUT.toUpperCase(), WaveNode.INITWAVEOUTPUT.toUpperCase(), 
+			WaveNode.STARTWAVEOUTPUT.toUpperCase()));
+	private Set<String> wsKeys = new HashSet<String>(Arrays.asList(WaveSpawnNode.DONEOUTPUT, WaveSpawnNode.FIRSTSPAWNOUTPUT, WaveSpawnNode.LASTSPAWNOUTPUT,
+			WaveSpawnNode.MAXACTIVE, WaveSpawnNode.NAME, WaveSpawnNode.SPAWNCOUNT, WaveSpawnNode.STARTWAVEOUTPUT));
+	
 	
 	public PopulationParser(MainWindow window) {
 		this.window = window;
 	}
 	
-	public void processPop(File file) {
-		//read in pop
-		//make note of #includes, will need it later
-		
-		//parse templates
-		//parse missions
-		
-		//parse rest
-		
-		
-	}
-	
-	public VDFNode readPop(File file) {
+	//parses entire population
+	public void parsePopulation(File file) {
 		VDFNode root = null;
+		String[] includes;
+		PopNode popNode;
 		
 		try {
 			root = new VDFParser().parse(ItemParser.readFile(file.toPath(), StandardCharsets.US_ASCII));
-			root = root.getSubNode(root.lastKey()); //waveschedule is standard name, but can be named whatever user wants
+			
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
 		catch (IOException i) {
-			window.updateFeedback(file.getName() + " was moved or not found");
+			window.updateFeedback(file.getName() + " was not found");
+			return;
 		}
 		
-		return root;
+		//once again, need error checking here
+		includes = (String[]) root.get(root.firstKey());
+		root = root.getSubNode(root.lastKey()); //waveschedule is standard name, but can be named whatever user wants
+		
+		popNode = new PopNode(root);
+		
+		
+		//parse templates
+		//parse missions
 	}
 	
+	//parses templates only
 	public void parseTemplates(ItemParser itemparser, File file) {
 		String filename = file.getName();
 		VDFNode templateRoot = null;
@@ -74,7 +79,7 @@ public class PopulationParser { //parse .pop
 		
 		//this is kinda awful, probably should do something better
 		//excludes name and template
-		Set<String> botKeys =  new HashSet<String>(Arrays.asList("Class", "ClassIcon", "Health",
+		Set<String> botKeys = new HashSet<String>(Arrays.asList("Class", "ClassIcon", "Health",
 				"Scale", "TeleportWhere", "AutoJumpMin", "AutoJumpMax", "Skill", "WeaponRestrictions",
 				"BehaviorModifiers", "MaxVisionRange", "Item", "Attributes", "ItemAttributes",
 				"CharacterAttributes", "EventChangeAttributes"));

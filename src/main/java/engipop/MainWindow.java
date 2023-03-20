@@ -14,8 +14,6 @@ import java.util.List;
 
 import engipop.ButtonListManager.States;
 import engipop.Tree.*;
-import engipop.Tree.TFBotNode.TFBotKeys;
-import engipop.Tree.WaveSpawnNode.WaveSpawnKeys;
 
 //main class
 //also contains listpanel, which manages the other panels
@@ -87,7 +85,7 @@ public class MainWindow extends EngiWindow {
 		menuBar.add(templateSet);
 		setJMenuBar(menuBar);		
 
-		currentWSNode.putKey(WaveSpawnKeys.NAME, "default");
+		currentWSNode.putKey(WaveSpawnNode.NAME, "default");
 		currentWaveNode.connectNodes(popNode);
 		currentWSNode.connectNodes(currentWaveNode);
 		
@@ -198,7 +196,7 @@ public class MainWindow extends EngiWindow {
 		
 		
 		PopulationParser popParse = new PopulationParser(this);
-		popParse.parseTemplates(itemParser, new File());
+		//popParse.parseTemplates(itemParser, new File());
 	}
 	
 	//subclass for list panel
@@ -520,8 +518,8 @@ public class MainWindow extends EngiWindow {
 					feedback.setText(" ");
 					wsPanel.updateNode(currentWSNode);
 					
-					if(currentWSNode.getValue(WaveSpawnKeys.NAME) != null) {
-						waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentWSNode.getValue(WaveSpawnKeys.NAME));
+					if(currentWSNode.getValueSingular(WaveSpawnNode.NAME) != null) {
+						waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentWSNode.getValueSingular(WaveSpawnNode.NAME));
 					}
 					else { //fallback if name was added but then removed
 						waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), "Wavespawn");
@@ -627,11 +625,11 @@ public class MainWindow extends EngiWindow {
 				feedback.setText("Bot successfully updated");
 				
 				//similar logic to setsquadrandomlistelement but uses set instead of addelement to update
-				if(currentBotNode.getValue(TFBotKeys.NAME) != null) {
-					squadRandomListModel.set(squadRandomList.getSelectedIndex(), (String) currentBotNode.getValue(TFBotKeys.NAME));
+				if(currentBotNode.getValueSingular(TFBotNode.NAME) != null) {
+					squadRandomListModel.set(squadRandomList.getSelectedIndex(), (String) currentBotNode.getValueSingular(TFBotNode.NAME));
 				}
 				else {
-					squadRandomListModel.set(squadRandomList.getSelectedIndex(), currentBotNode.getValue(TFBotKeys.CLASSNAME).toString());
+					squadRandomListModel.set(squadRandomList.getSelectedIndex(), currentBotNode.getValueSingular(TFBotNode.CLASSNAME).toString());
 				}
 			});
 			
@@ -1008,8 +1006,8 @@ public class MainWindow extends EngiWindow {
 
 			for(int i = 0; i < length; i++) {
 				WaveSpawnNode t = (WaveSpawnNode) currentWaveNode.getChildren().get(i);
-				if(t.getValue(WaveSpawnKeys.NAME) != null && !t.getValue(WaveSpawnKeys.NAME).equals("")) {
-					waveSpawnListModel.addElement((String) t.getValue(WaveSpawnKeys.NAME)); //this is extremely awful
+				if(t.getValueSingular(WaveSpawnNode.NAME) != null && !t.getValueSingular(WaveSpawnNode.NAME).equals("")) {
+					waveSpawnListModel.addElement((String) t.getValueSingular(WaveSpawnNode.NAME)); //this is extremely awful
 				}
 				else {
 					waveSpawnListModel.addElement(Integer.toString(i));
@@ -1036,11 +1034,11 @@ public class MainWindow extends EngiWindow {
 		
 		//refresh singular element on squadrandom list
 		private void setSquadRandomListElement(TFBotNode node) {
-			if(node.getValue(TFBotKeys.NAME) != null) {
-				squadRandomListModel.addElement((String) node.getValue(TFBotKeys.NAME)); //this sucks
+			if(node.getValueSingular(TFBotNode.NAME) != null) {
+				squadRandomListModel.addElement((String) node.getValueSingular(TFBotNode.NAME)); //this sucks
 			}
 			else {
-				squadRandomListModel.addElement(node.getValue(TFBotKeys.CLASSNAME).toString());
+				squadRandomListModel.addElement(node.getValueSingular(TFBotNode.CLASSNAME).toString());
 				//classname is classname obj
 			}
 		}

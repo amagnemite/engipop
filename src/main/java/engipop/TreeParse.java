@@ -4,16 +4,16 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
+import engipop.EngiPanel.ItemSlot;
 import engipop.Tree.*;
 import engipop.Tree.TFBotNode.*;
-import engipop.Tree.WaveSpawnNode.WaveSpawnKeys;
 
 public class TreeParse { //it is time to parse
 	private static int indentCount = 0;
 	private static String indent = "																				";
 	//20 indents
 	
-	public static String petAltName = "assister in Pyrovision";
+	public static final String PETALTNAME = "assister in Pyrovision";
 	//counts as assister is some kind of pet this update is going to be awesome
 	
 	public TreeParse() {
@@ -49,13 +49,13 @@ public class TreeParse { //it is time to parse
 		String stopCheck = "";
 
 		//all waves need to have a start
-		stopCheck = wave.getStart().isTargetEmptyOrNull() ? error + "StartWaveOutput" : "";
+		stopCheck = ((RelayNode) wave.getValueSingular(WaveNode.STARTWAVEOUTPUT)).isTargetEmptyOrNull() ? error + "StartWaveOutput" : "";
 		if(stopCheck.isEmpty() && !lastWave) { //all waves need done except last wave
-			stopCheck = wave.getDone().isTargetEmptyOrNull() ? error + "DoneOutput" : "";
+			stopCheck = ((RelayNode) wave.getValueSingular(WaveNode.DONEOUTPUT)).isTargetEmptyOrNull() ? error + "DoneOutput" : "";
 			
 		}
-		if(stopCheck.isEmpty() && wave.getInit() != null) { 
-			stopCheck = wave.getInit().isTargetEmptyOrNull() ? error + "InitWaveOutput" : "";
+		if(stopCheck.isEmpty() && wave.getValueSingular(WaveNode.INITWAVEOUTPUT) != null) { 
+			stopCheck = ((RelayNode) wave.getValueSingular(WaveNode.INITWAVEOUTPUT)).isTargetEmptyOrNull() ? error + "InitWaveOutput" : "";
 		}
 		
 		if(stopCheck.isEmpty()) {
@@ -120,17 +120,20 @@ public class TreeParse { //it is time to parse
 	
 	//unlike wave/spawn, for now just strip out stock weapons here so they don't get unnecessarily printed
 	private static void checkBot(TFBotNode bot) {
-		EngiPanel.Classes botClass = (EngiPanel.Classes) bot.getValue(TFBotKeys.CLASSNAME);
+		EngiPanel.Classes botClass = (EngiPanel.Classes) bot.getValueSingular(TFBotNode.CLASSNAME);
+		String[] itemList = (String[]) bot.getValueArray(TFBotNode.ITEM);
 		
-		if(bot.getValue(TFBotKeys.PRIMARY) != null && bot.getValue(TFBotKeys.PRIMARY).equals(botClass.primary())) {
-			bot.putKey(TFBotKeys.PRIMARY, "");
+		//check this is reference
+		if(itemList[ItemSlot.PRIMARY.getSlot()].equals(botClass.primary())) {
+			itemList[ItemSlot.PRIMARY.getSlot()] = null;
 		}
-		if(bot.getValue(TFBotKeys.SECONDARY) != null && bot.getValue(TFBotKeys.SECONDARY).equals(botClass.secondary())) {
-			bot.putKey(TFBotKeys.SECONDARY, "");
+		if(itemList[ItemSlot.SECONDARY.getSlot()].equals(botClass.secondary())) {
+			itemList[ItemSlot.SECONDARY.getSlot()] = null;
 		}
-		if(bot.getValue(TFBotKeys.MELEE) != null && bot.getValue(TFBotKeys.MELEE).equals(botClass.melee())) {
-			bot.putKey(TFBotKeys.MELEE, "");
+		if(itemList[ItemSlot.MELEE.getSlot()].equals(botClass.melee())) {
+			itemList[ItemSlot.MELEE.getSlot()] = null;
 		}
+		//might need to strip building here
 	} 
 	
 	private static String checkTank(TankNode tank, int waveNum, String wsName) {
@@ -376,18 +379,18 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
-		Map<TFBotKeys, Object> map = node.getMap();
+		Map<String, Object[]> map = node.getMap();
 		
 		//these are hardcoded to force a specific print order
 		//otherwise would need some conversion to a sortedmap + a comparator of some sort
 		
-		//if(map.containsKey(TFBotKeys.CLASSNAME)) { //always has a classname
-		indentPrintln(pw, "Class " + map.get(TFBotKeys.CLASSNAME));
+		//if(map.containsKey(TFBotNode.CLASSNAME)) { //always has a classname
+		indentPrintln(pw, "Class " + map.get(TFBotNode.CLASSNAME));
 		//}
 		
-		if(map.containsKey(TFBotKeys.CLASSICON)) { //todo: probably should check for empty icon strings
-			String value = (String) map.get(TFBotKeys.CLASSICON);
-			if(!(value.equalsIgnoreCase(node.getValue(TFBotKeys.CLASSNAME).toString()))) {
+		if(map.containsKey(TFBotNode.CLASSICON)) { //todo: probably should check for empty icon strings
+			String value = (String) map.get(TFBotNode.CLASSICON);
+			if(!(value.equalsIgnoreCase(node.getValue(TFBotNode.CLASSNAME).toString()))) {
 				//if classicon is not equal to the string version of its classname
 				if(!value.equals("heavy")) { //dumb workaround to heavyweapons != heavy
 					indentPrintln(pw, "ClassIcon " + value);
@@ -395,42 +398,42 @@ public class TreeParse { //it is time to parse
 			}
 		}
 		
-		if(map.containsKey(TFBotKeys.NAME)) { 
-			indentPrintln(pw, "Name \"" + map.get(TFBotKeys.NAME) + "\"");
+		if(map.containsKey(TFBotNode.NAME)) { 
+			indentPrintln(pw, "Name \"" + map.get(TFBotNode.NAME) + "\"");
 		}
 		
 		//these two are always contained
-		if(!map.get(TFBotKeys.SKILL).equals(TFBotNode.EASY)) {
-			indentPrintln(pw, "Skill " + map.get(TFBotKeys.SKILL));
+		if(!map.get(TFBotNode.SKILL).equals(TFBotNode.EASY)) {
+			indentPrintln(pw, "Skill " + map.get(TFBotNode.SKILL));
 		}	
 		
-		if(!map.get(TFBotKeys.WEAPONRESTRICT).equals(TFBotNode.ANY)) {
-			indentPrintln(pw, "WeaponRestrictions " + map.get(TFBotKeys.WEAPONRESTRICT));
+		if(!map.get(TFBotNode.WEAPONRESTRICT).equals(TFBotNode.ANY)) {
+			indentPrintln(pw, "WeaponRestrictions " + map.get(TFBotNode.WEAPONRESTRICT));
 		}	
 		
 		//past here more optional stuff
-		if(map.containsKey(TFBotKeys.PRIMARY)) {
-			indentPrintln(pw, "Item \"" + map.get(TFBotKeys.PRIMARY) + "\"");
+		if(map.containsKey(TFBotNode.PRIMARY)) {
+			indentPrintln(pw, "Item \"" + map.get(TFBotNode.PRIMARY) + "\"");
 		}
 		
-		if(map.containsKey(TFBotKeys.SECONDARY)) {
-			indentPrintln(pw, "Item \"" + map.get(TFBotKeys.SECONDARY) + "\"");
+		if(map.containsKey(TFBotNode.SECONDARY)) {
+			indentPrintln(pw, "Item \"" + map.get(TFBotNode.SECONDARY) + "\"");
 		}
 		
-		if(map.containsKey(TFBotKeys.MELEE)) {
-			indentPrintln(pw, "Item \"" + map.get(TFBotKeys.MELEE) + "\"");
+		if(map.containsKey(TFBotNode.MELEE)) {
+			indentPrintln(pw, "Item \"" + map.get(TFBotNode.MELEE) + "\"");
 		}
 		
-		if(map.containsKey(TFBotKeys.HAT1)) {
-			indentPrintln(pw, "Item \"" + map.get(TFBotKeys.HAT1) + "\"");
+		if(map.containsKey(TFBotNode.HAT1)) {
+			indentPrintln(pw, "Item \"" + map.get(TFBotNode.HAT1) + "\"");
 		}
 		
-		if(map.containsKey(TFBotKeys.HAT2)) {
-			indentPrintln(pw, "Item \"" + map.get(TFBotKeys.HAT2) + "\"");
+		if(map.containsKey(TFBotNode.HAT2)) {
+			indentPrintln(pw, "Item \"" + map.get(TFBotNode.HAT2) + "\"");
 		}
 		
-		if(map.containsKey(TFBotKeys.HAT3)) {
-			indentPrintln(pw, "Item \"" + map.get(TFBotKeys.HAT3) + "\"");
+		if(map.containsKey(TFBotNode.HAT3)) {
+			indentPrintln(pw, "Item \"" + map.get(TFBotNode.HAT3) + "\"");
 		}
 		
 		if(node.getTags().size() > 0) { //ez
@@ -447,28 +450,28 @@ public class TreeParse { //it is time to parse
 				Map<String, String> attrNode = node.getItemAttributeList().get(slot);
 				switch(slot) {
 					case PRIMARY:
-						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotKeys.CLASSNAME), TFBotKeys.PRIMARY, node, attrNode);
+						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), TFBotNode.PRIMARY, node, attrNode);
 						break;
 					case SECONDARY:
-						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotKeys.CLASSNAME), TFBotKeys.SECONDARY, node, attrNode);
+						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), TFBotNode.SECONDARY, node, attrNode);
 						break;
 					case MELEE:
-						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotKeys.CLASSNAME), TFBotKeys.MELEE, node, attrNode);
+						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), TFBotNode.MELEE, node, attrNode);
 						break;
 					case BUILDING:
-						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotKeys.CLASSNAME), TFBotKeys.BUILDING, node, attrNode);
+						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), TFBotNode.BUILDING, node, attrNode);
 						break;	
 					case CHARACTER:
-						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotKeys.CLASSNAME), TFBotKeys.CHARACTER, node, attrNode);
+						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), TFBotNode.CHARACTER, node, attrNode);
 						break;
 					case HAT1:
-						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotKeys.CLASSNAME), TFBotKeys.HAT1, node, attrNode);
+						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), TFBotNode.HAT1, node, attrNode);
 						break;
 					case HAT2:
-						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotKeys.CLASSNAME), TFBotKeys.HAT2, node, attrNode);
+						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), TFBotNode.HAT2, node, attrNode);
 						break;
 					case HAT3:
-						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotKeys.CLASSNAME), TFBotKeys.HAT3, node, attrNode);
+						printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), TFBotNode.HAT3, node, attrNode);
 						break;			
 					case NONE: //shouldn't have this in actual node
 					default:
@@ -482,8 +485,8 @@ public class TreeParse { //it is time to parse
 		System.out.println("printed tfbot");
 	}
 	
-	private static void printAttr(PrintWriter pw, EngiPanel.Classes tfClass, TFBotKeys slot, TFBotNode botNode, Map<String, String> attrNode) {
-		if(slot.equals(TFBotKeys.CHARACTER)) { //different subtree name
+	private static void printAttr(PrintWriter pw, EngiPanel.Classes tfClass, TFBotNode slot, TFBotNode botNode, Map<String, String> attrNode) {
+		if(slot.equals(TFBotNode.CHARACTER)) { //different subtree name
 			indentPrintln(pw, "CharacterAttributes");
 		}
 		else {
@@ -492,7 +495,7 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
-		if(!slot.equals(TFBotKeys.CHARACTER)) {
+		if(!slot.equals(TFBotNode.CHARACTER)) {
 			if(botNode.getValue(slot) == null || ((String) botNode.getValue(slot)).isEmpty()) { //if the slot was stripped out by the precheck
 				switch (slot) {
 					case PRIMARY:
@@ -517,7 +520,7 @@ public class TreeParse { //it is time to parse
 		}
 		
 		attrNode.forEach((k, v) -> {
-			if(!v.equals(petAltName)) {
+			if(!v.equals(PETALTNAME)) {
 				indentPrintln(pw, "\"" + k + "\"" + " " + v);
 			}
 			else { //super super long 

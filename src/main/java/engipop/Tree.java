@@ -4,10 +4,12 @@ import java.util.Map.Entry;
 
 import engipop.EngiPanel.Classes;
 import engipop.EngiPanel.ItemSlot;
+import engipop.Tree.WaveNode;
 import net.platinumdigitalgroup.jvdf.VDFBindField;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
+@SuppressWarnings("unchecked")
 public class Tree {
 	
     private Node root;
@@ -20,16 +22,6 @@ public class Tree {
     public Node getRoot() {
     	return this.root;
     }
-    /*
-    public static boolean checkIfNullOrEmpty(Object obj) {
-		boolean check = false;
-		
-		if(obj == null) {
-			check
-		}
-		
-	} */
-    
     public enum SpawnerType {
     	TFBOT, TANK, SQUAD, RANDOMCHOICE
     }
@@ -37,6 +29,7 @@ public class Tree {
     public static class Node {
         private Node parent;
         private List<Node> children = new ArrayList<Node>();
+        protected Map<String, Object[]> keyVals = new HashMap<String, Object[]>(8);
         //children refers to waveschedule - wave - wavespawn - spawner connections
         //side connections like relays are connected elsewhere
         
@@ -69,28 +62,152 @@ public class Tree {
         public void setParent(Node parent) {
         	this.parent = parent;
         }
- 
+    	
+    	//put key into map assuming it's not null or empty, otherwise remove it
+    	public void putKey(String key, Object value) {
+    		if(value != null) {
+    			if((value.getClass() == String.class && !value.equals("")) || 
+    					value.getClass() != String.class) {
+    				//if it is a string that is not empty or it is not a string
+    				keyVals.put(key, new Object[] {value});
+    			}
+    			else { //remove key does nothing if key doesn't exist
+    				keyVals.remove(key);
+    			}
+    		}
+    		else {
+    			keyVals.remove(key);
+    		}
+    	}
+    	
+    	//array value ver of above
+    	public void putKey(String key, Object[] value) {
+    		if(value.length > 0) {
+    			keyVals.put(key, value);
+    		}
+    		else {
+    			keyVals.remove(key);
+    		}
+    	}
+    	
+    	public Object getValueSingular(String key) {
+    		//if(keyVals.get(key).length == 1) {
+    		//	return keyVals.get(key);
+    		//}
+    		if(keyVals.get(key) == null) {
+    			return null;
+    		}
+    		else {
+    			return keyVals.get(key)[0];
+    		}
+    	}
+    	
+    	public Object[] getValueArray(String key) {
+    		return keyVals.get(key);
+    	}
+    	
+    	//reconsider this
+    	public Map<String, Object[]> getMap() {
+    		return this.keyVals;
+    	}
+    	
+    	//convert inconsistent cases to standardized
+    	public boolean convertCase(Map<String, Object[]> map, List<String> keys) {
+    		boolean updated = false;
+       		Iterator<String> iterator = map.keySet().iterator();
+       		List<Entry<String, Object[]>> newEntries = new ArrayList<Entry<String, Object[]>>();
+    		
+    		while(iterator.hasNext()) { 
+    			String next = iterator.next();
+    			int k = keys.indexOf(next.toUpperCase());
+				if(k != -1 && !keys.get(k).equals(next)) { //if already in pascal case, skip
+					newEntries.add(new AbstractMap.SimpleEntry<String, Object[]>(keys.get(k), map.get(next)));
+					iterator.remove();
+				}
+    		}
+    		for(Entry<String, Object[]> entry : newEntries) {
+    			map.put(entry.getKey(), entry.getValue());
+    		}
+    		
+    		if(newEntries.size() > 0) {
+    			updated = true;
+    		}
+    		
+    		return updated;
+    	}
+    	
+    	public void convertVDFNodeToHash(Map<String, Object[]> map) {
+    		for(Entry<String, Object[]> entry : map.entrySet()) {
+    			if(entry.getValue()[0].getClass() == VDFNode.class) {
+    				List<Map<String, Object[]>> nodeArray = new ArrayList<Map<String, Object[]>>(entry.getValue().length);
+    				
+    				for(int i = 0; i < entry.getValue().length; i++) {
+    					Map<String, Object[]> subMap = new HashMap<String, Object[]>(8);
+    					subMap.putAll((VDFNode) entry.getValue()[i]);
+    					convertVDFNodeToHash(subMap);
+    					nodeArray.add(subMap);
+    				}
+    				entry.setValue(new Object[] {nodeArray});
+    			}
+    		}
+    	}
     }
     
     public static class PopNode extends Node { //
+    	public static final String STARTINGCURRENCY = "StartingCurrency"; //int
+    	public static final String RESPAWNWAVETIME = "RespawnWaveTime"; //int
+    	public static final String FIXEDRESPAWNWAVETIME = "FixedRespawnWaveTime"; //boolean
+    	public static final String EVENTPOPFILE = "EventPopfile"; //boolean / this is a string, convert this later
+    	public static final String BUSTERDAMAGE = "AddSentryBusterWhenDamageDealtExceeds"; //int
+    	public static final String BUSTERKILLS = "AddSentryBusterWhenKillCountExceeds"; //int
+    	public static final String BOTSATKINSPAWN = "CanBotsAttackWhileInSpawnRoom"; //boolean / string
+    	public static final String ADVANCED = "Advanced"; //boolean
+    	
     	private int mapIndex = -1;
-    	private int startingCurrency = 400; //default 0
-    	private int respawnWaveTime = 6; //default 10
-    	private boolean fixedRespawnWaveTime;
-    	private boolean EventPopfile; //this is a string, convert this later
-    	private int busterDmg = 3000; //default 3k
-    	private int busterKills = 15; //default 15
-    	private boolean botsAtkInSpawn; //another string
-    	private boolean advanced;
     	private Map<String, WaveSpawnNode> wsTemplateMap;
-    	//= new HashMap<String, WaveSpawnNode>();
     	private Map<String, TFBotNode> botTemplateMap;
-    	//= new HashMap<String, TFBotNode>();
-        
+
         public PopNode() {
-        	
+        	this.putKey(STARTINGCURRENCY, 400);
+        	this.putKey(RESPAWNWAVETIME, 6);
+        	this.putKey(BUSTERDAMAGE, 3000);
+        	this.putKey(BUSTERKILLS, 15);
+        	this.putKey(BOTSATKINSPAWN, false);
         }
         
+		public PopNode(Map<String, Object[]> map) { //constructor for read in nodes
+        	List<String> popKeys = new ArrayList<String>(Arrays.asList(STARTINGCURRENCY.toUpperCase(), RESPAWNWAVETIME.toUpperCase(),
+        			FIXEDRESPAWNWAVETIME.toUpperCase(), EVENTPOPFILE.toUpperCase(), BUSTERDAMAGE.toUpperCase(), 
+        				BUSTERKILLS.toUpperCase(), BOTSATKINSPAWN.toUpperCase(), ADVANCED.toUpperCase()));
+        	List<String> waveKeys = new ArrayList<String>(Arrays.asList(WaveNode.STARTWAVEOUTPUT.toUpperCase(), 
+        			WaveNode.DONEOUTPUT.toUpperCase(), WaveNode.INITWAVEOUTPUT.toUpperCase()));
+        	
+        	keyVals.putAll(map);
+        	
+        	for(Entry<String, Object[]> entry : keyVals.entrySet()) {
+        		
+        	}
+        	
+        	
+        	convertCase(keyVals, popKeys);
+
+    		Iterator<Entry<String, Object[]>> iterator2 = keyVals.entrySet().iterator();
+    		while(iterator2.hasNext()) {
+    			Entry<String, Object[]> entry = iterator2.next();
+    			
+    			if(entry.getValue()[0].getClass() == VDFNode.class) {
+    				boolean updated = convertCase((Map<String, Object[]>) entry.getValue()[0], waveKeys);
+    				
+    				if(updated) {
+    					WaveNode waveNode = new WaveNode(entry.getKey(), (Map<String, Object[]>) entry.getValue()[0]);
+    					waveNode.connectNodes(this);
+    					iterator2.remove();
+    				}
+    			}
+    		}
+        }
+        
+        /*
         public void setCurrency(int c) {
         	this.startingCurrency = c;
         }
@@ -153,7 +270,7 @@ public class Tree {
         
         public boolean getAdvanced() {
         	return this.advanced;
-        }
+        } */
         
         public void setMapIndex(int i) {
         	this.mapIndex = i;
@@ -180,6 +297,7 @@ public class Tree {
         }
     }
     
+    /*
     //node for template info
     public static class TemplateNode extends Node {
     	private Map<String, Node> templateMap = new TreeMap<String, Node>();
@@ -191,28 +309,63 @@ public class Tree {
     	public Map<String, Node> getMap() {
     		return this.templateMap;
     	}
-    }
-    
-    public static class TemplateInfoNode extends Node {
-    	private String nodename;
-    	
-    	public TemplateInfoNode(String nodename) {
-    		this.nodename = nodename;
-    	}
-    }
+    } */
     
     public static class MissionNode extends Node {
-    	
+    	public static final String WHERE = "Where"; //string
+    	public static final String OBJECTIVE = "Objective"; //string
+    	public static final String INITIALCOOLDOWN = "InitialCooldown"; //float
+    	public static final String COOLDOWNTIME = "CooldownTime"; //float
+    	public static final String BEGINATWAVE = "BeginAtWave"; //int
+    	public static final String RUNFORTHISMANYWAVES = "RunForThisManyWaves"; //int
+    	public static final String DESIREDCOUNT = "DesiredCount"; //int
+    	//spawner
     }
     
     public static class WaveNode extends Node { 
     	//todo: sound support
     	//description?
     	//waitwhendone and checkpoint are both vestigal
-    	private RelayNode start = new RelayNode();
-    	private RelayNode done = new RelayNode();
-    	private RelayNode init;
+    	public static final String STARTWAVEOUTPUT = "StartWaveOutput";
+    	public static final String DONEOUTPUT = "DoneOutput";
+    	public static final String INITWAVEOUTPUT = "InitWaveOutput";
     	
+    	private String name;
+    	
+    	public WaveNode() {
+    		this.putKey(STARTWAVEOUTPUT, new RelayNode());
+    		this.putKey(DONEOUTPUT, new RelayNode());
+    	}
+    	
+        public WaveNode(String name, Map<String, Object[]> map) { //readin node, key case should already be converted
+        	List<String> wsKeys = new ArrayList<String>(Arrays.asList(WaveSpawnNode.WHERE.toUpperCase(), WaveSpawnNode.TOTALCOUNT.toUpperCase(),
+        			WaveSpawnNode.MAXACTIVE.toUpperCase(), WaveSpawnNode.SPAWNCOUNT.toUpperCase(), WaveSpawnNode.WAITBEFORESTARTING.toUpperCase(),
+        			WaveSpawnNode.WAITBETWEENSPAWNS.toUpperCase(), WaveSpawnNode.TOTALCURRENCY.toUpperCase(), 
+        			WaveSpawnNode.NAME.toUpperCase(), WaveSpawnNode.WAITFORALLDEAD.toUpperCase(), WaveSpawnNode.WAITFORALLSPAWNED.toUpperCase(),
+        			WaveSpawnNode.SUPPORT.toUpperCase(), WaveSpawnNode.STARTWAVEOUTPUT.toUpperCase(), WaveSpawnNode.FIRSTSPAWNOUTPUT.toUpperCase(),
+        			WaveSpawnNode.LASTSPAWNOUTPUT.toUpperCase(), WaveSpawnNode.DONEOUTPUT.toUpperCase(), WaveSpawnNode.TFBOT.toUpperCase(),
+        			WaveSpawnNode.TANK.toUpperCase(), WaveSpawnNode.SQUAD.toUpperCase(), WaveSpawnNode.RANDOMCHOICE.toUpperCase()));
+        	
+        	this.name = name; //this is the internal pop block name
+        	keyVals.putAll(map);
+        	
+    		Iterator<Entry<String, Object[]>> iterator = keyVals.entrySet().iterator();
+    		while(iterator.hasNext()) {
+    			Entry<String, Object[]> entry = iterator.next();
+    			
+    			if(entry.getValue()[0].getClass() == VDFNode.class) {
+    				boolean updated = convertCase((Map<String, Object[]>) entry.getValue()[0], wsKeys);
+    				
+    				if(updated) {
+    					WaveSpawnNode wsNode = new WaveSpawnNode((Map<String, Object[]>) entry.getValue()[0]);
+    					wsNode.connectNodes(this);
+    					iterator.remove();
+    				}
+    			}
+    		}
+        }
+    	
+    	/*
     	public void setStart(RelayNode s) {
     		this.start = s;
     	}
@@ -236,153 +389,157 @@ public class Tree {
     	public RelayNode getInit() {
     		return this.init;
     	}
+    	*/
     }
     
     public static class RelayNode extends Node { //something experimental
-    	Map<String, String> map = new HashMap<String, String>();
+    	public static final String TARGET = "Target";
+    	public static final String ACTION = "Action";
+    	public static final String PARAM = "Param";
+    	public static final String DELAY = "Delay";
     	
     	public RelayNode() { //for now, assume all actions are trigger
-    		map.put("Target", null); //mostly for nice formatting
-			map.put("Action", "trigger");
+    		this.putKey(TARGET, null);
+			this.putKey(ACTION, "trigger");
 		}
     	
-    	public void setTarget(String relay) {
-    		map.put("Target", relay);
-    	}
-    	
-    	public String getTarget() {
-    		return map.get("Target");
-    	}
-    	
-    	public Map<String, String> getMap() {
-    		return map;
+    	public RelayNode(Map<String, Object[]> map) {
+    		for(Entry<String, Object[]> entry : map.entrySet()) {
+    			if(entry.getKey().equalsIgnoreCase(TARGET)) {
+    				this.putKey(TARGET, entry.getValue());
+    			}
+    			else if(entry.getKey().equalsIgnoreCase(ACTION)) {
+    				this.putKey(ACTION, entry.getValue());
+    			}
+    			else if(entry.getKey().equalsIgnoreCase(PARAM)) { 
+    				this.putKey(PARAM, entry.getValue());
+    			}
+    			else { //delay
+    				this.putKey(DELAY, entry.getValue());
+    			}
+    		}
     	}
     	
     	public boolean isTargetEmptyOrNull() {
     		boolean check = false;
     		
-    		if(map.get("Target") == null) {
+    		if(this.getValueSingular("Target") == null) {
     			check = true;
     		}
     		else {
-    			check = map.get("Target").isEmpty() ? true : false;
+    			check = ((String) this.getValueSingular("Target")).isEmpty() ? true : false;
     		}
     		return check;
     	}
     }
     
-    public static class StartWaveOutputNode extends RelayNode { 
-    	
-    }
-    
-    public static class DoneOutputNode extends RelayNode {
-   
-    }
-    
-    public static class InitWaveOutputNode extends RelayNode {
-    	   
-    }
-    
-    public static class FirstWaveOutputNode extends RelayNode {
- 	   
-    }
-    
-    public static class LastWaveOutputNode extends RelayNode {
-  	   
-    }
-    
     public static class WaveSpawnNode extends Node { //node for wavespawns
-    	
-    	public enum WaveSpawnKeys {
-    		WHERE, TOTALCOUNT, MAXACTIVE,
-    		SPAWNCOUNT, WAITBEFORESTARTING,
-    		WAITBETWEENSPAWNS, WAITBETWEENDEATHS,
-    		TOTALCURRENCY, NAME, WAITFORALLDEAD,
-    		WAITFORALLSPAWNED, SUPPORT, SUPPORTLIMITED,
-    		WAVESTARTOUTPUT, FIRSTSPAWNOUTPUT, LASTSPAWNOUTPUT,
-    		DONEOUTPUT, TEMPLATE
-    	}
-    	
+	
     	//where, name, waitforalldead, waitforallspawned, template = string
     	//totalcount, maxactive, spawncount, totalcurrency = int
     	//waitbeforestarting, waitbetweenspawns = double
     	//waitbetweendeaths, support, supportlimited = boolean
-    	
-    	private Map<WaveSpawnKeys, Object> keyVals = new HashMap<WaveSpawnKeys, Object>();
-    	
-    	/*
-    	private String where = "spawnbot"; //todo: add support for the weird locations no one uses
-    	private int totalCount = 1; //default 0
-    	private int maxActive = 1; //default 999
-    	private int spawnCount = 1; //default 1
-    	private double waitBeforeStarting;
-    	private double waitBetweenSpawns;
-    	private boolean waitBetweenDeaths; //betweenspawns and betweenspawnsafterdeath are mutually exclusive
+  
+    	public static final String WHERE = "Where"; //string
+    	public static final String TOTALCOUNT = "TotalCount"; //int
+    	public static final String MAXACTIVE = "MaxActive"; //int
+    	public static final String SPAWNCOUNT = "SpawnCount"; //int
+    	public static final String WAITBEFORESTARTING = "WaitBeforeStarting"; //float
+    	public static final String WAITBETWEENSPAWNS = "WaitBetweenSpawns"; //float
+    	public static final String WAITBETWEENSPAWNSAFTERDEATH = "WaitBetweenSpawnsAfterDeath";
     	//todo: add wavespawn sounds/outputs as optional feature
-    	private int totalCurrency; //default -1
-    	private String name;
-    	private String waitForAllDead; 
-    	private String waitForAllSpawned;
-    	private boolean support;
-    	private boolean supportLimited;
+    	public static final String TOTALCURRENCY = "TotalCurrency"; //int
+    	public static final String NAME = "Name"; //string
+    	public static final String WAITFORALLDEAD = "WaitForAllDead"; //string
+    	public static final String WAITFORALLSPAWNED = "WaitForAllSpawned"; //string
+    	public static final String SUPPORT = "Support"; //boolean/flag
     	//private boolean randomSpawn; //default 0, if true allows bot spawns to be randomized
     	//prob should be disabled for single spawn maps
-    	private RelayNode start;
-    	private RelayNode first;
-    	private RelayNode last;
-    	private RelayNode done; */
+    	public static final String STARTWAVEOUTPUT = "StartWaveOutput"; //relaynode / map
+    	public static final String FIRSTSPAWNOUTPUT = "FirstSpawnOutput";
+    	public static final String LASTSPAWNOUTPUT = "LastSpawnOutput";
+    	public static final String DONEOUTPUT = "DoneOutput";
+    	
+    	public static final String TFBOT = "TFBot";
+    	public static final String TANK = "Tank";
+    	public static final String SQUAD = "Squad";
+    	public static final String RANDOMCHOICE = "RandomChoice";
+    	
+    	private boolean waitBetweenDeaths; //betweenspawns and betweenspawnsafterdeath are mutually exclusive
+    	private boolean supportLimited;
     	
     	public WaveSpawnNode() {
-    		keyVals.put(WaveSpawnKeys.WHERE, "spawnbot");
-    		keyVals.put(WaveSpawnKeys.TOTALCOUNT, 1);
-    		keyVals.put(WaveSpawnKeys.MAXACTIVE, 1);
-    		keyVals.put(WaveSpawnKeys.SPAWNCOUNT, 1);
-    		keyVals.put(WaveSpawnKeys.WAITBEFORESTARTING, 0.0);
-    		keyVals.put(WaveSpawnKeys.WAITBETWEENSPAWNS, 0.0);
-    		keyVals.put(WaveSpawnKeys.WAITBETWEENDEATHS, false);
-    		keyVals.put(WaveSpawnKeys.TOTALCURRENCY, 0);
-    		keyVals.put(WaveSpawnKeys.SUPPORT, false);
-    		keyVals.put(WaveSpawnKeys.SUPPORTLIMITED, false);
+    		this.putKey(WHERE, "spawnbot");
+    		this.putKey(TOTALCOUNT, 1);
+    		this.putKey(MAXACTIVE, 1);
+    		this.putKey(SPAWNCOUNT, 1);
+    		this.putKey(WAITBEFORESTARTING, 0.0);
+    		this.putKey(WAITBETWEENSPAWNS, 0.0);
+    		this.putKey(TOTALCURRENCY, 0);
+    		this.putKey(SUPPORT, false);
     	}
     	
-    	public WaveSpawnNode(VDFNode node) {
-    		for(Entry<String, Object[]> entry : node.entrySet()) {
-    			if(!entry.getKey().equals("WaveStartOutput") && !entry.getKey().equals("FirstSpawnOutput") &&
-    				!entry.getKey().equals("LastSpawnOutput") && !entry.getKey().equals("DoneOutput")) {
-    			//if not complex keyvalue type
-    				keyVals.put(WaveSpawnKeys.valueOf(entry.getKey()), entry.getValue());
-    				
-    				
-    				
+    	public WaveSpawnNode(Map<String, Object[]> map) {
+    		//keys are converted by wave
+    		keyVals.putAll(map);
+    		
+    		if(keyVals.get(WAITBETWEENSPAWNSAFTERDEATH) != null) {
+    			waitBetweenDeaths = true;
+    		}
+    		
+    		//need to check this 
+    		if(keyVals.get(SUPPORT) != null) {
+    			Object supportVal = keyVals.get(SUPPORT)[0];
+    			if(supportVal.getClass() == String.class) {
+    				if(((String) supportVal).equalsIgnoreCase("LIMITED")) {
+    					supportLimited = true;
+    				}
     			}
     		}
-    	}
-    	
-    	//put key into map assuming it's not null or empty, otherwise remove it
-    	public void putKey(WaveSpawnKeys key, Object value) {
-    		if(value != null) {
-    			if((value.getClass() == String.class && !value.equals("")) || 
-    					value.getClass() != String.class) {
-    				//if it is a string that is not empty or it is not a string
-    				keyVals.put(key, value);
-    			}
-    			else { //remove key does nothing if key doesn't exist
-    				keyVals.remove(key);
-    			}
+    		
+    		if(keyVals.get(STARTWAVEOUTPUT) != null) {
+    			this.putKey(STARTWAVEOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(STARTWAVEOUTPUT)));
     		}
-    		else {
-    			keyVals.remove(key);
+    		if(keyVals.get(FIRSTSPAWNOUTPUT) != null) {
+    			this.putKey(FIRSTSPAWNOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(FIRSTSPAWNOUTPUT)));
+    		}
+    		if(keyVals.get(LASTSPAWNOUTPUT) != null) {
+    			this.putKey(LASTSPAWNOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(LASTSPAWNOUTPUT)));
+    		}
+    		if(keyVals.get(DONEOUTPUT) != null) {
+    			this.putKey(DONEOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(DONEOUTPUT)));
+    		}
+    		
+    		if(keyVals.get(TFBOT) != null) {
+    			TFBotNode botNode = new TFBotNode((Map<String, Object[]>) keyVals.get(TFBOT)[0]);
+    			botNode.setParent(this);
+    			keyVals.remove(TFBOT);
+    		}
+    		else if(keyVals.get(TANK) != null) {
+    			
+    		}
+    		else if(keyVals.get(SQUAD) != null) {
+    			
+    		}
+    		else if(keyVals.get(RANDOMCHOICE) != null) {
+    			
     		}
     	}
-    	
-    	//if you only need one value
-    	public Object getValue(WaveSpawnKeys key) {
-    		return keyVals.get(key);
+ 
+    	public void setBetweenDeaths(boolean death) {
+    		this.waitBetweenDeaths = death;
     	}
     	
-    	//entire map
-    	public Map<WaveSpawnKeys, Object> getMap() {
-    		return this.keyVals;
+    	public boolean getBetweenDeaths() {
+    		return this.waitBetweenDeaths;
+    	}
+    	
+    	public void setSupportLimited(boolean s) {
+    		this.supportLimited = s;
+    	}
+    	
+    	public boolean getSupportLimited() {
+    		return this.supportLimited;
     	}
     	
     	/*
@@ -442,14 +599,6 @@ public class Tree {
     		return this.waitBetweenSpawns;
     	}
     	
-    	public void setBetweenDeaths(boolean death) {
-    		this.waitBetweenDeaths = death;
-    	}
-    	
-    	public boolean getBetweenDeaths() {
-    		return this.waitBetweenDeaths;
-    	}
-    	
     	public void setCurrency(int curr) {
     		this.totalCurrency = curr;
     	}
@@ -480,14 +629,6 @@ public class Tree {
     	
     	public boolean getSupport() {
     		return this.support;
-    	}
-    	
-    	public void setSupportLimited(boolean s) {
-    		this.supportLimited = s;
-    	}
-    	
-    	public boolean getSupportLimited() {
-    		return this.supportLimited;
     	}
     	
     	public void setStart(RelayNode s) {
@@ -526,7 +667,7 @@ public class Tree {
     	public void copyWaveSpawn(WaveSpawnNode copyFrom) {
     		this.setParent(copyFrom.getParent()); //double check parent doesn't interfere with anything
     		this.setChildren(copyFrom.getChildren());
-    		this.getMap().putAll(copyFrom.getMap());
+    		//this.getMap().putAll(copyFrom.getMap());
     	}
     	
     	public Node getSpawner() {
@@ -556,14 +697,30 @@ public class Tree {
     }
     
     public static class TankNode extends Node {
-    	private int health = EngiPanel.tankDefaultHealth;
-    	//private double speed = Values.tankDefaultHealth;
-    	private String name = "tankboss";
-    	private boolean skin = false;
-    	private String startingPathTrackNode; //default ""
-    	private RelayNode onKilled;
-    	private RelayNode onBomb;
+    	public static final String HEALTH = "Health"; //int
+    	public static final String SPEED = "Speed"; //float
+    	public static final String NAME = "Name"; //string
+    	public static final String SKIN = "Skin"; //flag
+    	public static final String STARTINGPATHTRACKNODE = "StartingPathTrackNode"; //default ""
+    	public static final String ONKILLEDOUTPUT = "OnKilledOutput";
+    	public static final String ONBOMBDROPPEDOUTPUT = "OnBombDroppedOutput";
     	
+    	public TankNode() {
+    		this.putKey(HEALTH, EngiPanel.tankDefaultHealth);
+    		this.putKey(NAME, "tankboss");
+    		this.putKey(SKIN, false);
+    	}
+    	
+    	public TankNode(Map<String, Object[]> map) {
+    		List<String> keys = new ArrayList<String>(Arrays.asList(HEALTH.toUpperCase(), SPEED.toUpperCase(), NAME.toUpperCase(), 
+    				SKIN.toUpperCase(), STARTINGPATHTRACKNODE.toUpperCase(), ONKILLEDOUTPUT.toUpperCase(), 
+    				ONBOMBDROPPEDOUTPUT.toUpperCase()));
+    		
+    		keyVals.putAll(map);
+    		convertCase(keyVals, keys);
+    	}
+    	
+    	/*
     	public String getName() {
     		return this.name;
     	}
@@ -607,72 +764,36 @@ public class Tree {
     	public RelayNode getOnBomb() {
     		return this.onBomb;
     	}
-    	
-    	
-    	
+    	*/
     }
     
     public static class TFBotNode extends Node { //node for tfbot spawners
     	
-    	public enum TFBotKeys {
-    		CLASSNAME ("Class"), //class 
-    		CLASSICON ("ClassIcon"), //string
-    		NAME ("Name"),
-    		SKILL ("Skill"), //skill
-    		WEAPONRESTRICT ("WeaponRestriction"), //weaponrestriction
-    		TAGS ("Tag"), //string
-    		ATTRIBUTES ("Attribute"), 
-    		PRIMARY ("ItemPrimary"), 
-    		SECONDARY ("ItemSecondary"),
-    		MELEE ("ItemMelee"), 
-    		BUILDING ("ItemBuilding"), 
-    		HAT1 ("ItemCosmetic1"), 
-    		HAT2 ("ItemCosmetic2"),
-    		HAT3 ("ItemCosmetic3"),
-    		ACTION ("Action"),
-    		ITEM ("Item"),
-    		ITEMATTRIBUTES ("ItemAttributes"),
-    		ITEMATTRIBUTESPRIMARY ("ItemAttributesPrimary"),
-    		ITEMATTRIBUTESSECONDARY ("ItemAttributesSecondary"),
-    		ITEMATTRIBUTESMELEE ("ItemAttributesMelee"),
-    		ITEMATTRIBUTESHAT1 ("ItemAttributesCosmetic1"),
-    		ITEMATTRIBUTESHAT2 ("ItemAttributesCosmetic2"),
-    		ITEMATTRIBUTESHAT3 ("ItemAttributesCosmetic3"),
-    		ITEMATTRIBUTESACTION ("ItemAttributesAction"),
-    		CHARACTERATTRIBUTES ("CharacterAttributes"),
-    		TEMPLATE ("Template"), 
-    		HEALTH ("Health"), 
-    		SCALE ("Scale"), 
-    		AUTOJUMPMIN ("AutoJumpMin"),
-    		AUTOJUMPMAX ("AutoJumpMax"), 
-    		BEHAVIORMODIFIERS ("BehaviorModifiers"),
-    		MAXVISIONRANGE ("MaxVisionRange"),
-    		TELEPORTWHERE ("TeleportWhere"),
-    		EVENTCHANGEATTRIBUTES ("EventChangeAttributes");
-    		
-    		private String keyName;
-    		
-    		TFBotKeys(String keyName) {
-    			this.keyName = keyName;
-    		}
-    		
-    		@Override
-    		public String toString() {
-    			return keyName;
-    		}
-    	}
-    	//classname - classes
-    	//classicon - string
-    	//name - string
-    	//skill - string
-    	//template - string
-    	//weaponrestrict - string
-    	//primary, secondary, melee, building, hat1, hat2, hat3 - string
+    	public static final String CLASSNAME = "Class"; //class 
+    	public static final String CLASSICON = "ClassIcon"; //string
+    	public static final String NAME = "Name"; //string
+    	public static final String SKILL = "Skill"; //skill
+    	public static final String WEAPONRESTRICT = "WeaponRestriction"; //weaponrestriction
+    	public static final String TAGS = "Tag"; //List<String>
+    	public static final String ATTRIBUTES = "Attribute";  //List<String>
+    	public static final String ITEM = "Item"; //String[]
+    	public static final String ITEMATTRIBUTES = "ItemAttributes"; //List<HashMap<String, String>>
+		//when read from VDF, is TreeMap[]
+    	public static final String CHARACTERATTRIBUTES = "CharacterAttributes";
+    	public static final String TEMPLATE = "Template"; //string
+    	public static final String HEALTH = "Health"; //int
+    	public static final String SCALE = "Scale"; //float
+    	public static final String AUTOJUMPMIN = "AutoJumpMin"; //float
+    	public static final String AUTOJUMPMAX = "AutoJumpMax"; //float
+    	public static final String BEHAVIORMODIFIERS = "BehaviorModifiers"; //string
+    	public static final String MAXVISIONRANGE = "MaxVisionRange"; //int
+    	public static final String TELEPORTWHERE = "TeleportWhere"; //string
+    	public static final String EVENTCHANGEATTRIBUTES = "EventChangeAttributes";
     	
     	public static final int ITEMCOUNT = 7;
     	
     	public enum Skill {
-    		EASY ("Easy"),
+    		EASY ("Easy"), 
     		NORMAL ("Normal"),
     		HARD ("Hard"),
     		EXPERT ("Expert");
@@ -707,9 +828,6 @@ public class Tree {
     		}
     	}
     	
-    	//todo: add support for the niche use vars 
-    	
-    	private Map<String, Object[]> keyVals = new HashMap<String, Object[]>(8);
     	//private List<String> tags;
     	//private List<String> attributes;
     	//private String[] items;
@@ -717,80 +835,39 @@ public class Tree {
     	//private Map<ItemSlot, HashMap<String, String>> itemAttributeList;
     	
     	public TFBotNode() { //defaults
-    		keyVals.put(TFBotKeys.CLASSNAME.name(), new Object[] {Classes.Scout});
-    		keyVals.put(TFBotKeys.CLASSICON.name(), new Object[] {"scout"});
-    		keyVals.put(TFBotKeys.SKILL.name(), new Object[] {Skill.EASY});
-    		keyVals.put(TFBotKeys.WEAPONRESTRICT.name(), new Object[] {WeaponRestriction.ANY});
+    		this.putKey(CLASSNAME, Classes.Scout);
+    		this.putKey(CLASSICON, "scout");
+    		this.putKey(SKILL, Skill.EASY);
+    		this.putKey(WEAPONRESTRICT, WeaponRestriction.ANY);
     		isItemsSorted = true;
     	}
     	 
-    	//alternate complex constructor for read in tfbots
-    	public TFBotNode(VDFNode parsedNode) {   		
-    		isItemsSorted = false;
+    	//alternate constructor for read in tfbots
+    	public TFBotNode(Map<String, Object[]> map) {
+    		List<String> keys = new ArrayList<String>(Arrays.asList(CLASSNAME.toUpperCase(), CLASSICON.toUpperCase(), NAME.toUpperCase(), 
+    				SKILL.toUpperCase(), WEAPONRESTRICT.toUpperCase(), TAGS.toUpperCase(), ATTRIBUTES.toUpperCase(), ITEM.toUpperCase(), 
+    				ITEMATTRIBUTES.toUpperCase(), CHARACTERATTRIBUTES.toUpperCase(), TEMPLATE.toUpperCase(), HEALTH.toUpperCase(), 
+    				SCALE.toUpperCase(), AUTOJUMPMIN.toUpperCase(), AUTOJUMPMAX.toUpperCase(), BEHAVIORMODIFIERS.toUpperCase(), 
+    				MAXVISIONRANGE.toUpperCase(), TELEPORTWHERE.toUpperCase(), EVENTCHANGEATTRIBUTES.toUpperCase()));
     		
-    		for(Entry<String, Object[]> entry : parsedNode.entrySet()) {
-    			VDFNode subNode;
-    			
-    			//need to convert array of vdfnodes to array of hashmaps
-    			if(entry.getValue()[0].getClass() == VDFNode.class) {
-    				Object[] nodeArray = new Object[entry.getValue().length];
-    				
-    				for(int i = 0; i < nodeArray.length; i++) {
-    					Map<String, Object[]> subMap = new HashMap<String, Object[]>(4);
-    					subMap.putAll((VDFNode) entry.getValue()[i]);
-    					nodeArray[i] = subMap;
-    				}
-    				
-    				keyVals.put(entry.getKey().toUpperCase(), nodeArray);
-    			}
-    			else if(entry.getValue().length > 1) {
+    		keyVals.putAll(map);
+    		convertCase(keyVals, keys);
+    		
+    		for(Entry<String, Object[]> entry : keyVals.entrySet()) {
+    			if(entry.getValue().length > 1) {
     				//converts an array to a list to an array containing a singular list
-    				List<Object> list = Arrays.asList(entry.getValue());
-    				keyVals.put(entry.getKey(), new Object[] {list});
+    				List<Object> list = new ArrayList<Object>(Arrays.asList(entry.getValue()));
+    				entry.setValue(new Object[] {list});
     			}
-    			else {
-    				keyVals.put(entry.getKey().toUpperCase(), entry.getValue());
-    			}
+    			
+    			if(entry.getKey().equals(TFBotNode.WEAPONRESTRICT)) {
+					//need to sanity check here
+					entry.setValue(new Object[] {(WeaponRestriction.valueOf(((String) entry.getValue()[0]).toUpperCase()))});
+				}
+				else if(entry.getKey().equals(TFBotNode.SKILL)) {
+					entry.setValue(new Object[] {(Skill.valueOf(((String) entry.getValue()[0]).toUpperCase()))});
+				}
     		}
-    	}
-    	
-    	//put key into map assuming it's not null or empty, otherwise remove it
-    	public void putKey(String key, Object value) {
-    		if(value != null) {
-    			if((value.getClass() == String.class && !value.equals("")) || 
-    					value.getClass() != String.class) {
-    				//if it is a string that is not empty or it is not a string
-    				keyVals.put(key, new Object[] {value});
-    			}
-    			else { //remove key does nothing if key doesn't exist
-    				keyVals.remove(key);
-    			}
-    		}
-    		else {
-    			keyVals.remove(key);
-    		}
-    	}
-    	
-    	//array value ver of above
-    	public void putKey(String key, Object[] value) {
-    		if(value.length > 0) {
-    			keyVals.put(key, value);
-    		}
-    		else {
-    			keyVals.remove(key);
-    		}
-    	}
-    	
-    	public Object getValueSingular(TFBotKeys key) {
-    		//if(keyVals.get(key).length == 1) {
-    		//	return keyVals.get(key);
-    		//}
-    		
-    		return keyVals.get(key)[0];
-    	}
-    	
-    	public Object[] getValueArray(TFBotKeys key) {
-    		return keyVals.get(key);
     	}
     	
     	public boolean isItemsSorted() {
@@ -799,11 +876,6 @@ public class Tree {
     	
     	public void setItemsSorted(boolean isItemsSorted) {
     		this.isItemsSorted = isItemsSorted;
-    	}
-    	
-    	//reconsider this
-    	public Map<String, Object[]> getMap() {
-    		return this.keyVals;
     	}
     	
     	/*
@@ -845,11 +917,52 @@ public class Tree {
     
     //these two are mostly convenience 
     public static class SquadNode extends Node {
+    	public SquadNode() {
+    		
+    	}
     	
+    	public SquadNode(Map<String, Object[]> map) {
+    		boolean match = false;
+    		String currentKey = "";
+    		
+    		keyVals.putAll(map);
+    		
+    		//may want to use generic spawners here
+    		for(String key : keyVals.keySet()) {
+    			if(key.equalsIgnoreCase(WaveSpawnNode.TFBOT) && !key.equals(WaveSpawnNode.TFBOT)) {
+    				match = true;
+    				currentKey = key;
+    			}
+    		}
+    		
+    		if(match) {
+    			keyVals.put(WaveSpawnNode.TFBOT, keyVals.remove(currentKey));
+    		}
+    	}
     }
     
     public static class RandomChoiceNode extends Node {
+    	public RandomChoiceNode() {
+    		
+    	}
     	
+    	public RandomChoiceNode(Map<String, Object[]> map) { 
+    		boolean match = false;
+    		String currentKey = "";
+    		
+    		keyVals.putAll(map);
+    		
+    		for(String key : keyVals.keySet()) {
+    			if(key.equalsIgnoreCase(WaveSpawnNode.TFBOT) && !key.equals(WaveSpawnNode.TFBOT)) {
+    				match = true;
+    				currentKey = key;
+    			}
+    		}
+    		
+    		if(match) {
+    			keyVals.put(WaveSpawnNode.TFBOT, keyVals.remove(currentKey));
+    		}
+    	}
     }
     
 }

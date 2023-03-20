@@ -37,17 +37,17 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	JCheckBox advancedBox;
 	
 	JButton updatePop;
-	PopNode pn;
+	PopNode popNode;
 	
 	private PropertyChangeSupport support = new PropertyChangeSupport(this);
 	
-	public SecondaryWindow(PopNode pn, MainWindow w) {
+	public SecondaryWindow(PopNode popNode, MainWindow w) {
 		super("Population settings");
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		setSize(800, 200);
 		
-		this.pn = pn;
+		this.popNode = popNode;
 		makePopPanel(w);
 		
 		addGB(popPanel, 0, 0);
@@ -119,8 +119,8 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		updatePop.addActionListener(event -> {
 			updateNode();
 			feedback.setText("Population settings updated");
-			if(pn.getMapIndex() > -1) { //if user entered a map
-				loadMapInfo(pn.getMapIndex());
+			if(popNode.getMapIndex() > -1) { //if user entered a map
+				loadMapInfo(popNode.getMapIndex());
 			}
 		});
 		
@@ -181,25 +181,25 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	}
 	
 	private void updateNode() {
-		pn.setMapIndex(maps.getSelectedIndex());
-		pn.setCurrency((int) currSpinner.getValue());
-		pn.setWaveTime((int) respawnWaveSpinner.getValue());
-		pn.setFixedWaveTime(waveTimeBox.isSelected());
-		pn.setEventPop(eventBox.isSelected());
-		pn.setBusterDmg((int) busterDmgSpinner.getValue());
-		pn.setBusterKills((int) busterKillSpinner.getValue());
-		pn.setAtkInSpawn(atkSpawnBox.isSelected());
-		pn.setAdvanced(advancedBox.isSelected());
+		popNode.setMapIndex(maps.getSelectedIndex());
+		popNode.putKey(PopNode.STARTINGCURRENCY, currSpinner.getValue());
+		popNode.putKey(PopNode.RESPAWNWAVETIME, respawnWaveSpinner.getValue());
+		popNode.putKey(PopNode.FIXEDRESPAWNWAVETIME, waveTimeBox.isSelected());
+		popNode.putKey(PopNode.EVENTPOPFILE, eventBox.isSelected());
+		popNode.putKey(PopNode.BUSTERDAMAGE, busterDmgSpinner.getValue());
+		popNode.putKey(PopNode.BUSTERKILLS, busterKillSpinner.getValue());
+		popNode.putKey(PopNode.BOTSATKINSPAWN, atkSpawnBox.isSelected());
+		popNode.putKey(PopNode.ADVANCED, advancedBox.isSelected());
 	}
 	
 	public void updatePopPanel() {
-		currSpinner.setValue(pn.getCurrency());
-		respawnWaveSpinner.setValue(pn.getWaveTime());
-		waveTimeBox.setSelected(pn.getFixedWaveTime());
-		eventBox.setSelected(pn.getEventPop());
-		busterDmgSpinner.setValue(pn.getBusterDmg());
-		busterKillSpinner.setValue(pn.getBusterKills());
-		atkSpawnBox.setSelected(pn.getAtkInSpawn());
-		advancedBox.setSelected(pn.getAdvanced());
+		currSpinner.setValue(popNode.getValueSingular(PopNode.STARTINGCURRENCY));
+		respawnWaveSpinner.setValue(popNode.getValueSingular(PopNode.RESPAWNWAVETIME));
+		waveTimeBox.setSelected((boolean) popNode.getValueSingular(PopNode.FIXEDRESPAWNWAVETIME));
+		eventBox.setSelected((boolean) popNode.getValueSingular(PopNode.EVENTPOPFILE));
+		busterDmgSpinner.setValue(popNode.getValueSingular(PopNode.BUSTERDAMAGE));
+		busterKillSpinner.setValue(popNode.getValueSingular(PopNode.BUSTERKILLS));
+		atkSpawnBox.setSelected((boolean) popNode.getValueSingular(PopNode.BOTSATKINSPAWN));
+		advancedBox.setSelected((boolean) popNode.getValueSingular(PopNode.ADVANCED));
 	}
 }

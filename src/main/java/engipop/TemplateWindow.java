@@ -30,11 +30,8 @@ import engipop.Tree.RandomChoiceNode;
 import engipop.Tree.SquadNode;
 import engipop.Tree.TFBotNode;
 import engipop.Tree.TankNode;
-import engipop.Tree.TemplateNode;
 import engipop.Tree.WaveNode;
 import engipop.Tree.WaveSpawnNode;
-import engipop.Tree.TFBotNode.TFBotKeys;
-import engipop.Tree.WaveSpawnNode.WaveSpawnKeys;
 
 //window to edit bot and ws templates
 //similar structure to main window
@@ -55,7 +52,7 @@ public class TemplateWindow extends EngiWindow {
 	SquadNode currentSquadNode = new SquadNode();
 	RandomChoiceNode currentRCNode = new RandomChoiceNode();
 	
-	TemplateNode templateParent = new TemplateNode(); //placeholder node, doesn't contain anything
+	//TemplateNode templateParent = new TemplateNode(); //placeholder node, doesn't contain anything
 	int generated = 1; //attempt to make sure names are unique
 	
 	public TemplateWindow(MainWindow w, SecondaryWindow w2) {
@@ -166,8 +163,8 @@ public class TemplateWindow extends EngiWindow {
 			type = "WaveSpawn_";
 			WaveSpawnNode wsNode = (WaveSpawnNode) node; //redundant but code clarity
 			
-			if(wsNode.getMap().containsKey(WaveSpawnKeys.NAME)) { //this currently doesn't get used
-				body = (String) wsNode.getValue(WaveSpawnKeys.NAME);
+			if(wsNode.getMap().containsKey(WaveSpawnNode.NAME)) { //this currently doesn't get used
+				body = (String) wsNode.getValueSingular(WaveSpawnNode.NAME);
 			}
 			
 			if(wsNode.hasChildren()) { //same here
@@ -179,10 +176,10 @@ public class TemplateWindow extends EngiWindow {
 			type = "TFBot_";
 			TFBotNode botNode = (TFBotNode) node;
 			
-			body = botNode.getValue(TFBotKeys.CLASSNAME).toString();
+			body = botNode.getValueSingular(TFBotNode.CLASSNAME).toString();
 			
-			if((String) botNode.getValue(TFBotKeys.NAME) != null) {
-				body = body + "_" + (String) botNode.getValue(TFBotKeys.NAME) + "_";
+			if((String) botNode.getValueSingular(TFBotNode.NAME) != null) {
+				body = body + "_" + (String) botNode.getValueSingular(TFBotNode.NAME) + "_";
 			}
 			keyset = popNode.getBotTemplateMap().keySet();
 		}
@@ -437,7 +434,7 @@ public class TemplateWindow extends EngiWindow {
 			addToBotList.addActionListener(event -> {
 				TFBotNode newTemplate = new TFBotNode();
 				botPanel.updateNode(newTemplate);
-				newTemplate.setParent(templateParent); //fake parent to appease attributepanel
+				//newTemplate.setParent(templateParent); //fake parent to appease attributepanel
 				//if(currentBotNode.getItemAttributeList() != null) { //copy attributes over
 					//newTemplate.setItemAttributeList(new HashMap<ItemSlot, HashMap<String, String>>());
 					//newTemplate.getItemAttributeList().putAll(currentBotNode.getItemAttributeList());
@@ -1017,11 +1014,11 @@ public class TemplateWindow extends EngiWindow {
 			
 			for(int i = 0; i < length; i++) {
 				TFBotNode t = (TFBotNode) node.getChildren().get(i);
-				if(t.getValue(TFBotKeys.NAME) != null) {
-					squadRandomListModel.addElement((String) t.getValue(TFBotKeys.NAME)); //this is extremely awful
+				if(t.getValueSingular(TFBotNode.NAME) != null) {
+					squadRandomListModel.addElement((String) t.getValueSingular(TFBotNode.NAME)); //this is extremely awful
 				}
 				else {
-					squadRandomListModel.addElement(t.getValue(TFBotKeys.CLASSNAME).toString());
+					squadRandomListModel.addElement(t.getValueSingular(TFBotNode.CLASSNAME).toString());
 					//classname is classname obj
 				}		
 			}

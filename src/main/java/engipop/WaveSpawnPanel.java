@@ -12,7 +12,6 @@ import javax.swing.*;
 
 import engipop.Tree.RelayNode;
 import engipop.Tree.WaveSpawnNode;
-import engipop.Tree.WaveSpawnNode.WaveSpawnKeys;
 
 @SuppressWarnings("serial")
 public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener { //panel for creating wavespawns
@@ -214,46 +213,46 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	}
 	
 	public void updatePanel(WaveSpawnNode wsn) { //sets panel components to reflect the node
-		wsNameField.setText((String) wsn.getValue(WaveSpawnKeys.NAME));
-		wsWhereBox.setSelectedItem(wsn.getValue(WaveSpawnKeys.WHERE));
-		wsTotalSpin.setValue(wsn.getValue(WaveSpawnKeys.TOTALCOUNT));
-		wsMaxSpin.setValue(wsn.getValue(WaveSpawnKeys.MAXACTIVE));
-		wsSpawnSpin.setValue(wsn.getValue(WaveSpawnKeys.SPAWNCOUNT));
-		wsStartSpin.setValue(wsn.getValue(WaveSpawnKeys.WAITBEFORESTARTING));
-		wsBetweenSpin.setValue(wsn.getValue(WaveSpawnKeys.WAITBETWEENSPAWNS));
-		wsDeaths.setSelected((Boolean) wsn.getValue(WaveSpawnKeys.WAITBETWEENDEATHS));
+		wsNameField.setText((String) wsn.getValueSingular(WaveSpawnNode.NAME));
+		wsWhereBox.setSelectedItem(wsn.getValueSingular(WaveSpawnNode.WHERE));
+		wsTotalSpin.setValue(wsn.getValueSingular(WaveSpawnNode.TOTALCOUNT));
+		wsMaxSpin.setValue(wsn.getValueSingular(WaveSpawnNode.MAXACTIVE));
+		wsSpawnSpin.setValue(wsn.getValueSingular(WaveSpawnNode.SPAWNCOUNT));
+		wsStartSpin.setValue(wsn.getValueSingular(WaveSpawnNode.WAITBEFORESTARTING));
+		wsBetweenSpin.setValue(wsn.getValueSingular(WaveSpawnNode.WAITBETWEENSPAWNS));
+		wsDeaths.setSelected(wsn.getBetweenDeaths());
 		updateBetweenSpawns();
-		wsCurrSpin.setValue(wsn.getValue(WaveSpawnKeys.TOTALCURRENCY));
-		wsDeadField.setText((String) wsn.getValue(WaveSpawnKeys.WAITFORALLDEAD));
-		wsSpawnField.setText((String) wsn.getValue(WaveSpawnKeys.WAITFORALLSPAWNED));
-		isSupport.setSelected((Boolean) wsn.getValue(WaveSpawnKeys.SUPPORT));
-		isLimited.setSelected((Boolean) wsn.getValue(WaveSpawnKeys.SUPPORTLIMITED));
+		wsCurrSpin.setValue(wsn.getValueSingular(WaveSpawnNode.TOTALCURRENCY));
+		wsDeadField.setText((String) wsn.getValueSingular(WaveSpawnNode.WAITFORALLDEAD));
+		wsSpawnField.setText((String) wsn.getValueSingular(WaveSpawnNode.WAITFORALLSPAWNED));
+		isSupport.setSelected((Boolean) wsn.getValueSingular(WaveSpawnNode.SUPPORT));
+		isLimited.setSelected(wsn.getSupportLimited());
 		
 		//relays aren't mandatory, so only show them if they exist
-		if(wsn.getValue(WaveSpawnKeys.WAVESTARTOUTPUT) != null) {
+		if(wsn.getValueSingular(WaveSpawnNode.STARTWAVEOUTPUT) != null) {
 			doStart.setSelected(true);
-			startRelay.setSelectedItem(((RelayNode) wsn.getValue(WaveSpawnKeys.WAVESTARTOUTPUT)).getTarget());
+			startRelay.setSelectedItem(((RelayNode) wsn.getValueSingular(WaveSpawnNode.STARTWAVEOUTPUT)).getValueSingular(RelayNode.TARGET));
 		}
 		else {
 			doStart.setSelected(false);
 		}
-		if(wsn.getValue(WaveSpawnKeys.FIRSTSPAWNOUTPUT) != null) { //first
+		if(wsn.getValueSingular(WaveSpawnNode.FIRSTSPAWNOUTPUT) != null) { //first
 			doFirst.setSelected(true);
-			firstRelay.setSelectedItem(((RelayNode) wsn.getValue(WaveSpawnKeys.FIRSTSPAWNOUTPUT)).getTarget());
+			firstRelay.setSelectedItem(((RelayNode) wsn.getValueSingular(WaveSpawnNode.FIRSTSPAWNOUTPUT)).getValueSingular(RelayNode.TARGET));
 		}
 		else {
 			doFirst.setSelected(false);
 		}
-		if(wsn.getValue(WaveSpawnKeys.LASTSPAWNOUTPUT) != null) { //last
+		if(wsn.getValueSingular(WaveSpawnNode.LASTSPAWNOUTPUT) != null) { //last
 			doLast.setSelected(true);
-			lastRelay.setSelectedItem(((RelayNode) wsn.getValue(WaveSpawnKeys.LASTSPAWNOUTPUT)).getTarget());
+			lastRelay.setSelectedItem(((RelayNode) wsn.getValueSingular(WaveSpawnNode.LASTSPAWNOUTPUT)).getValueSingular(RelayNode.TARGET));
 		}
 		else {
 			doLast.setSelected(false);
 		}
-		if(wsn.getValue(WaveSpawnKeys.DONEOUTPUT) != null) { //done
+		if(wsn.getValueSingular(WaveSpawnNode.DONEOUTPUT) != null) { //done
 			doDone.setSelected(true);
-			doneRelay.setSelectedItem(((RelayNode) wsn.getValue(WaveSpawnKeys.DONEOUTPUT)).getTarget());
+			doneRelay.setSelectedItem(((RelayNode) wsn.getValueSingular(WaveSpawnNode.DONEOUTPUT)).getValueSingular(RelayNode.TARGET));
 		}
 		else {
 			doDone.setSelected(false);
@@ -261,57 +260,73 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	}
 	
 	public void updateNode(WaveSpawnNode wsn) { //update node to reflect panel
-		wsn.putKey(WaveSpawnKeys.NAME, wsNameField.getText());
-		wsn.putKey(WaveSpawnKeys.WHERE, wsWhereBox.getSelectedItem());
-		wsn.putKey(WaveSpawnKeys.TOTALCOUNT, wsTotalSpin.getValue());
-		wsn.putKey(WaveSpawnKeys.MAXACTIVE, wsMaxSpin.getValue());
-		wsn.putKey(WaveSpawnKeys.SPAWNCOUNT, wsSpawnSpin.getValue());
-		wsn.putKey(WaveSpawnKeys.WAITBEFORESTARTING, wsStartSpin.getValue());
-		wsn.putKey(WaveSpawnKeys.WAITBETWEENSPAWNS, wsBetweenSpin.getValue());
-		wsn.putKey(WaveSpawnKeys.WAITBETWEENDEATHS, wsDeaths.isSelected()); //this needs sanity checking
-		wsn.putKey(WaveSpawnKeys.TOTALCURRENCY, wsCurrSpin.getValue());
-		wsn.putKey(WaveSpawnKeys.WAITFORALLDEAD, wsDeadField.getText());
-		wsn.putKey(WaveSpawnKeys.WAITFORALLSPAWNED, wsSpawnField.getText());
-		wsn.putKey(WaveSpawnKeys.SUPPORT, isSupport.isSelected());
-		wsn.putKey(WaveSpawnKeys.SUPPORTLIMITED, isLimited.isSelected());
+		wsn.putKey(WaveSpawnNode.NAME, wsNameField.getText());
+		wsn.putKey(WaveSpawnNode.WHERE, wsWhereBox.getSelectedItem());
+		wsn.putKey(WaveSpawnNode.TOTALCOUNT, wsTotalSpin.getValue());
+		wsn.putKey(WaveSpawnNode.MAXACTIVE, wsMaxSpin.getValue());
+		wsn.putKey(WaveSpawnNode.SPAWNCOUNT, wsSpawnSpin.getValue());
+		wsn.putKey(WaveSpawnNode.WAITBEFORESTARTING, wsStartSpin.getValue());
+		wsn.putKey(WaveSpawnNode.TOTALCURRENCY, wsCurrSpin.getValue());
+		wsn.putKey(WaveSpawnNode.WAITFORALLDEAD, wsDeadField.getText());
+		wsn.putKey(WaveSpawnNode.WAITFORALLSPAWNED, wsSpawnField.getText());
+		wsn.putKey(WaveSpawnNode.SUPPORT, isSupport.isSelected());
+		
+		if(wsDeaths.isSelected()) { //this needs sanity checking
+			wsn.putKey(WaveSpawnNode.WAITBETWEENSPAWNS, null);
+			wsn.putKey(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH, wsBetweenSpin.getValue());
+		}
+		else {
+			wsn.putKey(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH, null);
+			wsn.putKey(WaveSpawnNode.WAITBETWEENSPAWNS, wsBetweenSpin.getValue());
+		}
+		wsn.setBetweenDeaths(wsDeaths.isSelected());
+		
+		if(isLimited.isSelected()) {
+			wsn.putKey(WaveSpawnNode.SUPPORT, "Limited");
+		}
+		else {
+			wsn.putKey(WaveSpawnNode.SUPPORT, true);
+		}
+		wsn.setSupportLimited(isLimited.isSelected());
+		
 		
 		if(doStart.isSelected()) {
-			if(wsn.getValue(WaveSpawnKeys.WAVESTARTOUTPUT) == null) { //make relays if data is entered and no relay exists
-				wsn.putKey(WaveSpawnKeys.WAVESTARTOUTPUT, new RelayNode()); 
+			if(wsn.getValueSingular(WaveSpawnNode.STARTWAVEOUTPUT) == null) { //make relays if data is entered and no relay exists
+				wsn.putKey(WaveSpawnNode.STARTWAVEOUTPUT, new RelayNode()); 
 			}
-			((RelayNode) wsn.getValue(WaveSpawnKeys.WAVESTARTOUTPUT)).setTarget((String) startRelay.getSelectedItem());
+			((RelayNode) wsn.getValueSingular(WaveSpawnNode.STARTWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) startRelay.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
 			//this does mean the node itself is now thrown out, so may consider removing checking if the
 			//node is null above
-			wsn.putKey(WaveSpawnKeys.WAVESTARTOUTPUT, null);
+			wsn.putKey(WaveSpawnNode.STARTWAVEOUTPUT, null);
 		}
 		if(doFirst.isSelected()) { //first
-			if(wsn.getValue(WaveSpawnKeys.FIRSTSPAWNOUTPUT) == null) {
-				wsn.putKey(WaveSpawnKeys.FIRSTSPAWNOUTPUT, new RelayNode()); 
+			if(wsn.getValueSingular(WaveSpawnNode.FIRSTSPAWNOUTPUT) == null) {
+				wsn.putKey(WaveSpawnNode.FIRSTSPAWNOUTPUT, new RelayNode()); 
 			}
-			((RelayNode) wsn.getValue(WaveSpawnKeys.FIRSTSPAWNOUTPUT)).setTarget((String) firstRelay.getSelectedItem());
+			((RelayNode) wsn.getValueSingular(WaveSpawnNode.FIRSTSPAWNOUTPUT)).putKey(RelayNode.TARGET, (String) firstRelay.getSelectedItem());
 		}
 		else { 
-			wsn.putKey(WaveSpawnKeys.FIRSTSPAWNOUTPUT, null);
+			wsn.putKey(WaveSpawnNode.FIRSTSPAWNOUTPUT, null);
 		}
 		if(doLast.isSelected()) { //last
-			if(wsn.getValue(WaveSpawnKeys.LASTSPAWNOUTPUT) == null) {
-				wsn.putKey(WaveSpawnKeys.LASTSPAWNOUTPUT, new RelayNode());
+			if(wsn.getValueSingular(WaveSpawnNode.LASTSPAWNOUTPUT) == null) {
+				wsn.putKey(WaveSpawnNode.LASTSPAWNOUTPUT, new RelayNode());
 			}
-			((RelayNode) wsn.getValue(WaveSpawnKeys.LASTSPAWNOUTPUT)).setTarget((String) lastRelay.getSelectedItem());
+			((RelayNode) wsn.getValueSingular(WaveSpawnNode.LASTSPAWNOUTPUT)).putKey(RelayNode.TARGET, (String) lastRelay.getSelectedItem());
 		}
 		else {
-			wsn.putKey(WaveSpawnKeys.LASTSPAWNOUTPUT, null);
+			wsn.putKey(WaveSpawnNode.LASTSPAWNOUTPUT, null);
 		}
 		if(doDone.isSelected()) { //done
-			if(wsn.getValue(WaveSpawnKeys.DONEOUTPUT) == null) {
-				wsn.putKey(WaveSpawnKeys.DONEOUTPUT, new RelayNode());
+			if(wsn.getValueSingular(WaveSpawnNode.DONEOUTPUT) == null) {
+				wsn.putKey(WaveSpawnNode.DONEOUTPUT, new RelayNode());
 			}
-			((RelayNode) wsn.getValue(WaveSpawnKeys.DONEOUTPUT)).setTarget((String) doneRelay.getSelectedItem());
+			((RelayNode) wsn.getValueSingular(WaveSpawnNode.DONEOUTPUT)).putKey(RelayNode.TARGET, (String) doneRelay.getSelectedItem());
 		}
 		else {
-			wsn.putKey(WaveSpawnKeys.DONEOUTPUT, null);
+			wsn.putKey(WaveSpawnNode.DONEOUTPUT, null);
 		}
 	}
 	
