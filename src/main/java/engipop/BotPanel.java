@@ -36,8 +36,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	//DefaultComboBoxModel<String> classModel;
 	DefaultComboBoxModel<String> iconModel = new DefaultComboBoxModel<String>();
 	DefaultListModel<String> tagModel = new DefaultListModel<String>();
-	//DefaultComboBoxModel<String> templateModel = new DefaultComboBoxModel<String>();
-	ComboBoxModel<String> templateModel; //double check if access to model is actually needed
+	DefaultComboBoxModel<String> templateModel = new DefaultComboBoxModel<String>();
+	//ComboBoxModel<String> templateModel; //double check if access to model is actually needed
 	
 	JTextField nameField = new JTextField(30); //max bot name is ~32
 	JTextField templateField = new JTextField(15);
@@ -94,7 +94,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
 		
 		setLayout(gbLayout);
-		gb.anchor = GridBagConstraints.WEST;
+		gbConstraints.anchor = GridBagConstraints.WEST;
 		
 		//this.parser = parser;
 		
@@ -243,16 +243,16 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		addGB(hat2List, 1, 13);		
 		addGB(hat3List, 1, 14);
 		
-		gb.anchor = GridBagConstraints.EAST;
+		gbConstraints.anchor = GridBagConstraints.EAST;
 		addGB(buiAttrBut, 2, 9);
 		
-		gb.anchor = GridBagConstraints.CENTER;
-		gb.gridwidth = 2;
+		gbConstraints.anchor = GridBagConstraints.CENTER;
+		gbConstraints.gridwidth = 2;
 		addGB(attrButPanel, 2, 7);
 		addGB(attrButPanel2, 2, 8);
 		
-		gb.anchor = GridBagConstraints.WEST;
-		gb.gridheight = 8;
+		gbConstraints.anchor = GridBagConstraints.WEST;
+		gbConstraints.gridheight = 8;
 		addGB(attrPanel, 2, 10);
 	}
 	
@@ -577,15 +577,15 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		return attributes;
 	}
 	
-	//convert templatepanel's bot template listmodel data to botpanel's template combobox model
+	//copy templatepanel's bot template model data to botpanel's template model
 	//i hate models
-	public void updateTemplateModel(DefaultListModel<String> model) {
-		String[] array = new String[model.size()];
-		model.copyInto(array);
+	public void updateTemplateModel(DefaultComboBoxModel<String> model) {
+		templateModel.removeAllElements();
 		
-		templateBox.setModel(new DefaultComboBoxModel<String>(array));
-		
-		templateModel = templateBox.getModel();
+		for(int i = 0; i < model.getSize(); i++) {
+			templateModel.addElement(model.getElementAt(i));
+		}
+
 		templateBox.setSelectedIndex(-1); //default to no template
 	}
 	
@@ -757,12 +757,12 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		JButton addAttrToBot = new JButton("Add current ItemAttributes type to bot");
 		JButton removeAttrFromBot = new JButton("Remove current ItemAttribute type from bot");
 		
-		ButtonListManager attrBLManager = new ButtonListManager(attrSelectedList, addAttributeToListButton,
+		ButtonListManager attrBLManager = new ButtonListManager(addAttributeToListButton,
 				updateAttributeValueButton, removeAttributeFromList);
 		
 		public AttributesPanel(String[] itemAttributes) {
 			setLayout(gbLayout);
-			gb.anchor = GridBagConstraints.WEST;
+			gbConstraints.anchor = GridBagConstraints.WEST;
 			
 			itemAttributeBox = new JComboBox<String>(itemAttributes);
 			itemAttributeBox.setEditable(true);
@@ -780,13 +780,13 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			addGB(updateAttributeValueButton, 2, 1);
 			addGB(attrValueField, 3, 1);
 			
-			gb.gridwidth = 2;
+			gbConstraints.gridwidth = 2;
 			addGB(addAttrToBot, 2, 5);
 			addGB(removeAttrFromBot, 2, 6);
 			addGB(itemAttributeBox, 0, 0);
 			
 			//gb.gridwidth = 2;
-			gb.gridheight = 6;
+			gbConstraints.gridheight = 6;
 			addGB(attrListPane, 0, 2);	
 			
 			setAttrToBotButtonsStates(false, false, States.DISABLE);

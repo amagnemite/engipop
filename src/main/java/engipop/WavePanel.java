@@ -34,8 +34,8 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	
 	public WavePanel(SecondaryWindow secondaryWindow) {
 		setLayout(gbLayout);
-		gb.anchor = GridBagConstraints.WEST;
-		gb.insets = new Insets(0, 0, 0, 5);
+		gbConstraints.anchor = GridBagConstraints.WEST;
+		gbConstraints.insets = new Insets(0, 0, 0, 5);
 		
 		secondaryWindow.addPropertyChangeListener(SecondaryWindow.WAVERELAY, this);
 		

@@ -23,7 +23,7 @@ public class Tree {
     	return this.root;
     }
     public enum SpawnerType {
-    	TFBOT, TANK, SQUAD, RANDOMCHOICE
+    	NONE, TFBOT, TANK, SQUAD, RANDOMCHOICE
     }
 
     public static class Node {
@@ -66,8 +66,11 @@ public class Tree {
     	//put key into map assuming it's not null or empty, otherwise remove it
     	public void putKey(String key, Object value) {
     		if(value != null) {
-    			if((value.getClass() == String.class && !value.equals("")) || 
-    					value.getClass() != String.class) {
+    			if(value.getClass() == Boolean.class) { //prevent checkboxes from erroring
+    				keyVals.put(key, new Object[] {value});
+    			}
+    			else if(value.getClass() != String.class || 
+    				(value.getClass() == String.class && !value.equals(""))) {
     				//if it is a string that is not empty or it is not a string
     				keyVals.put(key, new Object[] {value});
     			}
@@ -94,7 +97,7 @@ public class Tree {
     		//if(keyVals.get(key).length == 1) {
     		//	return keyVals.get(key);
     		//}
-    		if(keyVals.get(key) == null) {
+    		if(!keyVals.containsKey(key)) {
     			return null;
     		}
     		else {
@@ -104,6 +107,10 @@ public class Tree {
     	
     	public Object[] getValueArray(String key) {
     		return keyVals.get(key);
+    	}
+    	
+    	public boolean containsKey(String key) {
+    		return keyVals.containsKey(key);
     	}
     	
     	//reconsider this
@@ -164,8 +171,8 @@ public class Tree {
     	public static final String ADVANCED = "Advanced"; //boolean
     	
     	private int mapIndex = -1;
-    	private Map<String, WaveSpawnNode> wsTemplateMap;
-    	private Map<String, TFBotNode> botTemplateMap;
+    	private Map<String, Node> wsTemplateMap;
+    	private Map<String, Node> botTemplateMap;
 
         public PopNode() {
         	this.putKey(STARTINGCURRENCY, 400);
@@ -173,6 +180,9 @@ public class Tree {
         	this.putKey(BUSTERDAMAGE, 3000);
         	this.putKey(BUSTERKILLS, 15);
         	this.putKey(BOTSATKINSPAWN, false);
+        	this.putKey(FIXEDRESPAWNWAVETIME, false);
+        	this.putKey(EVENTPOPFILE, false);
+        	this.putKey(ADVANCED, false);
         }
         
 		public PopNode(Map<String, Object[]> map) { //constructor for read in nodes
@@ -184,13 +194,8 @@ public class Tree {
         	
         	keyVals.putAll(map);
         	
-        	for(Entry<String, Object[]> entry : keyVals.entrySet()) {
-        		
-        	}
-        	
-        	
         	convertCase(keyVals, popKeys);
-
+        	
     		Iterator<Entry<String, Object[]>> iterator2 = keyVals.entrySet().iterator();
     		while(iterator2.hasNext()) {
     			Entry<String, Object[]> entry = iterator2.next();
@@ -280,19 +285,19 @@ public class Tree {
         	return this.mapIndex;
         }
         
-        public void setWSTemplateMap(Map<String, WaveSpawnNode> map) {
+        public void setWSTemplateMap(Map<String, Node> map) {
         	this.wsTemplateMap = map;
         }
         
-        public Map<String, WaveSpawnNode> getWSTemplateMap() {
+        public Map<String, Node> getWSTemplateMap() {
         	return this.wsTemplateMap;
         }
         
-        public void setBotTemplateMap(Map<String, TFBotNode> map) {
+        public void setBotTemplateMap(Map<String, Node> map) {
         	this.botTemplateMap = map;
         }
         
-        public Map<String, TFBotNode> getBotTemplateMap() {
+        public Map<String, Node> getBotTemplateMap() {
         	return this.botTemplateMap;
         }
     }
@@ -346,7 +351,7 @@ public class Tree {
         			WaveSpawnNode.LASTSPAWNOUTPUT.toUpperCase(), WaveSpawnNode.DONEOUTPUT.toUpperCase(), WaveSpawnNode.TFBOT.toUpperCase(),
         			WaveSpawnNode.TANK.toUpperCase(), WaveSpawnNode.SQUAD.toUpperCase(), WaveSpawnNode.RANDOMCHOICE.toUpperCase()));
         	
-        	this.name = name; //this is the internal pop block name
+        	this.setName(name); //this is the internal pop block name
         	keyVals.putAll(map);
         	
     		Iterator<Entry<String, Object[]>> iterator = keyVals.entrySet().iterator();
@@ -364,6 +369,14 @@ public class Tree {
     			}
     		}
         }
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
     	
     	/*
     	public void setStart(RelayNode s) {
@@ -399,7 +412,7 @@ public class Tree {
     	public static final String DELAY = "Delay";
     	
     	public RelayNode() { //for now, assume all actions are trigger
-    		this.putKey(TARGET, null);
+    		//this.putKey(TARGET, null);
 			this.putKey(ACTION, "trigger");
 		}
     	
@@ -420,6 +433,7 @@ public class Tree {
     		}
     	}
     	
+    	/*
     	public boolean isTargetEmptyOrNull() {
     		boolean check = false;
     		
@@ -431,6 +445,7 @@ public class Tree {
     		}
     		return check;
     	}
+    	*/
     }
     
     public static class WaveSpawnNode extends Node { //node for wavespawns

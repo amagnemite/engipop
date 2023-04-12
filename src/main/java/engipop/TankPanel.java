@@ -35,8 +35,8 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	
 	public TankPanel(SecondaryWindow SecondaryWindow) {
 		setLayout(gbLayout);
-		gb.anchor = GridBagConstraints.WEST;
-		gb.insets = new Insets(0, 0, 0, 5);
+		gbConstraints.anchor = GridBagConstraints.WEST;
+		gbConstraints.insets = new Insets(0, 0, 0, 5);
 		
 		int tankInit = EngiPanel.tankDefaultHealth, min = 0, tankMax = 300000, tankIncr = 1000;
 		//double speedInit = Values.tankDefaultSpeed, dMin = 0.0, speedMax = 300.0, speedIncr = 1.0;

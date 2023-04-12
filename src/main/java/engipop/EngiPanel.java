@@ -11,7 +11,7 @@ import javax.swing.JPanel;
 //convenience class for reused methods / static variables
 public class EngiPanel extends JPanel {
 	protected GridBagLayout gbLayout = new GridBagLayout();
-	protected GridBagConstraints gb = new GridBagConstraints();
+	protected GridBagConstraints gbConstraints = new GridBagConstraints();
 	
 	public enum Classes { //class names + their default weps
 		None ("n/a", "n/a", "n/a"),
@@ -92,9 +92,9 @@ public class EngiPanel extends JPanel {
 	
 	//method to position on grid bag layout
 	protected void addGB(Component comp, int x, int y) {
-		gb.gridx = x;
-		gb.gridy = y;
-		add(comp, gb);
+		gbConstraints.gridx = x;
+		gbConstraints.gridy = y;
+		add(comp, gbConstraints);
 	}
 	
 	//set visibility of a component and its paired label

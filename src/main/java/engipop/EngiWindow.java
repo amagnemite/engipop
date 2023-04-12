@@ -6,6 +6,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.net.URL;
 
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -17,12 +18,14 @@ public class EngiWindow extends JFrame {
 	public static ImageIcon icon = new ImageIcon(iconURL); //same icon across all windows
 	
 	//common node check types
+	/*
 	public final static int NONE = -1;
 	public final static int WAVESPAWN = 0;
 	public final static int TFBOT = 1;
 	public final static int TANK = 2;
 	public final static int SQUAD = 3;
 	public final static int RANDOMCHOICE = 4;
+	*/
 	
 	GridBagLayout gbLayout = new GridBagLayout();
 	GridBagConstraints gbConstraints = new GridBagConstraints();
@@ -47,4 +50,11 @@ public class EngiWindow extends JFrame {
 		feedback.setText(string);
 	}
 	
+	public static class NoDeselectionModel extends DefaultListSelectionModel {
+
+	    @Override
+	    public void removeSelectionInterval(int index0, int index1) {
+	    	
+	    }
+	}
 }

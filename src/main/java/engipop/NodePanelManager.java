@@ -1,0 +1,591 @@
+package engipop;
+
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.util.List;
+
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+import engipop.ButtonListManager.States;
+import engipop.EngiWindow.NoDeselectionModel;
+import engipop.Tree.Node;
+import engipop.Tree.RandomChoiceNode;
+import engipop.Tree.SpawnerType;
+import engipop.Tree.SquadNode;
+import engipop.Tree.TFBotNode;
+import engipop.Tree.TankNode;
+import engipop.Tree.WaveNode;
+import engipop.Tree.WaveSpawnNode;
+
+//buttons to interface with backend / select panel visibility
+//split across two panels
+public class NodePanelManager {
+	static final String updateBotMsg = "Update bot";
+	static final String addBotMsg = "Add bot";
+	static final String removeBotMsg = "Remove bot";
+	
+	static final String updateTankMsg = "Update tank";
+	static final String addTankMsg = "Add tank";
+	static final String removeTankMsg = "Remove tank";
+	
+	static final String addSquadMsg = "Add squad";
+	static final String removeSquadMsg = "Remove squad";
+	static final String addRandomMsg = "Add randomchoice";
+	static final String removeRandomMsg = "Remove randomchoice";	
+	
+	static final String noSpawner = "Current spawner type: none";
+	static final String botSpawner = "Current spawner type: TFBot";
+	static final String tankSpawner = "Current spawner type: tank";
+	static final String squadSpawner = "Current spawner type: squad";
+	static final String randomSpawner = "Current spawner type: randomchoice";
+	
+	WaveSpawnNode currentWSNode = new WaveSpawnNode();
+	TFBotNode currentBotNode = new TFBotNode();
+	TankNode currentTankNode = new TankNode();
+	SquadNode currentSquadNode = new SquadNode();
+	RandomChoiceNode currentRCNode = new RandomChoiceNode();
+	
+	EngiWindow window;
+	BotPanel botPanel;
+	TankPanel tankPanel;
+	
+	JButton addSpawner = new JButton(addBotMsg);
+	JButton updateSpawner = new JButton(updateBotMsg);
+	JButton removeSpawner = new JButton(removeBotMsg);
+	
+	//essentially functions the same as the above 3, just manages squad/random's child bots
+	JButton addSquadRandomBot = new JButton(addBotMsg);
+	JButton updateSquadRandomBot = new JButton(updateBotMsg);
+	JButton removeSquadRandomBot = new JButton(removeBotMsg);
+	
+	DefaultListModel<String> squadRandomListModel = new DefaultListModel<String>();
+	JList<String> squadRandomList = new JList<String>(squadRandomListModel);
+	
+	ButtonListManager spawnerBLManager = new ButtonListManager(addSpawner, updateSpawner, removeSpawner);
+	ButtonListManager squadRandomBLManager = new ButtonListManager(addSquadRandomBot, updateSquadRandomBot, removeSquadRandomBot);
+	
+	JLabel spawnerInfo = new JLabel("Current spawner: none");
+	
+	JRadioButton tfbotBut = new JRadioButton("TFBot");
+	JRadioButton tankBut = new JRadioButton("Tank");
+	JRadioButton squadBut = new JRadioButton("Squad");
+	JRadioButton randomBut = new JRadioButton("RandomChoice");
+	JRadioButton noneBut = new JRadioButton("none");
+	//hidden button to ensure the buttongroup state always changes, so can't go from say tfbot to tfbot, which wouldn't cause a state change
+	
+	public NodePanelManager(EngiWindow window, BotPanel botPanel, TankPanel tankPanel) {
+		this.window = window;
+		this.botPanel = botPanel;
+		this.tankPanel = tankPanel;
+		
+		squadRandomList.setSelectionModel(new NoDeselectionModel());
+		squadRandomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		//listAddWaveSpawn.setPreferredSize(new Dimension(159, 22));
+		//+2 for padding or something
+		
+		spawnerBLManager.changeButtonState(States.EMPTY);
+		squadRandomBLManager.changeButtonState(States.DISABLE);
+		
+		addSquadRandomBot.setVisible(false);
+		updateSquadRandomBot.setVisible(false);
+		removeSquadRandomBot.setVisible(false);
+		
+		initListeners();
+		initSpawnerSelector();
+	}
+	
+	public JPanel makeListPanel() {
+		EngiPanel panel = new EngiPanel();
+		
+		panel.setLayout(panel.gbLayout);
+		panel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
+		panel.gbConstraints.insets = new Insets(5, 0, 5, 5);
+		
+		panel.addGB(addSpawner, 0, 0);
+		panel.addGB(updateSpawner, 0, 1);
+		panel.addGB(removeSpawner, 0, 2);
+		
+		panel.addGB(addSquadRandomBot, 0, 3);
+		panel.addGB(updateSquadRandomBot, 0, 4);
+		panel.addGB(removeSquadRandomBot, 0, 5);
+		
+		panel.gbConstraints.gridheight = 3;
+		panel.addGB(squadRandomList, 1, 0);	
+		
+		return panel;
+	}
+	
+	public JPanel makeSpawnerPanel() {
+		JPanel panel = new JPanel();
+		
+		panel.add(tfbotBut = new JRadioButton("TFBot"));
+		panel.add(tankBut = new JRadioButton("Tank"));
+		panel.add(squadBut = new JRadioButton("Squad"));
+		panel.add(randomBut = new JRadioButton("RandomChoice"));
+		panel.add(spawnerInfo);
+		
+		return panel;
+	}
+	
+	//will need new contexts later
+	protected void initListeners() { //inits all the button/list listeners
+		addSpawner.addActionListener(event -> {
+			switch (addSpawner.getText()) {
+				//TODO: get the current wsnode from whatever parent window
+				case (addBotMsg):
+					botPanel.updateNode(currentBotNode);
+					currentBotNode.connectNodes(currentWSNode);
+					spawnerBLManager.changeButtonState(States.FILLEDSLOT);
+					botPanel.getAttributesPanel().updateItemAttrInfo(currentBotNode); //other place where you can enter bot added state
+					spawnerInfo.setText(botSpawner);				
+					//currentBotNode = new TFBotNode();		
+					//if(currentWSNode.getParent() == null) { //may need to change here
+					//	feedback.setText("Bot successfully created, but the wavespawn it is linked to is currently unadded");
+					//}
+					//else {
+						window.feedback.setText("Bot successfully created");
+					//}
+					
+					break;
+				case (addTankMsg):
+					tankPanel.updateNode(currentTankNode);
+					currentTankNode.connectNodes(currentWSNode);
+					spawnerBLManager.changeButtonState(States.FILLEDSLOT);
+					spawnerInfo.setText(tankSpawner);
+					//if(currentWSNode.getParent() == null) {
+					//	feedback.setText("Tank successfully created, but the wavespawn it is linked to is currently unadded");
+					//}
+					//else {
+						window.feedback.setText("Tank successfully created");
+					//}
+					break;
+				case (addSquadMsg):
+					currentSquadNode.connectNodes(currentWSNode);
+					spawnerBLManager.changeButtonState(States.FILLEDSLOT);
+					squadRandomBLManager.changeButtonState(States.EMPTY); //enable adding bot subnodes
+					
+					spawnerInfo.setText(squadSpawner);
+					window.feedback.setText("Squad successfully created");
+					//loadBot(true);
+					
+					break;
+				case (addRandomMsg):
+					currentRCNode.connectNodes(currentWSNode);
+					spawnerBLManager.changeButtonState(States.FILLEDSLOT);
+					squadRandomBLManager.changeButtonState(States.EMPTY);
+					
+					spawnerInfo.setText(randomSpawner);
+					window.feedback.setText("RandomChoice successfully created");
+				
+					break;
+			}
+		});
+		
+		removeSpawner.addActionListener(event -> { //remove current spawner from wavespawn	
+			currentWSNode.getChildren().clear();
+			resetSpawnerState();
+		});
+		
+		updateSpawner.addActionListener(event -> { //update current spawner
+			if(tankBut.isSelected()) {
+				tankPanel.updateNode(currentTankNode);
+				window.feedback.setText("Tank successfully updated");
+			}
+			else {
+				botPanel.updateNode(currentBotNode);
+				window.feedback.setText("Bot successfully updated");
+			}
+		});
+		
+		addSquadRandomBot.addActionListener(event -> { //squad/rc specific button for adding bots to them
+			window.feedback.setText(" ");
+			
+			botPanel.updateNode(currentBotNode);
+			if(squadBut.isSelected()) { //double check for the old spawner times
+				currentBotNode.connectNodes(currentSquadNode);
+			}
+			else {
+				currentBotNode.connectNodes(currentRCNode);
+			}
+			//getSquadRandomList();
+			
+			setSquadRandomListElement(currentBotNode);
+			
+			loadBot(true);
+		});
+		
+		updateSquadRandomBot.addActionListener(event -> { //squad/rc specific button to update bots
+			botPanel.updateNode(currentBotNode);
+			window.feedback.setText("Bot successfully updated");
+			
+			//similar logic to setsquadrandomlistelement but uses set instead of addelement to update
+			if(currentBotNode.containsKey(TFBotNode.NAME)) {
+				squadRandomListModel.set(squadRandomList.getSelectedIndex(), (String) currentBotNode.getValueSingular(TFBotNode.NAME));
+			}
+			else {
+				squadRandomListModel.set(squadRandomList.getSelectedIndex(), currentBotNode.getValueSingular(TFBotNode.CLASSNAME).toString());
+			}
+		});
+		
+			
+		removeSquadRandomBot.addActionListener(event -> { //squad/rc button to remove bots from them
+			if(squadRandomList.getSelectedIndex() != -1) {
+				List<Node> list;
+				
+				if(squadBut.isSelected()) {
+					list = currentSquadNode.getChildren();
+				}
+				else {
+					list = currentRCNode.getChildren();
+				}
+				
+				list.remove(squadRandomList.getSelectedIndex()); 
+				squadRandomListModel.remove(squadRandomList.getSelectedIndex());
+						
+				//getSquadRandomList();
+				
+				if(list.size() == 0) { //if no wavespawns again
+					squadRandomBLManager.changeButtonState(States.EMPTY);
+					loadBot(true);
+				}
+				else { 
+					squadRandomList.setSelectedIndex(list.size() - 1);
+				}
+			}
+		});
+		
+		squadRandomList.addListSelectionListener(event -> { //list of squad/random's bots
+			int squadRandomIndex = squadRandomList.getSelectedIndex();
+			window.feedback.setText(" ");
+			
+			//prevent fits if index is reset
+			if(squadRandomIndex != -1) {
+				if(squadBut.isSelected()) {
+					currentBotNode = (TFBotNode) currentSquadNode.getChildren().get(squadRandomIndex);
+				}
+				else {
+					currentBotNode = (TFBotNode) currentRCNode.getChildren().get(squadRandomIndex);
+				}
+				loadBot(false, currentBotNode);
+				squadRandomBLManager.changeButtonState(States.FILLEDSLOT);
+			}
+			else { //create a new bot 
+				loadBot(true);
+				squadRandomBLManager.changeButtonState(States.EMPTY);
+			}
+		});
+	}
+	
+	void checkSpawner(Node node) { //check what the wavespawn's spawner is
+		if(node.getClass() == TFBotNode.class) {
+			tfbotBut.setSelected(true);
+			spawnerInfo.setText(botSpawner);
+		}
+		else if(node.getClass() == TankNode.class) {
+			tankBut.setSelected(true);
+			spawnerInfo.setText(tankSpawner);
+		}
+		else if(node.getClass() == SquadNode.class) {
+			squadBut.setSelected(true);
+			spawnerInfo.setText(squadSpawner);
+		}
+		else if(node.getClass() == RandomChoiceNode.class) {
+			randomBut.setSelected(true);
+			spawnerInfo.setText(randomSpawner);
+		}
+	}
+	
+	void loadBot(boolean newNode, Node node) { //if true, generate a new tfbot, otherwise load the input node
+		if(tfbotBut.isSelected()) {
+			addSpawner.setText(addBotMsg);
+			updateSpawner.setText(updateBotMsg);
+			removeSpawner.setText(removeBotMsg);	
+		}
+		
+		if(newNode) { //generate new tfbot
+			currentBotNode = new TFBotNode();
+			if(tfbotBut.isSelected()) {
+				spawnerBLManager.changeButtonState(States.EMPTY);
+			}
+			botPanel.getAttributesPanel().setAttrToBotButtonsStates(false, false, States.DISABLE);//disable item attr editing if new node
+		}
+		else { //load inputted tfbot
+			currentBotNode = (TFBotNode) node;
+			if(tfbotBut.isSelected()) {
+				spawnerBLManager.changeButtonState(States.SELECTED);
+			}
+			botPanel.getAttributesPanel().setAttrToBotButtonsStates(true, false, States.NOSELECTION);
+		}
+		botPanel.getAttributesPanel().updateItemAttrInfo(currentBotNode);
+		botPanel.updatePanel(currentBotNode);
+	}
+	
+	void loadBot(boolean newNode) { //if you're making a fresh node for ws don't need to specify linking 
+		loadBot(newNode, null);
+	}
+	
+	void loadTank(boolean newTank) { //load tank info or create a new tank node and set panel visibility
+		addSpawner.setText(addTankMsg);
+		updateSpawner.setText(updateTankMsg);
+		removeSpawner.setText(removeTankMsg);
+		
+		if(newTank) {
+			currentTankNode = new TankNode();
+			spawnerBLManager.changeButtonState(ButtonListManager.States.EMPTY);
+		}
+		else {
+			currentTankNode = (TankNode) currentWSNode.getSpawner();
+			spawnerBLManager.changeButtonState(ButtonListManager.States.SELECTED);
+		}
+		tankPanel.updatePanel(currentTankNode);
+	}
+	
+	void loadSquad(boolean newSquad) { //creates a new squad node if true and loads existing if false
+		addSpawner.setText(addSquadMsg);
+		//updateSpawner.setText(updateBotMsg);
+		removeSpawner.setText(removeSquadMsg);
+		
+		if(newSquad) {
+			currentSquadNode = new SquadNode();
+			spawnerBLManager.changeButtonState(States.EMPTY);
+			squadRandomBLManager.changeButtonState(States.DISABLE);
+			loadBot(true);
+		}
+		else {
+			currentSquadNode = (SquadNode) currentWSNode.getSpawner();
+			spawnerBLManager.changeButtonState(States.SELECTED);
+			if(currentSquadNode.hasChildren()) {
+				loadBot(false, currentSquadNode.getChildren().get(0));
+				getSquadRandomList();
+				squadRandomBLManager.changeButtonState(States.NOSELECTION);
+			}
+			else { //only allow children removal if there are children to remove
+				squadRandomBLManager.changeButtonState(States.EMPTY);
+			}
+		}
+	}
+	
+	void loadRandom(boolean newRandom) { //same as above, just with rc
+		addSpawner.setText(addRandomMsg);
+		removeSpawner.setText(removeRandomMsg);
+		
+		if(newRandom) {
+			currentRCNode = new RandomChoiceNode();
+			spawnerBLManager.changeButtonState(States.EMPTY);
+			squadRandomBLManager.changeButtonState(States.DISABLE);
+			loadBot(true);
+		}
+		else {
+			currentRCNode = (RandomChoiceNode) currentWSNode.getSpawner();
+			spawnerBLManager.changeButtonState(States.SELECTED);
+			if(currentRCNode.hasChildren()) {
+				loadBot(false, currentRCNode.getChildren().get(0));
+				getSquadRandomList();
+				squadRandomBLManager.changeButtonState(States.NOSELECTION);
+			}
+			else {
+				loadBot(true);
+				squadRandomBLManager.changeButtonState(States.EMPTY);
+			}
+		}	
+	}
+	
+	protected void resetSpawnerState() {
+		spawnerInfo.setText(noSpawner);
+		//loadBot(true);
+		tfbotBut.setSelected(true);
+		spawnerBLManager.changeButtonState(States.DISABLE);
+	}
+	
+	//refresh entire squadrandom list
+	protected void getSquadRandomList() { //could be either a squadnode or randomchoicenode
+		Node node = new Node();
+		
+		if(squadBut.isSelected()) {
+			node = currentSquadNode;
+		}
+		else if(randomBut.isSelected()){
+			node = currentRCNode;
+		}
+		squadRandomListModel.clear();
+		
+		for(Node botNode : node.getChildren()) {
+			setSquadRandomListElement((TFBotNode) botNode);
+		}
+	}
+	
+	//refresh singular element on squadrandom list
+	protected void setSquadRandomListElement(TFBotNode node) {
+		if(node.getValueSingular(TFBotNode.NAME) != null) {
+			squadRandomListModel.addElement((String) node.getValueSingular(TFBotNode.NAME)); //this sucks
+		}
+		else {
+			squadRandomListModel.addElement(node.getValueSingular(TFBotNode.CLASSNAME).toString());
+			//classname is classname obj
+		}
+	}
+	
+	protected void initSpawnerSelector() { //inits the spawner related radio buttons
+		ButtonGroup spawnerGroup = new ButtonGroup();
+		
+		spawnerGroup.add(noneBut);
+		spawnerGroup.add(tfbotBut);
+		spawnerGroup.add(tankBut);
+		spawnerGroup.add(squadBut);
+		spawnerGroup.add(randomBut);
+		spawnerGroup.setSelected(tfbotBut.getModel(), true);
+		//todo: add mob and sentrygun here
+		
+		//radio buttons control visibility, button states only if selected button mismatches linked spawner
+		
+		tfbotBut.addItemListener(event -> {
+			if(event.getStateChange() == ItemEvent.SELECTED) {
+				try { //indexoutofbounds if no spawner
+					Node node = currentWSNode.getSpawner();
+					
+					if(node.getClass() == TFBotNode.class) {
+						//if currentWSNode has a tfbot, show it
+						loadBot(false, node);
+					}
+					else {	
+						spawnerBLManager.changeButtonState(ButtonListManager.States.REMOVEONLY);
+					}
+					
+				}
+				catch (IndexOutOfBoundsException e) {
+					loadBot(true);
+				}
+			}
+		});
+		tankBut.addItemListener(event -> {
+			if(event.getStateChange() == ItemEvent.SELECTED) {
+				botPanel.setVisible(false);
+				tankPanel.setVisible(true);
+				
+				try { //if currentwsnode doesn't have anything linked
+					Node node = currentWSNode.getSpawner();
+					
+					//currentBotNode != null &&
+					if(node.getClass() == TankNode.class) {
+						//if currentWSNode has a tank, show it
+						loadTank(false);
+					}
+					else {
+						spawnerBLManager.changeButtonState(ButtonListManager.States.REMOVEONLY);
+					}
+				}
+				catch (IndexOutOfBoundsException e) {
+					loadTank(true);
+				}
+			}
+			else {
+				tankPanel.setVisible(false);
+				botPanel.setVisible(true);
+			}			
+		});
+		squadBut.addItemListener(event -> {
+			if(event.getStateChange() == ItemEvent.SELECTED) { //only set srbot buttons visible in squad or random mode
+				addSquadRandomBot.setVisible(true);
+				updateSquadRandomBot.setVisible(true);
+				removeSquadRandomBot.setVisible(true);
+				
+				updateSpawner.setVisible(false);
+				
+				try {
+					Node node = currentWSNode.getSpawner();
+					
+					if(node.getClass() == SquadNode.class) {
+						loadSquad(false);
+					}
+					else {
+						spawnerBLManager.changeButtonState(States.REMOVEONLY); //allow squad node removal only, disable subnode tfbot editing
+						squadRandomBLManager.changeButtonState(States.DISABLE);
+					}
+				}
+				catch (IndexOutOfBoundsException e) {
+					loadSquad(true);
+				}	
+			}
+			else {
+				addSquadRandomBot.setVisible(false);
+				updateSquadRandomBot.setVisible(false);
+				removeSquadRandomBot.setVisible(false);
+				
+				updateSpawner.setVisible(true);
+				squadRandomListModel.clear();
+			}					
+		});
+		randomBut.addItemListener(event -> { //functionally the same as squad, just with rc
+			if(event.getStateChange() == ItemEvent.SELECTED) {
+				addSquadRandomBot.setVisible(true);
+				updateSquadRandomBot.setVisible(true);
+				removeSquadRandomBot.setVisible(true);
+				
+				updateSpawner.setVisible(false);
+				
+				try {
+					Node node = currentWSNode.getSpawner();
+					
+					if(node.getClass() == RandomChoiceNode.class) {
+						loadRandom(false);
+					}
+					else {
+						spawnerBLManager.changeButtonState(States.REMOVEONLY); //allow squad node removal only, disable subnode tfbot editing
+						squadRandomBLManager.changeButtonState(States.DISABLE);
+					}
+				}
+				catch (IndexOutOfBoundsException e) {
+					loadRandom(true);
+				}
+			}
+			else {
+				addSquadRandomBot.setVisible(false);
+				updateSquadRandomBot.setVisible(false);
+				removeSquadRandomBot.setVisible(false);
+				
+				updateSpawner.setVisible(true);
+				squadRandomListModel.clear();
+			}
+		});
+	}
+	
+	//various panel state updates
+	public void setSelectedButton(SpawnerType type) {
+		switch(type) {
+			case NONE:
+				noneBut.setSelected(true);
+				break;
+			case TFBOT:
+				tfbotBut.setSelected(true);
+				break;
+			case TANK:
+				tankBut.setSelected(true);
+				break;
+			case SQUAD:
+				squadBut.setSelected(true);
+				break;
+			case RANDOMCHOICE:
+				randomBut.setSelected(true);
+				break;
+			default:
+				break;
+		}
+	}
+	
+	public void setButtonState(States state) {
+		spawnerBLManager.changeButtonState(state);
+	}
+}

@@ -16,9 +16,9 @@ public class ButtonListManager {
 	JButton remove;
 	
 	public static enum States {
-		NOSELECTION, SELECTED, EMPTY, REMOVEONLY, DISABLE;
+		NOSELECTION, SELECTED, EMPTY, REMOVEONLY, DISABLE, FILLEDSLOT;
 	}
-
+	/*
 	public ButtonListManager(JList<String> list, JButton add, JButton update, JButton remove) {
 		this.list = list;
 		this.add = add;
@@ -26,7 +26,13 @@ public class ButtonListManager {
 		this.remove = remove;
 		
 		//initListeners();
+	} */
+	public ButtonListManager(JButton add, JButton update, JButton remove) {
+		this.add = add;
+		this.update = update;
+		this.remove = remove;
 	}
+	
 	/*
 	private String initListeners() {
 		String status = " ";
@@ -69,6 +75,12 @@ public class ButtonListManager {
 				remove.setEnabled(true);
 				break;
 			case SELECTED:
+				add.setEnabled(true);
+				//add.setEnabled(false);
+				update.setEnabled(true);
+				remove.setEnabled(true);
+				break;
+			case FILLEDSLOT:
 				add.setEnabled(false);
 				update.setEnabled(true);
 				remove.setEnabled(true);
