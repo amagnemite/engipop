@@ -4,163 +4,150 @@ import java.util.Map.Entry;
 
 import engipop.EngiPanel.Classes;
 import engipop.EngiPanel.ItemSlot;
-import engipop.Tree.WaveNode;
-import net.platinumdigitalgroup.jvdf.VDFBindField;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
 @SuppressWarnings("unchecked")
-public class Tree {
+public class Node {
+	private Node parent;
+	private List<Node> children = new ArrayList<Node>();
+	protected Map<String, Object[]> keyVals = new HashMap<String, Object[]>(8);
+	//children refers to waveschedule - wave - wavespawn - spawner connections
+	//side connections like relays are connected elsewhere
 	
-    private Node root;
-
-    public Tree(Node PopNode) {
-        root = PopNode;
-        
-    }
-    
-    public Node getRoot() {
-    	return this.root;
-    }
     public enum SpawnerType {
     	NONE, TFBOT, TANK, SQUAD, RANDOMCHOICE
     }
-
-    public static class Node {
-        private Node parent;
-        private List<Node> children = new ArrayList<Node>();
-        protected Map<String, Object[]> keyVals = new HashMap<String, Object[]>(8);
-        //children refers to waveschedule - wave - wavespawn - spawner connections
-        //side connections like relays are connected elsewhere
-        
-        public void connectNodes(Node parent) { //parents the calling node and adds calling node to parent's list
-        	this.parent = parent; 
-        	parent.children.add(this);
-        }
-        
-        public List<Node> getChildren() {
-        	return this.children;
-        }
-        
-        public void setChildren(List<Node> children) {
-        	this.children = children;
-        }
-        
-     	public boolean hasChildren() {
-    		boolean hasChild = false;
-    		
-    		if(this.getChildren().size() > 0) {
-    			hasChild = true;
-    		}
-    		return hasChild;
-    	}
-        
-        public Node getParent() {
-        	return this.parent;
-        }
-        
-        public void setParent(Node parent) {
-        	this.parent = parent;
-        }
-    	
-    	//put key into map assuming it's not null or empty, otherwise remove it
-    	public void putKey(String key, Object value) {
-    		if(value != null) {
-    			if(value.getClass() == Boolean.class) { //prevent checkboxes from erroring
-    				keyVals.put(key, new Object[] {value});
-    			}
-    			else if(value.getClass() != String.class || 
-    				(value.getClass() == String.class && !value.equals(""))) {
-    				//if it is a string that is not empty or it is not a string
-    				keyVals.put(key, new Object[] {value});
-    			}
-    			else { //remove key does nothing if key doesn't exist
-    				keyVals.remove(key);
-    			}
-    		}
-    		else {
-    			keyVals.remove(key);
-    		}
-    	}
-    	
-    	//array value ver of above
-    	public void putKey(String key, Object[] value) {
-    		if(value.length > 0) {
-    			keyVals.put(key, value);
-    		}
-    		else {
-    			keyVals.remove(key);
-    		}
-    	}
-    	
-    	public Object getValueSingular(String key) {
-    		//if(keyVals.get(key).length == 1) {
-    		//	return keyVals.get(key);
-    		//}
-    		if(!keyVals.containsKey(key)) {
-    			return null;
-    		}
-    		else {
-    			return keyVals.get(key)[0];
-    		}
-    	}
-    	
-    	public Object[] getValueArray(String key) {
-    		return keyVals.get(key);
-    	}
-    	
-    	public boolean containsKey(String key) {
-    		return keyVals.containsKey(key);
-    	}
-    	
-    	//reconsider this
-    	public Map<String, Object[]> getMap() {
-    		return this.keyVals;
-    	}
-    	
-    	//convert inconsistent cases to standardized
-    	public boolean convertCase(Map<String, Object[]> map, List<String> keys) {
-    		boolean updated = false;
-       		Iterator<String> iterator = map.keySet().iterator();
-       		List<Entry<String, Object[]>> newEntries = new ArrayList<Entry<String, Object[]>>();
-    		
-    		while(iterator.hasNext()) { 
-    			String next = iterator.next();
-    			int k = keys.indexOf(next.toUpperCase());
-				if(k != -1 && !keys.get(k).equals(next)) { //if already in pascal case, skip
-					newEntries.add(new AbstractMap.SimpleEntry<String, Object[]>(keys.get(k), map.get(next)));
-					iterator.remove();
-				}
-    		}
-    		for(Entry<String, Object[]> entry : newEntries) {
-    			map.put(entry.getKey(), entry.getValue());
-    		}
-    		
-    		if(newEntries.size() > 0) {
-    			updated = true;
-    		}
-    		
-    		return updated;
-    	}
-    	
-    	public void convertVDFNodeToHash(Map<String, Object[]> map) {
-    		for(Entry<String, Object[]> entry : map.entrySet()) {
-    			if(entry.getValue()[0].getClass() == VDFNode.class) {
-    				List<Map<String, Object[]>> nodeArray = new ArrayList<Map<String, Object[]>>(entry.getValue().length);
-    				
-    				for(int i = 0; i < entry.getValue().length; i++) {
-    					Map<String, Object[]> subMap = new HashMap<String, Object[]>(8);
-    					subMap.putAll((VDFNode) entry.getValue()[i]);
-    					convertVDFNodeToHash(subMap);
-    					nodeArray.add(subMap);
-    				}
-    				entry.setValue(new Object[] {nodeArray});
-    			}
-    		}
-    	}
+    
+    public void connectNodes(Node parent) { //parents the calling node and adds calling node to parent's list
+    	this.parent = parent; 
+    	parent.children.add(this);
     }
     
-    public static class PopNode extends Node { //
+    public List<Node> getChildren() {
+    	return this.children;
+    }
+    
+    public void setChildren(List<Node> children) {
+    	this.children = children;
+    }
+    
+ 	public boolean hasChildren() {
+		boolean hasChild = false;
+		
+		if(this.getChildren().size() > 0) {
+			hasChild = true;
+		}
+		return hasChild;
+	}
+    
+    public Node getParent() {
+    	return this.parent;
+    }
+    
+    public void setParent(Node parent) {
+    	this.parent = parent;
+    }
+	
+	//put key into map assuming it's not null or empty, otherwise remove it
+	public void putKey(String key, Object value) {
+		if(value == null || value.equals("")) { //remove key does nothing if key doesn't exist
+			keyVals.remove(key);
+			return;
+		}
+		else if(value.getClass() == List.class && ((List<String>) value).isEmpty()) {
+			keyVals.remove(key);
+			return;
+		}
+		//else if(value.getClass() != String.class || 
+		//	(value.getClass() == String.class && !value.equals(""))) {
+			//if it is a string that is not empty or it is not a string
+			
+		//}
+		keyVals.put(key, new Object[] {value});
+	}
+	
+	//array value ver of above
+	public void putKey(String key, Object[] value) {
+		if(value.length > 0) {
+			keyVals.put(key, value);
+		}
+		else {
+			keyVals.remove(key);
+		}
+	}
+	
+	public Object getValueSingular(String key) {
+		//if(keyVals.get(key).length == 1) {
+		//	return keyVals.get(key);
+		//}
+		if(!keyVals.containsKey(key)) {
+			return null;
+		}
+		else {
+			return keyVals.get(key)[0];
+		}
+	}
+	
+	public Object[] getValueArray(String key) {
+		return keyVals.get(key);
+	}
+	
+	public boolean containsKey(String key) {
+		return keyVals.containsKey(key);
+	}
+	
+	public void removeKey(String key) {
+		keyVals.remove(key);
+	}
+	
+	//reconsider this
+	public Map<String, Object[]> getMap() {
+		return this.keyVals;
+	}
+	
+	//convert inconsistent cases to standardized
+	public boolean convertCase(Map<String, Object[]> map, List<String> keys) {
+		boolean updated = false;
+   		Iterator<String> iterator = map.keySet().iterator();
+   		List<Entry<String, Object[]>> newEntries = new ArrayList<Entry<String, Object[]>>();
+		
+		while(iterator.hasNext()) { 
+			String next = iterator.next();
+			int k = keys.indexOf(next.toUpperCase());
+			if(k != -1 && !keys.get(k).equals(next)) { //if already in pascal case, skip
+				newEntries.add(new AbstractMap.SimpleEntry<String, Object[]>(keys.get(k), map.get(next)));
+				iterator.remove();
+			}
+		}
+		for(Entry<String, Object[]> entry : newEntries) {
+			map.put(entry.getKey(), entry.getValue());
+		}
+		
+		if(newEntries.size() > 0) {
+			updated = true;
+		}
+		
+		return updated;
+	}
+	
+	public void convertVDFNodeToHash(Map<String, Object[]> map) {
+		for(Entry<String, Object[]> entry : map.entrySet()) {
+			if(entry.getValue()[0].getClass() == VDFNode.class) {
+				List<Map<String, Object[]>> nodeArray = new ArrayList<Map<String, Object[]>>(entry.getValue().length);
+				
+				for(int i = 0; i < entry.getValue().length; i++) {
+					Map<String, Object[]> subMap = new HashMap<String, Object[]>(8);
+					subMap.putAll((VDFNode) entry.getValue()[i]);
+					convertVDFNodeToHash(subMap);
+					nodeArray.add(subMap);
+				}
+				entry.setValue(new Object[] {nodeArray});
+			}
+		}
+	}
+    
+    public static class PopNode extends Node {
     	public static final String STARTINGCURRENCY = "StartingCurrency"; //int
     	public static final String RESPAWNWAVETIME = "RespawnWaveTime"; //int
     	public static final String FIXEDRESPAWNWAVETIME = "FixedRespawnWaveTime"; //boolean
@@ -807,41 +794,15 @@ public class Tree {
     	
     	public static final int ITEMCOUNT = 7;
     	
-    	public enum Skill {
-    		EASY ("Easy"), 
-    		NORMAL ("Normal"),
-    		HARD ("Hard"),
-    		EXPERT ("Expert");
-    		
-    		private String name;
-    		
-    		Skill(String name) {
-    			this.name = name;
-    		}
-    		
-    		@Override
-    		public String toString() {
-    			return name;
-    		}
-    	}
+    	public static final String EASY = "Easy";
+    	public static final String NORMAL = "Normal";
+    	public static final String HARD = "Hard";
+    	public static final String EXPERT = "Expert";
     	
-    	public enum WeaponRestriction {
-    		ANY ("Any"),
-    		PRIMARYONLY ("PrimaryOnly"),
-    		SECONDARYONLY ("SecondaryOnly"),
-    		MELEEONLY ("MeleeOnly");
-    		
-    		private String name;
-    		
-    		WeaponRestriction(String name) {
-    			this.name = name;
-    		}
-    		
-    		@Override
-    		public String toString() {
-    			return name;
-    		}
-    	}
+    	public static final String ANY = "Any";
+    	public static final String PRIMARYONLY = "PrimaryOnly";
+    	public static final String SECONDARYONLY = "SecondaryOnly";
+    	public static final String MELEEONLY = "MeleeOnly";
     	
     	//private List<String> tags;
     	//private List<String> attributes;
@@ -852,8 +813,8 @@ public class Tree {
     	public TFBotNode() { //defaults
     		this.putKey(CLASSNAME, Classes.Scout);
     		this.putKey(CLASSICON, "scout");
-    		this.putKey(SKILL, Skill.EASY);
-    		this.putKey(WEAPONRESTRICT, WeaponRestriction.ANY);
+    		this.putKey(SKILL, EASY);
+    		this.putKey(WEAPONRESTRICT, ANY);
     		isItemsSorted = true;
     	}
     	 
@@ -874,14 +835,6 @@ public class Tree {
     				List<Object> list = new ArrayList<Object>(Arrays.asList(entry.getValue()));
     				entry.setValue(new Object[] {list});
     			}
-    			
-    			if(entry.getKey().equals(TFBotNode.WEAPONRESTRICT)) {
-					//need to sanity check here
-					entry.setValue(new Object[] {(WeaponRestriction.valueOf(((String) entry.getValue()[0]).toUpperCase()))});
-				}
-				else if(entry.getKey().equals(TFBotNode.SKILL)) {
-					entry.setValue(new Object[] {(Skill.valueOf(((String) entry.getValue()[0]).toUpperCase()))});
-				}
     		}
     	}
     	

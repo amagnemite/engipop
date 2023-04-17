@@ -5,8 +5,6 @@ import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import engipop.Tree.Node;
-
 //class for managing trios of add/update/remove buttons
 //currently doesn't do anything with list
 public class ButtonListManager {

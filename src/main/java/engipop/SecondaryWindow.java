@@ -2,8 +2,6 @@ package engipop;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeListener;
@@ -11,7 +9,7 @@ import java.beans.PropertyChangeSupport;
 
 import javax.swing.*;
 
-import engipop.Tree.PopNode;
+import engipop.Node.PopNode;
 
 @SuppressWarnings("serial")
 public class SecondaryWindow extends EngiWindow { //window for less important/one off deals

@@ -10,8 +10,8 @@ import java.util.List;
 
 import javax.swing.*;
 
-import engipop.Tree.RelayNode;
-import engipop.Tree.WaveSpawnNode;
+import engipop.Node.RelayNode;
+import engipop.Node.WaveSpawnNode;
 
 @SuppressWarnings("serial")
 public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener { //panel for creating wavespawns
@@ -272,11 +272,11 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		wsn.putKey(WaveSpawnNode.SUPPORT, isSupport.isSelected());
 		
 		if(wsDeaths.isSelected()) { //this needs sanity checking
-			wsn.putKey(WaveSpawnNode.WAITBETWEENSPAWNS, null);
+			wsn.removeKey(WaveSpawnNode.WAITBETWEENSPAWNS);
 			wsn.putKey(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH, wsBetweenSpin.getValue());
 		}
 		else {
-			wsn.putKey(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH, null);
+			wsn.removeKey(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH);
 			wsn.putKey(WaveSpawnNode.WAITBETWEENSPAWNS, wsBetweenSpin.getValue());
 		}
 		wsn.setBetweenDeaths(wsDeaths.isSelected());
@@ -299,7 +299,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		else { //if it isn't selected, throw out old data
 			//this does mean the node itself is now thrown out, so may consider removing checking if the
 			//node is null above
-			wsn.putKey(WaveSpawnNode.STARTWAVEOUTPUT, null);
+			wsn.removeKey(WaveSpawnNode.STARTWAVEOUTPUT);
 		}
 		if(doFirst.isSelected()) { //first
 			if(wsn.getValueSingular(WaveSpawnNode.FIRSTSPAWNOUTPUT) == null) {
@@ -308,7 +308,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			((RelayNode) wsn.getValueSingular(WaveSpawnNode.FIRSTSPAWNOUTPUT)).putKey(RelayNode.TARGET, (String) firstRelay.getSelectedItem());
 		}
 		else { 
-			wsn.putKey(WaveSpawnNode.FIRSTSPAWNOUTPUT, null);
+			wsn.removeKey(WaveSpawnNode.FIRSTSPAWNOUTPUT);
 		}
 		if(doLast.isSelected()) { //last
 			if(wsn.getValueSingular(WaveSpawnNode.LASTSPAWNOUTPUT) == null) {
@@ -317,7 +317,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			((RelayNode) wsn.getValueSingular(WaveSpawnNode.LASTSPAWNOUTPUT)).putKey(RelayNode.TARGET, (String) lastRelay.getSelectedItem());
 		}
 		else {
-			wsn.putKey(WaveSpawnNode.LASTSPAWNOUTPUT, null);
+			wsn.removeKey(WaveSpawnNode.LASTSPAWNOUTPUT);
 		}
 		if(doDone.isSelected()) { //done
 			if(wsn.getValueSingular(WaveSpawnNode.DONEOUTPUT) == null) {
@@ -326,7 +326,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			((RelayNode) wsn.getValueSingular(WaveSpawnNode.DONEOUTPUT)).putKey(RelayNode.TARGET, (String) doneRelay.getSelectedItem());
 		}
 		else {
-			wsn.putKey(WaveSpawnNode.DONEOUTPUT, null);
+			wsn.removeKey(WaveSpawnNode.DONEOUTPUT);
 		}
 	}
 	

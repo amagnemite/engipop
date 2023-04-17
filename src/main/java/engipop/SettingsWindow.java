@@ -27,13 +27,14 @@ import javax.swing.JTextField;
 @SuppressWarnings("serial")
 public class SettingsWindow extends EngiWindow {
 	static File cfgFileName = new File("engiconfig.cfg");
-	static final String itemsPath = "items_path.txt path";
+	private static final String scriptsPath = "tf2 scripts path";
+	private static final String itemsTxtPath = "\\items\\items_game.txt";
 	
 	//String itemsTxtPath;
 	Map<String, String> modifiedConfig = new HashMap<String, String>();
 	Map<String, String> oldConfig = new HashMap<String, String>();
 	
-	JTextField itemsTxtBox = new JTextField();
+	JTextField itemsTxtBox = new JTextField(45);
 	MainWindow window;
 	
 	public SettingsWindow(MainWindow window) {
@@ -42,13 +43,15 @@ public class SettingsWindow extends EngiWindow {
 		setSize(800, 200);
 		
 		this.window = window;
-		JLabel itemsTxtLabel = new JLabel("items_game.txt path: ");
+		JLabel itemsTxtLabel = new JLabel("tf2 scripts path: ");
 		
 		readFromConfig();
 		
 		itemsTxtBox.setEditable(false);
-		if(modifiedConfig.get(itemsPath) != null) {
-			itemsTxtBox.setText(modifiedConfig.get(itemsPath));
+		
+		if(modifiedConfig.get(scriptsPath) != null) {
+			itemsTxtBox.setText(modifiedConfig.get(scriptsPath));
+			//possibly fix length here
 		}
 		else {
 			itemsTxtBox.setText(" ");
@@ -58,16 +61,16 @@ public class SettingsWindow extends EngiWindow {
 		//update map
 		JButton updateItemsPath = new JButton("...");
 		updateItemsPath.addActionListener(event -> {
-			File file = getItemsTxtFile();
-			setItemsTxtPath(file);
+			File file = getScriptPath();
+			setScriptPathString(file);
 		});
 		
 		JButton updateConfig = new JButton("Update settings");
 		updateConfig.addActionListener(event -> {
 			writeToConfig();
 			
-			if(modifiedConfig.get(itemsPath) != null) {
-				window.parseItems(new File(modifiedConfig.get(itemsPath)));
+			if(modifiedConfig.get(scriptsPath) != null) {
+				window.parseItems(new File(modifiedConfig.get(scriptsPath) + itemsTxtPath));
 			}
 			
 			oldConfig.clear();
@@ -96,8 +99,8 @@ public class SettingsWindow extends EngiWindow {
 					switch (op) {
 						case JOptionPane.YES_OPTION: 
 							writeToConfig();
-							if(modifiedConfig.get(itemsPath) != null) {
-								window.parseItems(new File(modifiedConfig.get(itemsPath)));
+							if(modifiedConfig.get(scriptsPath) != null) {
+								window.parseItems(new File(modifiedConfig.get(scriptsPath) + itemsTxtPath));
 							}
 							oldConfig.clear();
 							oldConfig.putAll(modifiedConfig); //copies modified into old without making them point the same place
@@ -119,20 +122,20 @@ public class SettingsWindow extends EngiWindow {
 		});
 	}
 	
-	public void setItemsTxtPath(File file) {
+	public void setScriptPathString(File file) {
 		if(file != null) {
-			modifiedConfig.put(itemsPath, file.getPath());
-			itemsTxtBox.setText(modifiedConfig.get(itemsPath));
+			modifiedConfig.put(scriptsPath, file.getPath());
+			itemsTxtBox.setText(modifiedConfig.get(scriptsPath));
 		}
 		else {
-			modifiedConfig.put(itemsPath, null);
+			modifiedConfig.put(scriptsPath, null);
 			itemsTxtBox.setText(" ");
 		}
 		this.validate(); //updates textbox size
 	}
 	
-	public String getItemsTxtPath() {
-		return modifiedConfig.get(itemsPath);
+	public String getScriptPathString() {
+		return modifiedConfig.get(scriptsPath);
 	}
 	
 	//write map from config file
@@ -150,8 +153,8 @@ public class SettingsWindow extends EngiWindow {
 					//key = substring of length (where the = is) - 1 to 0
 					//value = substring starting at where the = is + 1
 				}
-				if(modifiedConfig.isEmpty() || modifiedConfig.get(itemsPath).equals("null")) {
-					modifiedConfig.put(itemsPath, null);
+				if(modifiedConfig.isEmpty() || modifiedConfig.get(scriptsPath).equals("null")) {
+					modifiedConfig.put(scriptsPath, null);
 				} //there may be othe rpossibly null values, in which case it'd be better handle nulls generically
 			}
 			catch (IOException e) {
@@ -187,8 +190,8 @@ public class SettingsWindow extends EngiWindow {
 	}
 	
 	public void updateWindow() {
-		if(modifiedConfig.get(itemsPath) != null) {
-			itemsTxtBox.setText(modifiedConfig.get(itemsPath));
+		if(modifiedConfig.get(scriptsPath) != null) {
+			itemsTxtBox.setText(modifiedConfig.get(scriptsPath));
 		}
 		else {
 			itemsTxtBox.setText(" ");
@@ -202,21 +205,21 @@ public class SettingsWindow extends EngiWindow {
 	public void initConfig(MainWindow mw) {
 		File cfg = new File("engiconfig.cfg");
 		try {
-			if(cfg.createNewFile() || this.getItemsTxtPath() == null) { //if no cfg existed or cfg existed but has no path set
-				int op = JOptionPane.showConfirmDialog(this, "items_game.txt path is currently unset. Set it?");
+			if(cfg.createNewFile() || this.getScriptPathString() == null) { //if no cfg existed or cfg existed but has no path set
+				int op = JOptionPane.showConfirmDialog(this, "The TF2 scripts path is currently unset. Set it?");
 				
 				if(op == JOptionPane.YES_OPTION) {
-					File itemsTxt = getItemsTxtFile(); //try to get item path, then parse
+					File itemsTxt = getScriptPath(); //try to get item path, then parse
 					if(itemsTxt != null) {
-						setItemsTxtPath(itemsTxt);
+						setScriptPathString(itemsTxt);
 						writeToConfig();
 						//sw.updateWindow();
-						mw.parseItems(itemsTxt);
+						mw.parseItems(new File(getScriptPathString() + itemsTxtPath));
 					}
 				}
 			}
 			else {	
-				mw.parseItems(new File(getItemsTxtPath()));
+				mw.parseItems(new File(getScriptPathString() + itemsTxtPath));
 			}
 		}
 		catch (IOException io) {
@@ -224,13 +227,13 @@ public class SettingsWindow extends EngiWindow {
 		}
 	}
 	
-	private File getItemsTxtFile() { //get file object of items_game.txt
+	private File getScriptPath() { //get file object of scripts
 		JFileChooser c;
 		File file = null; //prob shouldn't do this but no defaults for linux/osx
-		boolean selectingFile = true;
+		//boolean selectingFile = true;
 		
 		if(System.getProperty("os.name").contains("Windows")) { //for windows, default to standard items_game path
-			file = new File("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf\\scripts\\items\\items_game.txt");
+			file = new File("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf\\scripts");
 			c = new JFileChooser(file);
 		}
 		else { //make linux and rare osx people suffer
@@ -238,9 +241,12 @@ public class SettingsWindow extends EngiWindow {
 			c = new JFileChooser();
 		}
 		
-		while(selectingFile) {
+		c.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		
+		//while(selectingFile) {
 			c.showOpenDialog(this);
 			file = c.getSelectedFile();
+			/*
 			if(file != null && !file.getName().equals("items_game.txt")) {
 				int op = JOptionPane.showConfirmDialog(this, "File selected is not items_game.txt. Select a new file?");
 				if (op != JOptionPane.YES_OPTION) { //if cancelled or no, leave
@@ -250,8 +256,8 @@ public class SettingsWindow extends EngiWindow {
 			}
 			else { //if it turns out it's a different file named items_game.txt, the parser will handle it
 				selectingFile = false;
-			}
-		}
+			} */
+		//}
 		return file;
 	}
 }

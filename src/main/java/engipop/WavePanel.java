@@ -14,8 +14,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 
-import engipop.Tree.RelayNode;
-import engipop.Tree.WaveNode;
+import engipop.Node.RelayNode;
+import engipop.Node.WaveNode;
 
 @SuppressWarnings("serial")
 //panel for wave
@@ -111,7 +111,7 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 			((RelayNode) wave.getValueSingular(WaveNode.INITWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) initRelay.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
-			wave.putKey(WaveNode.INITWAVEOUTPUT, null);
+			wave.removeKey(WaveNode.INITWAVEOUTPUT);
 		}
 	}
 	

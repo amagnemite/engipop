@@ -25,15 +25,14 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import engipop.ButtonListManager.States;
-import engipop.Tree.Node;
-import engipop.Tree.PopNode;
-import engipop.Tree.RandomChoiceNode;
-import engipop.Tree.SpawnerType;
-import engipop.Tree.SquadNode;
-import engipop.Tree.TFBotNode;
-import engipop.Tree.TankNode;
-import engipop.Tree.WaveNode;
-import engipop.Tree.WaveSpawnNode;
+import engipop.Node.PopNode;
+import engipop.Node.RandomChoiceNode;
+import engipop.Node.SpawnerType;
+import engipop.Node.SquadNode;
+import engipop.Node.TFBotNode;
+import engipop.Node.TankNode;
+import engipop.Node.WaveNode;
+import engipop.Node.WaveSpawnNode;
 
 //window to edit bot and ws templates
 //similar structure to main window
@@ -114,26 +113,27 @@ public class TemplateWindow extends EngiWindow {
 		modeGroup.add(botModeButton);
 		modeGroup.add(wsModeButton);
 		
-		//make template mode state clear
-		botModeButton.addItemListener(event -> {
-			if(botModeButton.isSelected()) {
-				addTemplateButton.setText(ADDBOT);
-				updateTemplateButton.setText(UPDATEBOT);
-				removeTemplateButton.setText(REMOVEBOT);
-				//reset combobox list here
-			}
-		});
+		spawnerListManager.setButtonState(States.DISABLE);
+		
 		wsModeButton.addItemListener(event -> {
 			if(wsModeButton.isSelected()) {
 				addTemplateButton.setText(ADDWS);
 				updateTemplateButton.setText(UPDATEWS);
 				removeTemplateButton.setText(REMOVEWS);
 				
+				updateTemplateComboBox(popNode.getWSTemplateMap());
+				
 				wsPanel.setVisible(true);
 				spawnerPanel.setVisible(true);
 				listPanel.setVisible(true);
 			}
-			else {
+			else { //if botmode
+				addTemplateButton.setText(ADDBOT);
+				updateTemplateButton.setText(UPDATEBOT);
+				removeTemplateButton.setText(REMOVEBOT);
+				
+				updateTemplateComboBox(popNode.getBotTemplateMap());
+				
 				wsPanel.setVisible(false);
 				spawnerPanel.setVisible(false);
 				listPanel.setVisible(false);
@@ -312,19 +312,24 @@ public class TemplateWindow extends EngiWindow {
 			
 			if(wsModeButton.isSelected()) {		
 				type = WAVESPAWN;
-				map = popNode.getWSTemplateMap();
-				if(map == null) {
+				
+				if(popNode.getWSTemplateMap() == null) {
 					popNode.setWSTemplateMap(new TreeMap<String, Node>()); //forces no nulls and sorts
 				}
+				map = popNode.getWSTemplateMap();
+				
 				currentNode = new WaveSpawnNode();
 				wsPanel.updateNode((WaveSpawnNode) currentNode);
+				spawnerListManager.setWSNode((WaveSpawnNode) currentNode);
 			}
 			else {
 				type = TFBOT;
-				map = popNode.getBotTemplateMap();
-				if(map == null) {
+				
+				if(popNode.getBotTemplateMap() == null) {
 					popNode.setBotTemplateMap(new TreeMap<String, Node>()); //forces no nulls and sorts
 				}
+				map = popNode.getBotTemplateMap();
+				
 				currentNode = new TFBotNode();
 				botPanel.updateNode((TFBotNode) currentNode);
 			}			
@@ -355,7 +360,6 @@ public class TemplateWindow extends EngiWindow {
 				map.put(name, currentNode);
 				templateComboModel.addElement(name);
 				templateComboBox.setSelectedItem(name);
-				//templateBLManager.changeButtonState(States.SELECTED);
 			}	
 		});
 		
@@ -412,28 +416,34 @@ public class TemplateWindow extends EngiWindow {
 		});
 		
 		removeTemplateButton.addActionListener(event -> {
-			templateComboModel.removeElement(templateComboBox.getSelectedItem());
-			//check if no more templates
+			String removed = (String) templateComboBox.getSelectedItem();
+			Map<String, Node> map;
+			
 			if(wsModeButton.isSelected()) {
-				popNode.getWSTemplateMap().remove(templateComboBox.getSelectedItem());
-				//updatetemplateComboBox(); //selection index should reset here
-				templateBLManager.changeButtonState(States.NOSELECTION);
+				map = popNode.getWSTemplateMap();
 			}
 			else {
-				popNode.getBotTemplateMap().remove(templateComboBox.getSelectedItem());
-				//updatetemplateComboBox(); //selection index should reset here
-				botPanel.updateTemplateModel(templateComboModel);
+				map = popNode.getBotTemplateMap();
 			}
+			
+			templateComboModel.removeElement(removed);
+			map.remove(removed);
+			
+			
+			
+			//botPanel.updateTemplateModel(templateComboModel);
 		});
 	}
 	
 	//returns last index
-	private int updatetemplateComboBox() {
+	private int updateTemplateComboBox(Map<String, Node> map) {
 		templateComboModel.removeAllElements();
 		
-		popNode.getWSTemplateMap().forEach((k, v) -> {
-			templateComboModel.addElement(k);
-		});
+		if(map != null) {
+			map.forEach((k, v) -> {
+				templateComboModel.addElement(k);
+			});
+		}
 		
 		return templateComboModel.getSize() - 1;
 	}

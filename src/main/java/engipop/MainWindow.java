@@ -11,7 +11,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
-import engipop.Tree.*;
+import engipop.Node.*;
 
 //main class
 @SuppressWarnings("serial")
@@ -41,8 +41,7 @@ public class MainWindow extends EngiWindow {
 	
 	PopNode popNode = new PopNode(); //minimum working pop
 	
-	Tree tree = new Tree(popNode);
-	ItemParser itemParser;
+	ItemParser itemParser = new ItemParser();
 	
 	private PropertyChangeSupport support = new PropertyChangeSupport(this);
 	
@@ -68,6 +67,8 @@ public class MainWindow extends EngiWindow {
 				tempWindow.setVisible(true);
 			}
 		});
+		
+		templateSet.setMaximumSize(new Dimension(150, 50));
 		
 		optionsMenu.add(settings);
 		optionsMenu.add(popSet);
@@ -179,13 +180,14 @@ public class MainWindow extends EngiWindow {
 	
 	//take file, parse it, let botpanels know
 	public void parseItems(File itemsTxt) { 
-		itemParser = new ItemParser(itemsTxt, this);
+		//itemparser = 
+		itemParser.parse(itemsTxt, this);
 		updatePropertyListeners();
 		
-		try {
-			new PopulationParser(this).parseTemplates(itemParser, Paths.get((this.getClass().getResource("/robot_standard.pop")).toURI()).toFile());
-		} catch (URISyntaxException e) {
-		}
+		//try {
+			//new PopulationParser(this, setW).parseTemplates(Paths.get((this.getClass().getResource("/robot_standard.pop")).toURI()).toFile());
+		//} catch (URISyntaxException e) {
+		//}
 		//popParse.parseTemplates(itemParser, new File());
 	}
 	

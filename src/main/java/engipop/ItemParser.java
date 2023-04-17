@@ -69,7 +69,10 @@ public class ItemParser { //parse item schema, get weapons and hats
 	List<String> spyCosmetics = new ArrayList<String>();
 	List<List<String>> spyItems = new ArrayList<List<String>>();
 	
-	public ItemParser(File file, MainWindow window) {
+	public ItemParser() {
+	}
+    
+	public void parse(File file, MainWindow window) {
 		//don't want to keep these three in memory
 		String schema = "";
 		VDFNode item;
@@ -88,7 +91,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 		item = new VDFParser().parse(schema);
 		if(!item.containsKey("items_game")) {
 			//wrong items_game.txt
-			window.updateFeedback("The items_game.txt defined does not contain TF2 item definitions");
+			window.updateFeedback("The file does not contain TF2 item definitions");
 		}
 		else {
 			allPrefabs = item.getSubNode("items_game").getSubNode("prefabs");
@@ -96,7 +99,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 			parsePrefab(item, allPrefabs);
 		}
 	}
-    
+	
 	private void initLists() { //mostly to declutter constructor
 		scoutItems.add(scoutPrimary);
 		scoutItems.add(scoutSecondary);
@@ -167,7 +170,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 						getClasses("cosmetic", node.getString("name"), node.getSubNode("used_by_classes"));
 						
 						//if it ends up here it's either
-						//a: item that relies on prefab for its equip_region or b
+						//a: item that relies on prefab for its equip_region or
 						//b: item with multiple equip_regions
 						//so not a medal either way
 					}	

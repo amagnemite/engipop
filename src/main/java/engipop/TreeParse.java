@@ -5,8 +5,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
 import engipop.EngiPanel.ItemSlot;
-import engipop.Tree.*;
-import engipop.Tree.TFBotNode.*;
+import engipop.Node.*;
+import engipop.Node.TFBotNode.*;
 
 public class TreeParse { //it is time to parse
 	private static int indentCount = 0;
@@ -21,11 +21,10 @@ public class TreeParse { //it is time to parse
 	}
 	
 	//sanity check pop, make sure no nulls and general silliness can get printed
-	public String treeCheck(Tree tree) {
+	public String treeCheck(PopNode root) {
 		//int waveCount = tree.getRoot().getChildren().size();
-		PopNode popNode = (PopNode) tree.getRoot();
 		String stopCheck = "";
-		ListIterator<Node> iterator = popNode.getChildren().listIterator();
+		ListIterator<Node> iterator = root.getChildren().listIterator();
 		int waveNum = 1;
 		
 		//if(popNode.getChildren().size() == 0) {
@@ -34,7 +33,7 @@ public class TreeParse { //it is time to parse
 		
 		//i hate it here
 		while(stopCheck.isEmpty() && iterator.hasNext()) {
-			boolean lastWave = waveNum < popNode.getChildren().size() ? false : true;
+			boolean lastWave = waveNum < root.getChildren().size() ? false : true;
 			//if it's less than size, then not lastwave otherwise it is
 			stopCheck = checkWave((WaveNode) iterator.next(), waveNum, lastWave);
 			waveNum++;
@@ -167,8 +166,8 @@ public class TreeParse { //it is time to parse
 		return stopCheck;
 	}
 	
-	public void parseTree(File file, Tree tree) {
-		int waveCount = tree.getRoot().getChildren().size();
+	public void parseTree(File file, PopNode root) {
+		int waveCount = root.getChildren().size();
 		FileWriter fw;
 		PrintWriter pw;
 		indentCount = 0;
@@ -182,11 +181,11 @@ public class TreeParse { //it is time to parse
 			pw.println("{");
 			
 			//indentCount++;
-			printPopulation(pw, tree);
+			printPopulation(pw, root);
 			
 			//pain
 			for(int i = 0; i < waveCount; i++) {
-				printWave(pw, (WaveNode) tree.getRoot().getChildren().get(i));
+				printWave(pw, (WaveNode) root.getChildren().get(i));
 			}
 			indentCount--;
 			pw.println("}");
@@ -202,42 +201,42 @@ public class TreeParse { //it is time to parse
 	
 	}
 	
-	private void printPopulation(PrintWriter pw, Tree tree) { //population settings
-		PopNode node = (PopNode) tree.getRoot();
-			
-		if((int) node.getValueSingular(PopNode.STARTINGCURRENCY) > 0) {
+	private void printPopulation(PrintWriter pw, PopNode root) { //population settings
+		Map<String, Object[]> mapCopy = root.getMap();
+		
+		if(mapCopy.containsKey(PopNode.STARTINGCURRENCY)) {
 			indentPrint(pw, "StartingCurrency ");
-			pw.println(node.getValueSingular(PopNode.STARTINGCURRENCY));
+			pw.println(mapCopy.remove(PopNode.STARTINGCURRENCY));
 		}
 		
-		if((int) node.getValueSingular(PopNode.RESPAWNWAVETIME) != 10) {
+		if((int) mapCopy.get(PopNode.RESPAWNWAVETIME)[0] != 10) {
 			indentPrint(pw, "RespawnWaveTime ");
-			pw.println(node.getValueSingular(PopNode.RESPAWNWAVETIME));
+			pw.println(root.getValueSingular(PopNode.RESPAWNWAVETIME));
 		}
 		
-		if((boolean) node.getValueSingular(PopNode.EVENTPOPFILE)) { //double check these escapes
+		if((boolean) root.getValueSingular(PopNode.EVENTPOPFILE)) { //double check these escapes
 			indentPrintln(pw, "EventPopfile Halloween");
 		}
 		
-		if(node.getFixedWaveTime()) {
+		if(root.getFixedWaveTime()) {
 			indentPrintln(pw, "FixedRespawnWaveTime 1");
 		}
 		
-		if(node.getBusterDmg() != 3000) {
+		if(root.getBusterDmg() != 3000) {
 			indentPrint(pw, "AddSentryBusterWhenDamageDealtExceeds ");
-			pw.println(node.getBusterDmg());
+			pw.println(root.getBusterDmg());
 		}
 		
-		if(node.getBusterKills() != 15) {
+		if(root.getBusterKills() != 15) {
 			indentPrint(pw, "AddSentryBusterWhenKillCountExceeds ");
-			pw.println(node.getBusterKills());
+			pw.println(root.getBusterKills());
 		}
 		
-		if(!node.getAtkInSpawn()) {
+		if(!root.getAtkInSpawn()) {
 			indentPrintln(pw, "CanBotsAttackWhileInSpawnRoom no");
 		} //double check if a nonexistent bots attack allows spawn attacks
 		
-		if(node.getAdvanced()) {
+		if(root.getAdvanced()) {
 			indentPrintln(pw, "Advanced 1");
 		}
 		System.out.println("printed pop");

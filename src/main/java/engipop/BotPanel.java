@@ -20,8 +20,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.Position;
 
 import engipop.ButtonListManager.States;
-import engipop.Tree.TFBotNode;
-import engipop.Tree.TFBotNode.*;
+import engipop.Node.TFBotNode;
+import engipop.Node.TFBotNode.*;
 //import engipop.window;
 
 //todo: add some sort of sanity checking for itemattributes
@@ -43,7 +43,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JTextField templateField = new JTextField(15);
 	JComboBox<Classes> classBox = new JComboBox<Classes>(Classes.values());
 	JComboBox<String> iconBox = new JComboBox<String>(iconModel);
-	JComboBox<String> templateBox = new JComboBox<String>();
+	JComboBox<String> templateBox = new JComboBox<String>(templateModel);
 	JList<String> tagList = new JList<String>(tags);
 	JList<String> attributesList;
 	
@@ -66,15 +66,15 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	ButtonGroup wepGroup = new ButtonGroup();
 	ButtonGroup skillGroup = new ButtonGroup();
 	
-	JRadioButton easyBut = new JRadioButton(Skill.EASY.toString());
-	JRadioButton normalBut = new JRadioButton(Skill.NORMAL.toString());
-	JRadioButton hardBut = new JRadioButton(Skill.HARD.toString());
-	JRadioButton expBut = new JRadioButton(Skill.EXPERT.toString());
+	JRadioButton easyBut = new JRadioButton(TFBotNode.EASY);
+	JRadioButton normalBut = new JRadioButton(TFBotNode.NORMAL);
+	JRadioButton hardBut = new JRadioButton(TFBotNode.HARD);
+	JRadioButton expBut = new JRadioButton(TFBotNode.EXPERT);
 	
-	JRadioButton anyBut = new JRadioButton(WeaponRestriction.ANY.toString());
-	JRadioButton priBut = new JRadioButton(WeaponRestriction.PRIMARYONLY.toString());
-	JRadioButton secBut = new JRadioButton(WeaponRestriction.SECONDARYONLY.toString());
-	JRadioButton melBut = new JRadioButton(WeaponRestriction.MELEEONLY.toString());
+	JRadioButton anyBut = new JRadioButton(TFBotNode.ANY);
+	JRadioButton priBut = new JRadioButton(TFBotNode.PRIMARYONLY);
+	JRadioButton secBut = new JRadioButton(TFBotNode.SECONDARYONLY);
+	JRadioButton melBut = new JRadioButton(TFBotNode.MELEEONLY);
 	
 	//radio buttons to select active attribute editing
 	JPanel attrButPanel = new JPanel();
@@ -149,32 +149,32 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		JPanel skillPanel = new JPanel();
 		
 		skillPanel.add(easyBut);
-		easyBut.setActionCommand(Skill.EASY.toString());
+		easyBut.setActionCommand(TFBotNode.EASY);
 		skillGroup.add(easyBut);
 		skillPanel.add(normalBut);
-		normalBut.setActionCommand(Skill.NORMAL.toString());
+		normalBut.setActionCommand(TFBotNode.NORMAL);
 		skillGroup.add(normalBut);
 		skillPanel.add(hardBut);
-		hardBut.setActionCommand(Skill.HARD.toString());
+		hardBut.setActionCommand(TFBotNode.HARD);
 		skillGroup.add(hardBut);
 		skillPanel.add(expBut);
-		expBut.setActionCommand(Skill.EXPERT.toString());
+		expBut.setActionCommand(TFBotNode.EXPERT);
 		skillGroup.add(expBut);
 		skillGroup.setSelected(easyBut.getModel(), true);
 		
 		//wep restrict radio buttons
 		JPanel wepPanel = new JPanel();
 		wepPanel.add(anyBut);
-		anyBut.setActionCommand(WeaponRestriction.ANY.toString());
+		anyBut.setActionCommand(TFBotNode.ANY);
 		wepGroup.add(anyBut);
 		wepPanel.add(priBut);
-		priBut.setActionCommand(WeaponRestriction.PRIMARYONLY.toString());
+		priBut.setActionCommand(TFBotNode.PRIMARYONLY);
 		wepGroup.add(priBut);
 		wepPanel.add(secBut);
-		secBut.setActionCommand(WeaponRestriction.SECONDARYONLY.toString());
+		secBut.setActionCommand(TFBotNode.SECONDARYONLY);
 		wepGroup.add(secBut);		
 		wepPanel.add(melBut);
-		melBut.setActionCommand(WeaponRestriction.MELEEONLY.toString());
+		melBut.setActionCommand(TFBotNode.MELEEONLY);
 		wepGroup.add(melBut);
 		wepGroup.setSelected(anyBut.getModel(), true);
 		
@@ -279,31 +279,31 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		setIconBox(iconBox, iconModel, (Classes) tf.getValueSingular(TFBotNode.CLASSNAME)); //values of classname are classes from enum
 		iconBox.setSelectedItem(tf.getValueSingular(TFBotNode.CLASSICON));
 		nameField.setText((String) tf.getValueSingular(TFBotNode.NAME));
-		switch ((Skill) tf.getValueSingular(TFBotNode.SKILL)) {
-			case EASY:
+		switch ((String) tf.getValueSingular(TFBotNode.SKILL)) {
+			case TFBotNode.EASY:
 				skillGroup.setSelected(easyBut.getModel(), true);
 				break;
-			case NORMAL:
+			case TFBotNode.NORMAL:
 				skillGroup.setSelected(normalBut.getModel(), true);
 				break;
-			case HARD:
+			case TFBotNode.HARD:
 				skillGroup.setSelected(hardBut.getModel(), true);
 				break;
-			case EXPERT:
+			case TFBotNode.EXPERT:
 				skillGroup.setSelected(expBut.getModel(), true);
 				break;
 		}
-		switch ((WeaponRestriction) tf.getValueSingular(TFBotNode.WEAPONRESTRICT)) {
-			case ANY:
+		switch ((String) tf.getValueSingular(TFBotNode.WEAPONRESTRICT)) {
+			case TFBotNode.ANY:
 				wepGroup.setSelected(anyBut.getModel(), true);
 				break;
-			case PRIMARYONLY:
+			case TFBotNode.PRIMARYONLY:
 				wepGroup.setSelected(priBut.getModel(), true);
 				break;
-			case SECONDARYONLY:
+			case TFBotNode.SECONDARYONLY:
 				wepGroup.setSelected(secBut.getModel(), true);
 				break;
-			case MELEEONLY:
+			case TFBotNode.MELEEONLY:
 				wepGroup.setSelected(melBut.getModel(), true);
 				break;
 		}
@@ -509,24 +509,26 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		hat1List.removeAllItems();
 		hat2List.removeAllItems();
 		hat3List.removeAllItems();
+		
+		if(index != Classes.None) {
+			List<List<String>> lists = parser.getClassList(index);
 			
-		List<List<String>> lists = parser.getClassList(index);
-		
-		//set model(get the appropriate slot from lists, convert to a new string array of size inner list)
-		primaryList.setModel(getNewModel(lists, EngiPanel.PRIMARY));
-		secList.setModel(getNewModel(lists, EngiPanel.SECONDARY));
-		meleeList.setModel(getNewModel(lists, EngiPanel.MELEE));
-		
-		hat1List.setModel(getNewModel(lists, EngiPanel.COSMETIC));
-		hat2List.setModel(getNewModel(lists, EngiPanel.COSMETIC));
-		hat3List.setModel(getNewModel(lists, EngiPanel.COSMETIC));
-		
-		if(index == Classes.Spy && buildingList.getItemAt(0) == null) {
-			//only need to load once since there's only one possible building list
-			buildingList.setModel(getNewModel(lists, EngiPanel.BUILDING));
-			buildingList.setSelectedIndex(-1);
+			//set model(get the appropriate slot from lists, convert to a new string array of size inner list)
+			primaryList.setModel(getNewModel(lists, EngiPanel.PRIMARY));
+			secList.setModel(getNewModel(lists, EngiPanel.SECONDARY));
+			meleeList.setModel(getNewModel(lists, EngiPanel.MELEE));
+			
+			hat1List.setModel(getNewModel(lists, EngiPanel.COSMETIC));
+			hat2List.setModel(getNewModel(lists, EngiPanel.COSMETIC));
+			hat3List.setModel(getNewModel(lists, EngiPanel.COSMETIC));
+			
+			if(index == Classes.Spy && buildingList.getItemAt(0) == null) {
+				//only need to load once since there's only one possible building list
+				buildingList.setModel(getNewModel(lists, EngiPanel.BUILDING));
+				buildingList.setSelectedIndex(-1);
+			}
 		}
-		
+	
 		//default to no selection since these aren't mandatory
 		primaryList.setSelectedIndex(-1);
 		secList.setSelectedIndex(-1);

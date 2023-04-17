@@ -9,8 +9,8 @@ import java.util.List;
 
 import javax.swing.*;
 
-import engipop.Tree.RelayNode;
-import engipop.Tree.TankNode;
+import engipop.Node.RelayNode;
+import engipop.Node.TankNode;
 
 //panel for tank
 @SuppressWarnings("serial")
@@ -124,7 +124,7 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			((RelayNode) node.getValueSingular(TankNode.ONKILLEDOUTPUT)).putKey(RelayNode.TARGET, onBombBox.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
-			node.putKey(TankNode.ONKILLEDOUTPUT, null);
+			node.removeKey(TankNode.ONKILLEDOUTPUT);
 		}
 		if(onBombCheck.isSelected()) {
 			if(node.getValueSingular(TankNode.ONBOMBDROPPEDOUTPUT) == null) { //make relay if data is entered and no relay exists
@@ -133,7 +133,7 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			((RelayNode) node.getValueSingular(TankNode.ONBOMBDROPPEDOUTPUT)).putKey(RelayNode.TARGET, onKilledBox.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
-			node.putKey(TankNode.ONBOMBDROPPEDOUTPUT, null);
+			node.removeKey(TankNode.ONBOMBDROPPEDOUTPUT);
 		}
 	}
 	

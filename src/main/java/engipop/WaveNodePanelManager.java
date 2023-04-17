@@ -17,10 +17,9 @@ import javax.swing.event.ListSelectionListener;
 
 import engipop.ButtonListManager.States;
 import engipop.EngiWindow.NoDeselectionModel;
-import engipop.Tree.Node;
-import engipop.Tree.PopNode;
-import engipop.Tree.WaveNode;
-import engipop.Tree.WaveSpawnNode;
+import engipop.Node.PopNode;
+import engipop.Node.WaveNode;
+import engipop.Node.WaveSpawnNode;
 
 //also manages lists for wave/wavespawns
 public class WaveNodePanelManager extends NodePanelManager {
@@ -64,22 +63,18 @@ public class WaveNodePanelManager extends NodePanelManager {
 		waveList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		waveSpawnList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
-		waveBLManager.changeButtonState(States.SELECTED);
-		waveSpawnBLManager.changeButtonState(States.SELECTED);
-		
-		waveList.setSelectedIndex(0); //on init, have the 1st wave selected
-		waveSpawnList.setSelectedIndex(0); //same here
-		
 		addWave.setToolTipText("Creates an empty wave");
 		addWaveSpawn.setToolTipText("Creates an empty wavespawn");
 		
-		//this is a bit silly
-		//currentWSNode.putKey(WaveSpawnNode.NAME, "default");
 		currentWaveNode.connectNodes(popNode);
 		currentWSNode.connectNodes(currentWaveNode);
+		currentBotNode.connectNodes(currentWSNode);
 		
 		getWaveList();
 		getWaveSpawnList();
+		
+		waveList.setSelectedIndex(0); //on init, have the 1st wave selected
+		waveSpawnList.setSelectedIndex(0); //same here
 	}
 	
 	public JPanel makeListPanel() {
