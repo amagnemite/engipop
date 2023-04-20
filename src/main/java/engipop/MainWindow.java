@@ -1,15 +1,11 @@
 package engipop;
 
 import javax.swing.*;
-import javax.swing.event.*;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
 
 import engipop.Node.*;
 
@@ -39,7 +35,7 @@ public class MainWindow extends EngiWindow {
 	
 	JButton createPop = new JButton("Create popfile"); //may consider putting this in window
 	
-	PopNode popNode = new PopNode(); //minimum working pop
+	PopNode popNode = new PopNode();
 	
 	ItemParser itemParser = new ItemParser();
 	
@@ -55,16 +51,25 @@ public class MainWindow extends EngiWindow {
 		feedback = new JLabel(" ");
 		
 		//may want to reconsider this
-		SecondaryWindow w2 = new SecondaryWindow(popNode, this);
-		TemplateWindow tempWindow = new TemplateWindow(this, w2);
+		SettingsWindow settingsWindow = new SettingsWindow(this);
+		SecondaryWindow secondaryWindow = new SecondaryWindow(settingsWindow, popNode);
+		TemplateWindow tempWindow = new TemplateWindow(this, secondaryWindow);
+			
+		settingsWindow.initConfig();	
 		
 		popSet.addActionListener(event -> {
-			w2.updatePopPanel();
-			w2.setVisible(true);
+			secondaryWindow.updatePopPanel();
+			secondaryWindow.setVisible(true);
 		});
 		templateSet.addActionListener(event -> {
 			if(!tempWindow.isVisible()) {
 				tempWindow.setVisible(true);
+			}
+		});
+		settings.addActionListener(event -> {
+			if(!settingsWindow.isVisible()) {
+				settingsWindow.updateWindow();
+				settingsWindow.setVisible(true);
 			}
 		});
 		
@@ -76,12 +81,12 @@ public class MainWindow extends EngiWindow {
 		menuBar.add(templateSet);
 		setJMenuBar(menuBar);		
 
-		botPanel = new BotPanel(this, this, w2);
-		wsPanel = new WaveSpawnPanel(w2);
-		wavePanel = new WavePanel(w2);
-		tankPanel = new TankPanel(w2);
+		botPanel = new BotPanel(this, this, secondaryWindow);
+		wsPanel = new WaveSpawnPanel(secondaryWindow);
+		wavePanel = new WavePanel(secondaryWindow);
+		tankPanel = new TankPanel(secondaryWindow);
 		
-		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, botPanel, tankPanel);
+		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, botPanel, tankPanel, secondaryWindow);
 		listPanel = waveNodeManager.makeListPanel();
 		spawnerPanel = waveNodeManager.makeSpawnerPanel();
 		
@@ -93,7 +98,7 @@ public class MainWindow extends EngiWindow {
 		filler.setMinimumSize(filler.getPreferredSize()); */
 		
 		createPop.addActionListener(event -> { //potentially move this
-			String error = new TreeParse().treeCheck(tree);
+			String error = new TreeParse().treeCheck(popNode);
 			if(error.isEmpty()) {
 				generateFile();
 			}
@@ -127,7 +132,7 @@ public class MainWindow extends EngiWindow {
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		w2.requestFocus();
+		secondaryWindow.requestFocus();
 	}
 	
 	public static void main(String args[]) {
@@ -138,12 +143,6 @@ public class MainWindow extends EngiWindow {
 		}
 		
 		MainWindow w = new MainWindow();
-		SettingsWindow setW = new SettingsWindow(w);
-		
-		setW.initConfig(w);
-		
-		w.listen(setW); //could change this
-		
 	}
 	
 	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
@@ -168,16 +167,6 @@ public class MainWindow extends EngiWindow {
 		return this.popNode;
 	}
 	
-	//listeners that interact with other windows
-	void listen(SettingsWindow sw) {
-		settings.addActionListener(event -> {
-			if(!sw.isVisible()) {
-				sw.updateWindow();
-				sw.setVisible(true);
-			}
-		});
-	}
-	
 	//take file, parse it, let botpanels know
 	public void parseItems(File itemsTxt) { 
 		//itemparser = 
@@ -200,12 +189,12 @@ public class MainWindow extends EngiWindow {
 			if(file.exists()) { //confirm overwrite
 				int op = JOptionPane.showConfirmDialog(this, "Overwrite this file?");
 				if (op == JOptionPane.YES_OPTION) {
-					new TreeParse().parseTree(file, tree);
+					new TreeParse().parseTree(file, popNode);
 					feedback.setText("Popfile successfully generated!");
-				} //kinda jank
+				}
 			}
 			else { //if it doesn't exist, no overwrite check needed
-				new TreeParse().parseTree(file, tree);
+				new TreeParse().parseTree(file, popNode);
 				feedback.setText("Popfile successfully generated!");
 			}
 		}

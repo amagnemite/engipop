@@ -15,14 +15,10 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import engipop.ButtonListManager.States;
 import engipop.Node.PopNode;
@@ -31,7 +27,6 @@ import engipop.Node.SpawnerType;
 import engipop.Node.SquadNode;
 import engipop.Node.TFBotNode;
 import engipop.Node.TankNode;
-import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
 
 //window to edit bot and ws templates

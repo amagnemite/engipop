@@ -202,7 +202,7 @@ public class SettingsWindow extends EngiWindow {
 	}
 	
 	//check for itemstxtpath on load
-	public void initConfig(MainWindow mw) {
+	public void initConfig() {
 		File cfg = new File("engiconfig.cfg");
 		try {
 			if(cfg.createNewFile() || this.getScriptPathString() == null) { //if no cfg existed or cfg existed but has no path set
@@ -214,16 +214,16 @@ public class SettingsWindow extends EngiWindow {
 						setScriptPathString(itemsTxt);
 						writeToConfig();
 						//sw.updateWindow();
-						mw.parseItems(new File(getScriptPathString() + itemsTxtPath));
+						window.parseItems(new File(getScriptPathString() + itemsTxtPath));
 					}
 				}
 			}
 			else {	
-				mw.parseItems(new File(getScriptPathString() + itemsTxtPath));
+				window.parseItems(new File(getScriptPathString() + itemsTxtPath));
 			}
 		}
 		catch (IOException io) {
-			mw.updateFeedback("engiconfig.cfg was not found or is unable to be written to");
+			window.updateFeedback("engiconfig.cfg was not found or is unable to be written to");
 		}
 	}
 	

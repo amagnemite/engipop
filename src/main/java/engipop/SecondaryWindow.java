@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
 
 import javax.swing.*;
 
@@ -27,26 +28,34 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	
 	JSpinner currSpinner = new JSpinner();
 	JSpinner respawnWaveSpinner = new JSpinner();
-	JCheckBox eventBox;
-	JCheckBox waveTimeBox;
+	JCheckBox eventBox = new JCheckBox("Halloween?");
+	JCheckBox waveTimeBox = new JCheckBox("Fixed respawn wave times?");
 	JSpinner busterDmgSpinner = new JSpinner();
 	JSpinner busterKillSpinner = new JSpinner();
-	JCheckBox atkSpawnBox;
-	JCheckBox advancedBox;
+	JCheckBox atkSpawnBox = new JCheckBox("Can bots attack in spawn?");
+	//JCheckBox advancedBox = new JCheckBox("Advanced?");
 	
-	JButton updatePop;
+	JButton loadPop = new JButton("Load a population file");
+	JButton loadTemplate = new JButton("Load a template file");
+	JButton updatePop = new JButton("Update population settings");
+	
+	SettingsWindow setWin;
 	PopNode popNode;
 	
-	private PropertyChangeSupport support = new PropertyChangeSupport(this);
+	private PopulationParser popParser;
+	private PropertyChangeSupport propertySupport = new PropertyChangeSupport(this);
 	
-	public SecondaryWindow(PopNode popNode, MainWindow w) {
+	public SecondaryWindow(SettingsWindow setWin, PopNode popNode) {
 		super("Population settings");
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		setSize(800, 200);
 		
 		this.popNode = popNode;
-		makePopPanel(w);
+		this.setWin = setWin;
+		popParser = new PopulationParser(this, setWin);
+		
+		makePopPanel();
 		
 		addGB(popPanel, 0, 0);
 		
@@ -55,15 +64,15 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	}
 	
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
-        support.addPropertyChangeListener(listener);
+        propertySupport.addPropertyChangeListener(listener);
     }
 	
 	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        support.addPropertyChangeListener(propertyName, listener);
+        propertySupport.addPropertyChangeListener(propertyName, listener);
     }
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
-        support.removePropertyChangeListener(listener);
+        propertySupport.removePropertyChangeListener(listener);
     }
 	
     //take map info index, get map's info and tell the relevant listeners
@@ -71,15 +80,15 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
     	MapInfo info = new MapInfo();
     	info.getMapData(index);
     	
-    	support.firePropertyChange(WAVERELAY, null, info.getWaveRelay());
-    	support.firePropertyChange(WAVESPAWNRELAY, null, info.getWSRelay());
-    	support.firePropertyChange(BOTSPAWNS, null, info.getBotSpawns());
-    	support.firePropertyChange(TAGS, null, info.getTags());
-    	support.firePropertyChange(TANKSPAWNS, null, info.getTankSpawns());
-    	support.firePropertyChange(TANKRELAY, null, info.getTankRelays());
+    	propertySupport.firePropertyChange(WAVERELAY, null, info.getWaveRelay());
+    	propertySupport.firePropertyChange(WAVESPAWNRELAY, null, info.getWSRelay());
+    	propertySupport.firePropertyChange(BOTSPAWNS, null, info.getBotSpawns());
+    	propertySupport.firePropertyChange(TAGS, null, info.getTags());
+    	propertySupport.firePropertyChange(TANKSPAWNS, null, info.getTankSpawns());
+    	propertySupport.firePropertyChange(TANKRELAY, null, info.getTankRelays());
     }
     
-	private void makePopPanel(MainWindow w) { //makes population panel
+	private void makePopPanel() { //makes population panel
 		popPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.EAST;
@@ -91,6 +100,12 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 				busterDmgInit = 3000, busterDmgIncr = 100, busterDmgMax = 100000,
 				busterKillInit = 15, busterKillIncr = 1, busterKillMax = 100;
 		//arbitary numbers
+		
+		JLabel currLabel = new JLabel("StartingCurrency: ");
+		JLabel respawnWaveLabel = new JLabel("RespawnWaveTime: ");
+		JLabel busterDmgLabel = new JLabel("AddSentryBusterWhenDamageDealtExceeds: ");
+		JLabel busterKillLabel = new JLabel("AddSentryBusterWhenKillCountExceeds: ");
+		JLabel mapLabel = new JLabel("Map: ");
 		
 		SpinnerNumberModel currModel = new SpinnerNumberModel(currInit, min, currMax, currIncr);
 		SpinnerNumberModel respawnWaveModel = new SpinnerNumberModel(respawnInit, min, respawnMax, respawnIncr);
@@ -106,13 +121,6 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		maps.setPrototypeDisplayValue("mvm_waterlogged_rc4g");
 		
 		feedback = new JLabel(" ");
-		
-		eventBox = new JCheckBox("Halloween?");
-		waveTimeBox = new JCheckBox("Fixed respawn wave times?");
-		atkSpawnBox = new JCheckBox("Can bots attack in spawn?");
-		advancedBox = new JCheckBox("Advanced?");
-		
-		updatePop = new JButton("Update population settings");
 		
 		updatePop.addActionListener(event -> {
 			updateNode();
@@ -144,16 +152,30 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 			}
 		});
 		
-		JLabel currLabel = new JLabel("StartingCurrency: ");
-		JLabel respawnWaveLabel = new JLabel("RespawnWaveTime: ");
-		JLabel busterDmgLabel = new JLabel("AddSentryBusterWhenDamageDealtExceeds: ");
-		JLabel busterKillLabel = new JLabel("AddSentryBusterWhenKillCountExceeds: ");
-		JLabel mapLabel = new JLabel("Map: ");
+		loadPop.addActionListener(event -> {
+			JFileChooser fileChooser;
+			if(setWin.getScriptPathString() != null) {
+				fileChooser = new JFileChooser(setWin.getScriptPathString());
+			}
+			else {
+				fileChooser = new JFileChooser();
+			}			
+			File file = null;
+			
+			fileChooser.showOpenDialog(this);
+			file = fileChooser.getSelectedFile();
+			popNode = popParser.parsePopulation(file);
+			propertySupport.firePropertyChange("POPNODE", null, popNode);
+
+		});
 		
 		popPanel.addGB(feedback, 0, 0);
 		
 		popPanel.addGB(mapLabel, 0, 1);
 		popPanel.addGB(maps, 1, 1);
+		
+		popPanel.addGB(loadPop, 2, 1);
+		popPanel.addGB(loadTemplate, 3, 1);
 		
 		popPanel.addGB(currLabel, 0, 2);
 		popPanel.addGB(currSpinner, 1, 2);
@@ -168,7 +190,7 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		
 		popPanel.addGB(eventBox, 0, 4);
 		popPanel.addGB(atkSpawnBox, 1, 4);
-		popPanel.addGB(advancedBox, 2, 4);
+		//popPanel.addGB(advancedBox, 2, 4);
 		popPanel.addGB(updatePop, 2, 5);
 	}
 	
@@ -187,7 +209,7 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		popNode.putKey(PopNode.BUSTERDAMAGE, busterDmgSpinner.getValue());
 		popNode.putKey(PopNode.BUSTERKILLS, busterKillSpinner.getValue());
 		popNode.putKey(PopNode.BOTSATKINSPAWN, atkSpawnBox.isSelected());
-		popNode.putKey(PopNode.ADVANCED, advancedBox.isSelected());
+		//popNode.putKey(PopNode.ADVANCED, advancedBox.isSelected());
 	}
 	
 	public void updatePopPanel() {
@@ -198,6 +220,6 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		busterDmgSpinner.setValue(popNode.getValueSingular(PopNode.BUSTERDAMAGE));
 		busterKillSpinner.setValue(popNode.getValueSingular(PopNode.BUSTERKILLS));
 		atkSpawnBox.setSelected((boolean) popNode.getValueSingular(PopNode.BOTSATKINSPAWN));
-		advancedBox.setSelected((boolean) popNode.getValueSingular(PopNode.ADVANCED));
+		//advancedBox.setSelected((boolean) popNode.getValueSingular(PopNode.ADVANCED));
 	}
 }

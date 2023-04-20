@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import engipop.ButtonListManager.States;
@@ -67,6 +68,7 @@ public class NodePanelManager {
 	
 	DefaultListModel<String> squadRandomListModel = new DefaultListModel<String>();
 	JList<String> squadRandomList = new JList<String>(squadRandomListModel);
+	JScrollPane squadRandomListScroll = new JScrollPane(squadRandomList);
 	
 	ButtonListManager spawnerBLManager = new ButtonListManager(addSpawner, updateSpawner, removeSpawner);
 	ButtonListManager squadRandomBLManager = new ButtonListManager(addSquadRandomBot, updateSquadRandomBot, removeSquadRandomBot);
@@ -87,6 +89,8 @@ public class NodePanelManager {
 		
 		squadRandomList.setSelectionModel(new NoDeselectionModel());
 		squadRandomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		//squadRandomListScroll.setMinimumSize();
+		//squadRandomList.getPreferredScrollableViewportSize()
 		
 		//listAddWaveSpawn.setPreferredSize(new Dimension(159, 22));
 		//+2 for padding or something
@@ -118,7 +122,7 @@ public class NodePanelManager {
 		panel.addGB(removeSquadRandomBot, 0, 5);
 		
 		panel.gbConstraints.gridheight = 3;
-		panel.addGB(squadRandomList, 1, 0);	
+		panel.addGB(squadRandomListScroll, 1, 0);	
 		
 		return panel;
 	}

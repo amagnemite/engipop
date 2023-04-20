@@ -4,14 +4,11 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.ListSelectionModel;
+import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -22,11 +19,11 @@ import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
 
 //also manages lists for wave/wavespawns
-public class WaveNodePanelManager extends NodePanelManager {
+public class WaveNodePanelManager extends NodePanelManager implements PropertyChangeListener {
 	WavePanel wavePanel;
 	WaveSpawnPanel wsPanel;
 	
-	PopNode popNode;
+	private PopNode popNode = new PopNode();
 	WaveNode currentWaveNode = new WaveNode();
 	
 	JButton addWave = new JButton("Add wave");
@@ -42,6 +39,8 @@ public class WaveNodePanelManager extends NodePanelManager {
 	
 	JList<String> waveList = new JList<String>(waveListModel);
 	JList<String> waveSpawnList = new JList<String>(waveSpawnListModel);
+	JScrollPane waveListScroll = new JScrollPane(waveList);
+	JScrollPane waveSpawnListScroll = new JScrollPane(waveSpawnList);
 	
 	ButtonListManager waveBLManager = new ButtonListManager(addWave, updateWave, removeWave);
 	ButtonListManager waveSpawnBLManager = new ButtonListManager(addWaveSpawn, updateWaveSpawn, removeWaveSpawn);
@@ -49,13 +48,16 @@ public class WaveNodePanelManager extends NodePanelManager {
 	JLabel currentWaveLabel = new JLabel("");
 	JLabel currentWSLabel = new JLabel("");
 	
-	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, BotPanel botPanel, TankPanel tankPanel) {
+	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, BotPanel botPanel, TankPanel tankPanel,
+			SecondaryWindow secondaryWindow) {
 		super(window, botPanel, tankPanel);
 		initWaveListeners();
 		
 		this.wavePanel = wavePanel;
 		this.wsPanel = wsPanel;
 		popNode = window.getPopNode();
+		
+		secondaryWindow.addPropertyChangeListener("POPNODE", this);
 		
 		waveList.setSelectionModel(new NoDeselectionModel());
 		waveSpawnList.setSelectionModel(new NoDeselectionModel());
@@ -75,6 +77,10 @@ public class WaveNodePanelManager extends NodePanelManager {
 		
 		waveList.setSelectedIndex(0); //on init, have the 1st wave selected
 		waveSpawnList.setSelectedIndex(0); //same here
+		
+		//waveList.setvis
+		waveListScroll.setMinimumSize(waveList.getPreferredScrollableViewportSize());
+		waveSpawnListScroll.setMinimumSize(waveSpawnList.getPreferredScrollableViewportSize());
 	}
 	
 	public JPanel makeListPanel() {
@@ -103,9 +109,9 @@ public class WaveNodePanelManager extends NodePanelManager {
 		panel.addGB(removeSquadRandomBot, 0, 13);
 		
 		panel.gbConstraints.gridheight = 3;
-		panel.addGB(waveList, 1, 1);
-		panel.addGB(waveSpawnList, 1, 5);
-		panel.addGB(squadRandomList, 1, 8);
+		panel.addGB(waveListScroll, 1, 1);
+		panel.addGB(waveSpawnListScroll, 1, 5);
+		panel.addGB(squadRandomListScroll, 1, 8);
 				
 		return panel;
 	}
@@ -302,6 +308,7 @@ public class WaveNodePanelManager extends NodePanelManager {
 			//waveListModel.addElement("Wave " + Integer.toString(i + 1));
 			waveListModel.addElement("Wave");
 		}
+		waveList.setSelectedIndex(0);
 	}
 	
 	private void getWaveSpawnList() { //similar to the above, just gets actual names 
@@ -318,6 +325,7 @@ public class WaveNodePanelManager extends NodePanelManager {
 				waveSpawnListModel.addElement(Integer.toString(i));
 			}
 		}
+		waveSpawnListScroll.revalidate();
 	}
 	
 	//reset panels to fresh state whenever a node/its parents are removed
@@ -333,5 +341,15 @@ public class WaveNodePanelManager extends NodePanelManager {
 		waveSpawnListModel.clear();	
 		waveSpawnBLManager.changeButtonState(state);
 		resetSpawnerState();
+	}
+	
+	/*
+	public PopNode getPopNode() {
+		return this.popNode;
+	} */
+	
+	public void propertyChange(PropertyChangeEvent evt) {
+		this.popNode = (PopNode) evt.getNewValue();
+		getWaveList();
 	}
 }

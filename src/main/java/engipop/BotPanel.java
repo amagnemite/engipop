@@ -7,12 +7,10 @@ import java.awt.GridBagConstraints;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -21,8 +19,6 @@ import javax.swing.text.Position;
 
 import engipop.ButtonListManager.States;
 import engipop.Node.TFBotNode;
-import engipop.Node.TFBotNode.*;
-//import engipop.window;
 
 //todo: add some sort of sanity checking for itemattributes
 @SuppressWarnings("serial")

@@ -36,7 +36,7 @@ public class PopulationParser { //parse .pop
 	//parses entire population
 	public PopNode parsePopulation(File file) {
 		VDFNode root = null;
-		String[] includes;
+		Object[] includes;
 		//PopNode popNode;
 		
 		try {
@@ -50,11 +50,11 @@ public class PopulationParser { //parse .pop
 		}
 		
 		//once again, need error checking here
-		includes = (String[]) root.get(root.firstKey());	
+		includes = root.get(root.firstKey());
 		root = root.getSubNode(root.lastKey()); //waveschedule is standard name, but can be named whatever user wants
 		
-		for(String includedPop : includes) {
-			parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + includedPop));
+		for(Object includedPop : includes) {
+			parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + (String) includedPop));
 		}
 		
 		//parse templates

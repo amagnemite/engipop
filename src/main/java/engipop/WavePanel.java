@@ -88,10 +88,15 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	}
 	
 	public void updatePanel(WaveNode wave) { 
-		startRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.STARTWAVEOUTPUT)).getValueSingular(RelayNode.TARGET));
-		doneRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.DONEOUTPUT)).getValueSingular(RelayNode.TARGET)); //possibly make this not mandatory
+		if(wave.containsKey(WaveNode.STARTWAVEOUTPUT)) {
+			startRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.STARTWAVEOUTPUT)).getValueSingular(RelayNode.TARGET));
+		}
 		
-		if(wave.getValueSingular(WaveNode.INITWAVEOUTPUT) != null) { //not mandatory, so may not exist
+		if(wave.containsKey(WaveNode.DONEOUTPUT)) {
+			doneRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.DONEOUTPUT)).getValueSingular(RelayNode.TARGET)); //possibly make this not mandatory
+		}
+		
+		if(wave.containsKey(WaveNode.INITWAVEOUTPUT)) { //not mandatory, so may not exist
 			doInit.setSelected(true);
 			initRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.INITWAVEOUTPUT)).getValueSingular(RelayNode.TARGET));
 		}

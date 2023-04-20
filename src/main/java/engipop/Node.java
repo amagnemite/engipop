@@ -1,9 +1,9 @@
 package engipop;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import engipop.EngiPanel.Classes;
-import engipop.EngiPanel.ItemSlot;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
@@ -11,7 +11,8 @@ import net.platinumdigitalgroup.jvdf.VDFNode;
 public class Node {
 	private Node parent;
 	private List<Node> children = new ArrayList<Node>();
-	protected Map<String, Object[]> keyVals = new HashMap<String, Object[]>(8);
+	//protected Map<String, Object[]> keyVals = new HashMap<String, Object[]>(8);
+	protected Map<String, Object[]> keyVals = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
 	//children refers to waveschedule - wave - wavespawn - spawner connections
 	//side connections like relays are connected elsewhere
 	
@@ -45,6 +46,7 @@ public class Node {
     	return this.parent;
     }
     
+    //remove this?
     public void setParent(Node parent) {
     	this.parent = parent;
     }
@@ -101,50 +103,60 @@ public class Node {
 		keyVals.remove(key);
 	}
 	
+	public void printKeyVals() {
+		for(Entry<String, Object[]> entry : keyVals.entrySet()) {
+			System.out.print(entry.getKey());
+			if(entry.getValue().length == 1) {
+				System.out.println(" " + entry.getValue()[0]);
+			}
+			else {
+				System.out.println(" " + entry.getValue());
+			}
+		}
+	}
+	
 	//reconsider this
 	public Map<String, Object[]> getMap() {
 		return this.keyVals;
 	}
 	
-	//convert inconsistent cases to standardized
-	public boolean convertCase(Map<String, Object[]> map, List<String> keys) {
-		boolean updated = false;
-   		Iterator<String> iterator = map.keySet().iterator();
-   		List<Entry<String, Object[]>> newEntries = new ArrayList<Entry<String, Object[]>>();
+	//converts child vdfnodes into case insensitive treemaps
+	public void copyVDFNode(Map<String, Object[]> map) {
+		Set<String> stringSet = new HashSet<String>(
+				Arrays.asList(WaveSpawnNode.NAME, WaveSpawnNode.WAITFORALLDEAD, WaveSpawnNode.WAITFORALLSPAWNED));
 		
-		while(iterator.hasNext()) { 
-			String next = iterator.next();
-			int k = keys.indexOf(next.toUpperCase());
-			if(k != -1 && !keys.get(k).equals(next)) { //if already in pascal case, skip
-				newEntries.add(new AbstractMap.SimpleEntry<String, Object[]>(keys.get(k), map.get(next)));
-				iterator.remove();
-			}
-		}
-		for(Entry<String, Object[]> entry : newEntries) {
-			map.put(entry.getKey(), entry.getValue());
-		}
-		
-		if(newEntries.size() > 0) {
-			updated = true;
-		}
-		
-		return updated;
-	}
-	
-	public void convertVDFNodeToHash(Map<String, Object[]> map) {
 		for(Entry<String, Object[]> entry : map.entrySet()) {
 			if(entry.getValue()[0].getClass() == VDFNode.class) {
-				List<Map<String, Object[]>> nodeArray = new ArrayList<Map<String, Object[]>>(entry.getValue().length);
+				//List<Map<String, Object[]>> nodeArray = new ArrayList<Map<String, Object[]>>(entry.getValue().length);
+				Object[] nodeArray = new Object[entry.getValue().length];
 				
 				for(int i = 0; i < entry.getValue().length; i++) {
-					Map<String, Object[]> subMap = new HashMap<String, Object[]>(8);
+					Map<String, Object[]> subMap = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
 					subMap.putAll((VDFNode) entry.getValue()[i]);
-					convertVDFNodeToHash(subMap);
-					nodeArray.add(subMap);
+					copyVDFNode(subMap);
+					//nodeArray.add(subMap);
+					nodeArray[i] = subMap;
 				}
-				entry.setValue(new Object[] {nodeArray});
+				entry.setValue(nodeArray);
+				//entry.setValue(new Object[] {nodeArray});
 			}
-		}
+			else if(!stringSet.contains(entry.getKey())) {
+				final String Digits = "(\\p{Digit}+)";
+				//decimal digit one or more times
+
+				final String fpRegex =
+					("-?(" + //- 0 or 1 times
+					"("+Digits+"(\\.)?("+Digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
+					"(\\.("+Digits+")))"); //. , digits
+
+				if (Pattern.matches(fpRegex, myString)) {
+					Double.valueOf(myString); // Will not throw NumberFormatException
+				}	
+				else {
+				// Perform suitable alternative action
+				}	
+			}
+		}	
 	}
     
     public static class PopNode extends Node {
@@ -169,100 +181,43 @@ public class Node {
         	this.putKey(BOTSATKINSPAWN, false);
         	this.putKey(FIXEDRESPAWNWAVETIME, false);
         	this.putKey(EVENTPOPFILE, false);
-        	this.putKey(ADVANCED, false);
+        	//this.putKey(ADVANCED, false);
         }
         
-		public PopNode(Map<String, Object[]> map) { //constructor for read in nodes
-        	List<String> popKeys = new ArrayList<String>(Arrays.asList(STARTINGCURRENCY.toUpperCase(), RESPAWNWAVETIME.toUpperCase(),
-        			FIXEDRESPAWNWAVETIME.toUpperCase(), EVENTPOPFILE.toUpperCase(), BUSTERDAMAGE.toUpperCase(), 
-        				BUSTERKILLS.toUpperCase(), BOTSATKINSPAWN.toUpperCase(), ADVANCED.toUpperCase()));
-        	List<String> waveKeys = new ArrayList<String>(Arrays.asList(WaveNode.STARTWAVEOUTPUT.toUpperCase(), 
-        			WaveNode.DONEOUTPUT.toUpperCase(), WaveNode.INITWAVEOUTPUT.toUpperCase()));
-        	
+		public PopNode(Map<String, Object[]> map) { //constructor for read in nodes  	
+        	this.copyVDFNode(map);
         	keyVals.putAll(map);
         	
-        	convertCase(keyVals, popKeys);
+        	if(keyVals.containsKey("Wave")) {
+        		for(Object wave : keyVals.get("Wave")) {
+        			WaveNode waveNode = new WaveNode((Map<String, Object[]>) wave);
+					waveNode.connectNodes(this);
+        		}
+        		keyVals.remove("Wave");
+        	}
         	
-    		Iterator<Entry<String, Object[]>> iterator2 = keyVals.entrySet().iterator();
-    		while(iterator2.hasNext()) {
-    			Entry<String, Object[]> entry = iterator2.next();
-    			
-    			if(entry.getValue()[0].getClass() == VDFNode.class) {
-    				boolean updated = convertCase((Map<String, Object[]>) entry.getValue()[0], waveKeys);
-    				
-    				if(updated) {
-    					WaveNode waveNode = new WaveNode(entry.getKey(), (Map<String, Object[]>) entry.getValue()[0]);
-    					waveNode.connectNodes(this);
-    					iterator2.remove();
-    				}
-    			}
-    		}
+        	if(((String) keyVals.get(EVENTPOPFILE)[0]).equalsIgnoreCase("Halloween")) {
+        		keyVals.put(EVENTPOPFILE, new Object[] {true});
+        	}
+        	else {
+        		keyVals.put(EVENTPOPFILE, new Object[] {false});
+        	}
+        	
+        	String atk = (String) keyVals.get(BOTSATKINSPAWN)[0];
+        	if(atk != null && (atk.equalsIgnoreCase("no") || atk.equalsIgnoreCase("false"))) {
+        		keyVals.put(BOTSATKINSPAWN, new Object[] {false});
+        	}
+        	else {
+        		keyVals.put(BOTSATKINSPAWN, new Object[] {true});
+        	}
+        	
+        	if(keyVals.containsKey(FIXEDRESPAWNWAVETIME)) {
+        		keyVals.put(FIXEDRESPAWNWAVETIME, new Object[] {true});
+        	}
+        	else {
+        		keyVals.put(FIXEDRESPAWNWAVETIME, new Object[] {false});
+        	}
         }
-        
-        /*
-        public void setCurrency(int c) {
-        	this.startingCurrency = c;
-        }
-        
-        public int getCurrency() {
-        	return this.startingCurrency;
-        }
-        
-        public void setWaveTime(int w) {
-        	this.respawnWaveTime = w;
-        }
-        
-        public int getWaveTime() {
-        	return this.respawnWaveTime;
-        }
-        
-        public void setFixedWaveTime(boolean w) {
-        	this.fixedRespawnWaveTime = w;
-        }
-        
-        public boolean getFixedWaveTime() {
-        	return this.fixedRespawnWaveTime;
-        }
-        
-        public void setEventPop(boolean e) {
-        	this.EventPopfile = e;
-        }
-        
-        public boolean getEventPop() {
-        	return this.EventPopfile;
-        }
-        
-        public void setBusterDmg(int d) {
-        	this.busterDmg = d;
-        }
-        
-        public int getBusterDmg() {
-        	return this.busterDmg;
-        }
-        
-        public void setBusterKills(int k) {
-        	this.busterKills = k;
-        }
-        
-        public int getBusterKills() {
-        	return this.busterKills;
-        }
-        
-        public void setAtkInSpawn(boolean a) {
-        	this.botsAtkInSpawn = a;
-        }
-        
-        public boolean getAtkInSpawn() {
-        	return this.botsAtkInSpawn;
-        }
-        
-        public void setAdvanced(boolean a) {
-        	this.advanced = a;
-        }
-        
-        public boolean getAdvanced() {
-        	return this.advanced;
-        } */
         
         public void setMapIndex(int i) {
         	this.mapIndex = i;
@@ -322,74 +277,37 @@ public class Node {
     	public static final String DONEOUTPUT = "DoneOutput";
     	public static final String INITWAVEOUTPUT = "InitWaveOutput";
     	
-    	private String name;
-    	
     	public WaveNode() {
     		this.putKey(STARTWAVEOUTPUT, new RelayNode());
     		this.putKey(DONEOUTPUT, new RelayNode());
     	}
     	
-        public WaveNode(String name, Map<String, Object[]> map) { //readin node, key case should already be converted
-        	List<String> wsKeys = new ArrayList<String>(Arrays.asList(WaveSpawnNode.WHERE.toUpperCase(), WaveSpawnNode.TOTALCOUNT.toUpperCase(),
-        			WaveSpawnNode.MAXACTIVE.toUpperCase(), WaveSpawnNode.SPAWNCOUNT.toUpperCase(), WaveSpawnNode.WAITBEFORESTARTING.toUpperCase(),
-        			WaveSpawnNode.WAITBETWEENSPAWNS.toUpperCase(), WaveSpawnNode.TOTALCURRENCY.toUpperCase(), 
-        			WaveSpawnNode.NAME.toUpperCase(), WaveSpawnNode.WAITFORALLDEAD.toUpperCase(), WaveSpawnNode.WAITFORALLSPAWNED.toUpperCase(),
-        			WaveSpawnNode.SUPPORT.toUpperCase(), WaveSpawnNode.STARTWAVEOUTPUT.toUpperCase(), WaveSpawnNode.FIRSTSPAWNOUTPUT.toUpperCase(),
-        			WaveSpawnNode.LASTSPAWNOUTPUT.toUpperCase(), WaveSpawnNode.DONEOUTPUT.toUpperCase(), WaveSpawnNode.TFBOT.toUpperCase(),
-        			WaveSpawnNode.TANK.toUpperCase(), WaveSpawnNode.SQUAD.toUpperCase(), WaveSpawnNode.RANDOMCHOICE.toUpperCase()));
-        	
-        	this.setName(name); //this is the internal pop block name
+        public WaveNode(Map<String, Object[]> map) { //readin node, key case should already be converted
         	keyVals.putAll(map);
         	
-    		Iterator<Entry<String, Object[]>> iterator = keyVals.entrySet().iterator();
-    		while(iterator.hasNext()) {
-    			Entry<String, Object[]> entry = iterator.next();
-    			
-    			if(entry.getValue()[0].getClass() == VDFNode.class) {
-    				boolean updated = convertCase((Map<String, Object[]>) entry.getValue()[0], wsKeys);
-    				
-    				if(updated) {
-    					WaveSpawnNode wsNode = new WaveSpawnNode((Map<String, Object[]>) entry.getValue()[0]);
-    					wsNode.connectNodes(this);
-    					iterator.remove();
-    				}
-    			}
-    		}
+        	if(keyVals.containsKey("WaveSpawn")) {
+        		for(Object wavespawn : keyVals.get("WaveSpawn")) {
+        			WaveSpawnNode waveSpawnNode = new WaveSpawnNode((Map<String, Object[]>) wavespawn);
+					waveSpawnNode.connectNodes(this);
+        		}
+        		keyVals.remove("WaveSpawn");
+        	}
+        	
+        	if(keyVals.containsKey(STARTWAVEOUTPUT)) {
+        		RelayNode start = new RelayNode((Map<String, Object[]>) keyVals.get(STARTWAVEOUTPUT)[0]);
+        		keyVals.put(STARTWAVEOUTPUT, new Object[] {start});
+        	}
+        	
+        	if(keyVals.containsKey(DONEOUTPUT)) {
+        		RelayNode done = new RelayNode((Map<String, Object[]>) keyVals.get(DONEOUTPUT)[0]);
+        		keyVals.put(DONEOUTPUT, new Object[] {done});
+        	}
+        	
+        	if(keyVals.containsKey(INITWAVEOUTPUT)) {
+        		RelayNode init = new RelayNode((Map<String, Object[]>) keyVals.get(INITWAVEOUTPUT)[0]);
+        		keyVals.put(INITWAVEOUTPUT, new Object[] {init});
+        	}
         }
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-    	
-    	/*
-    	public void setStart(RelayNode s) {
-    		this.start = s;
-    	}
-    	
-    	public RelayNode getStart() {
-    		return this.start;
-    	}
-    	
-    	public void setDone(RelayNode s) {
-    		this.done = s;
-    	}
-    	
-    	public RelayNode getDone() {
-    		return this.done;
-    	}
-    	
-    	public void setInit(RelayNode s) {
-    		this.init = s;
-    	}
-    	
-    	public RelayNode getInit() {
-    		return this.init;
-    	}
-    	*/
     }
     
     public static class RelayNode extends Node { //something experimental
@@ -436,12 +354,6 @@ public class Node {
     }
     
     public static class WaveSpawnNode extends Node { //node for wavespawns
-	
-    	//where, name, waitforalldead, waitforallspawned, template = string
-    	//totalcount, maxactive, spawncount, totalcurrency = int
-    	//waitbeforestarting, waitbetweenspawns = double
-    	//waitbetweendeaths, support, supportlimited = boolean
-  
     	public static final String WHERE = "Where"; //string
     	public static final String TOTALCOUNT = "TotalCount"; //int
     	public static final String MAXACTIVE = "MaxActive"; //int
@@ -482,15 +394,14 @@ public class Node {
     	}
     	
     	public WaveSpawnNode(Map<String, Object[]> map) {
-    		//keys are converted by wave
     		keyVals.putAll(map);
     		
-    		if(keyVals.get(WAITBETWEENSPAWNSAFTERDEATH) != null) {
+    		if(keyVals.containsKey(WAITBETWEENSPAWNSAFTERDEATH)) {
     			waitBetweenDeaths = true;
     		}
     		
     		//need to check this 
-    		if(keyVals.get(SUPPORT) != null) {
+    		if(keyVals.containsKey(SUPPORT)) {
     			Object supportVal = keyVals.get(SUPPORT)[0];
     			if(supportVal.getClass() == String.class) {
     				if(((String) supportVal).equalsIgnoreCase("LIMITED")) {
@@ -499,32 +410,38 @@ public class Node {
     			}
     		}
     		
-    		if(keyVals.get(STARTWAVEOUTPUT) != null) {
+    		if(keyVals.containsKey(STARTWAVEOUTPUT)) {
     			this.putKey(STARTWAVEOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(STARTWAVEOUTPUT)));
     		}
-    		if(keyVals.get(FIRSTSPAWNOUTPUT) != null) {
+    		if(keyVals.containsKey(FIRSTSPAWNOUTPUT)) {
     			this.putKey(FIRSTSPAWNOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(FIRSTSPAWNOUTPUT)));
     		}
-    		if(keyVals.get(LASTSPAWNOUTPUT) != null) {
+    		if(keyVals.containsKey(LASTSPAWNOUTPUT)) {
     			this.putKey(LASTSPAWNOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(LASTSPAWNOUTPUT)));
     		}
-    		if(keyVals.get(DONEOUTPUT) != null) {
+    		if(keyVals.containsKey(DONEOUTPUT)) {
     			this.putKey(DONEOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(DONEOUTPUT)));
     		}
     		
-    		if(keyVals.get(TFBOT) != null) {
-    			TFBotNode botNode = new TFBotNode((Map<String, Object[]>) keyVals.get(TFBOT)[0]);
-    			botNode.setParent(this);
+    		if(keyVals.containsKey(TFBOT)) {
+    			TFBotNode node = new TFBotNode((Map<String, Object[]>) keyVals.get(TFBOT)[0]);
+    			node.connectNodes(this);
     			keyVals.remove(TFBOT);
     		}
-    		else if(keyVals.get(TANK) != null) {
-    			
+    		else if(keyVals.containsKey(TANK)) {
+    			TankNode node = new TankNode((Map<String, Object[]>) keyVals.get(TANK)[0]);
+    			node.connectNodes(this);
+    			keyVals.remove(TANK);
     		}
-    		else if(keyVals.get(SQUAD) != null) {
-    			
+    		else if(keyVals.containsKey(SQUAD)) {
+    			SquadNode node = new SquadNode((Map<String, Object[]>) keyVals.get(SQUAD)[0]);
+    			node.connectNodes(this);
+    			keyVals.remove(SQUAD);
     		}
-    		else if(keyVals.get(RANDOMCHOICE) != null) {
-    			
+    		else if(keyVals.containsKey(RANDOMCHOICE)) {
+    			RandomChoiceNode node = new RandomChoiceNode((Map<String, Object[]>) keyVals.get(RANDOMCHOICE)[0]);
+    			node.connectNodes(this);
+    			keyVals.remove(RANDOMCHOICE);
     		}
     	}
  
@@ -543,127 +460,6 @@ public class Node {
     	public boolean getSupportLimited() {
     		return this.supportLimited;
     	}
-    	
-    	/*
-    	public void setName(String name) {
-    		this.name = name;
-    	}
-    	
-    	public String getName() {
-    		return this.name;
-    	}
- 	
-    	public void setWhere(String where) {
-    		this.where = where;
-    	}
-    	
-    	public String getWhere() {
-    		return this.where;
-    	}
-    	
-    	public void setTotalCount(int total) {
-    		this.totalCount = total;
-    	}
-    	
-    	public int getTotalCount() {
-    		return this.totalCount;
-    	}
-    	
-    	public void setMaxActive(int max) {
-    		this.maxActive = max;
-    	}
-    	
-    	public int getMaxActive() {
-    		return this.maxActive;
-    	}
-    	
-    	public void setSpawnCount(int count) {
-    		this.spawnCount = count;
-    	}
-    	
-    	public int getSpawnCount() {
-    		return this.spawnCount;
-    	}
-    	
-    	public void setBeforeStarting(double before) {
-    		this.waitBeforeStarting = before;
-    	}
-    	
-    	public double getBeforeStarting() {
-    		return this.waitBeforeStarting;
-    	}
-    	
-    	public void setBetweenSpawns(double spawn) {
-    		this.waitBetweenSpawns = spawn;
-    	}
-    	
-    	public double getBetweenSpawns() {
-    		return this.waitBetweenSpawns;
-    	}
-    	
-    	public void setCurrency(int curr) {
-    		this.totalCurrency = curr;
-    	}
-    	
-    	public int getCurrency() {
-    		return this.totalCurrency;
-    	}
-    	
-    	public void setWaitDead(String dead) {
-    		this.waitForAllDead = dead;
-    	}
-    	
-    	public String getWaitDead() {
-    		return this.waitForAllDead;
-    	}
-    	
-    	public void setWaitSpawned(String spawn) {
-    		this.waitForAllSpawned = spawn;
-    	}
-    	
-    	public String getWaitSpawned() {
-    		return this.waitForAllSpawned;
-    	}
-    	
-    	public void setSupport(boolean s) {
-    		this.support = s;
-    	}
-    	
-    	public boolean getSupport() {
-    		return this.support;
-    	}
-    	
-    	public void setStart(RelayNode s) {
-    		this.start = s;
-    	}
-    	
-    	public RelayNode getStart() {
-    		return this.start;
-    	}
-    	
-    	public void setFirst(RelayNode s) {
-    		this.first = s;
-    	}
-    	
-    	public RelayNode getFirst() {
-    		return this.first;
-    	}
-    	
-    	public void setLast(RelayNode s) {
-    		this.last = s;
-    	}
-    	
-    	public RelayNode getLast() {
-    		return this.last;
-    	}
-    	
-    	public void setDone(RelayNode s) {
-    		this.done = s;
-    	}
-    	
-    	public RelayNode getDone() {
-    		return this.done;
-    	} */
     	
     	//copy input node to calling
     	public void copyWaveSpawn(WaveSpawnNode copyFrom) {
@@ -714,59 +510,17 @@ public class Node {
     	}
     	
     	public TankNode(Map<String, Object[]> map) {
-    		List<String> keys = new ArrayList<String>(Arrays.asList(HEALTH.toUpperCase(), SPEED.toUpperCase(), NAME.toUpperCase(), 
-    				SKIN.toUpperCase(), STARTINGPATHTRACKNODE.toUpperCase(), ONKILLEDOUTPUT.toUpperCase(), 
-    				ONBOMBDROPPEDOUTPUT.toUpperCase()));
-    		
     		keyVals.putAll(map);
-    		convertCase(keyVals, keys);
+    		
+    		if(keyVals.containsKey(ONKILLEDOUTPUT)) {
+    			this.putKey(ONKILLEDOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(ONKILLEDOUTPUT)));
+    		}
+    		
+    		if(keyVals.containsKey(ONBOMBDROPPEDOUTPUT)) {
+    			this.putKey(ONBOMBDROPPEDOUTPUT, 
+    				new RelayNode((Map<String, Object[]>) this.getValueSingular(ONBOMBDROPPEDOUTPUT)));
+    		}
     	}
-    	
-    	/*
-    	public String getName() {
-    		return this.name;
-    	}
-    	
-    	public void setHealth(int h) {
-    		this.health = h;
-    	}
-    	
-    	public int getHealth() {
-    		return this.health;
-    	}
-    	
-    	public void setSkin(boolean s) {
-    		this.skin = s;
-    	}
-    	
-    	public boolean getSkin() {
-    		return this.skin;
-    	}
-    	
-    	public void setStartingPath(String s) {
-    		this.startingPathTrackNode = s;
-    	}
-    	
-    	public String getStartingPath() {
-    		return this.startingPathTrackNode;
-    	}
-    	
-    	public void setOnKilled(RelayNode r) {
-    		this.onKilled = r;
-    	}
-    	
-    	public RelayNode getOnKilled() {
-    		return this.onKilled;
-    	}
-    	
-    	public void setOnBomb(RelayNode r) {
-    		this.onBomb = r;
-    	}
-    	
-    	public RelayNode getOnBomb() {
-    		return this.onBomb;
-    	}
-    	*/
     }
     
     public static class TFBotNode extends Node { //node for tfbot spawners
@@ -820,14 +574,7 @@ public class Node {
     	 
     	//alternate constructor for read in tfbots
     	public TFBotNode(Map<String, Object[]> map) {
-    		List<String> keys = new ArrayList<String>(Arrays.asList(CLASSNAME.toUpperCase(), CLASSICON.toUpperCase(), NAME.toUpperCase(), 
-    				SKILL.toUpperCase(), WEAPONRESTRICT.toUpperCase(), TAGS.toUpperCase(), ATTRIBUTES.toUpperCase(), ITEM.toUpperCase(), 
-    				ITEMATTRIBUTES.toUpperCase(), CHARACTERATTRIBUTES.toUpperCase(), TEMPLATE.toUpperCase(), HEALTH.toUpperCase(), 
-    				SCALE.toUpperCase(), AUTOJUMPMIN.toUpperCase(), AUTOJUMPMAX.toUpperCase(), BEHAVIORMODIFIERS.toUpperCase(), 
-    				MAXVISIONRANGE.toUpperCase(), TELEPORTWHERE.toUpperCase(), EVENTCHANGEATTRIBUTES.toUpperCase()));
-    		
     		keyVals.putAll(map);
-    		convertCase(keyVals, keys);
     		
     		for(Entry<String, Object[]> entry : keyVals.entrySet()) {
     			if(entry.getValue().length > 1) {
