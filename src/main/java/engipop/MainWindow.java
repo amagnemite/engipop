@@ -91,11 +91,7 @@ public class MainWindow extends EngiWindow {
 		spawnerPanel = waveNodeManager.makeSpawnerPanel();
 		
 		tankPanel.setVisible(false);
-		
-		/*
-		JPanel filler = new JPanel();
-		filler.setSize(new Dimension(100, 200));
-		filler.setMinimumSize(filler.getPreferredSize()); */
+		//tankPanel.setPreferredSize(botPanel.getPreferredSize());
 		
 		createPop.addActionListener(event -> { //potentially move this
 			String error = new TreeParse().treeCheck(popNode);
@@ -107,26 +103,25 @@ public class MainWindow extends EngiWindow {
 			}	 
 		});
 		
-		//addGB(filler, 0, 0);
 		addGB(feedback, 0, 1);
 		
 		gbConstraints.gridwidth = 2;
 		addGB(wavePanel, 0, 2);
+		
+		//gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		addGB(wsPanel, 0, 3);
 		
 		addGB(spawnerPanel, 0, 4);
-		
-		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		gbConstraints.gridwidth = 2;
-		addGB(tankPanel, 0, 5);
-		
+				
 		gbConstraints.gridheight = 2;
 		gbConstraints.weighty = 1;
 		addGB(botPanel, 0, 5);
+		//add insets?
+		addGB(tankPanel, 0, 5);
 		
 		gbConstraints.weighty = 0;
-		gbConstraints.gridwidth = 1;
 		gbConstraints.gridheight = 3;
+		gbConstraints.gridwidth = 1;
 		addGB(listPanel, 2, 3);
 		
 		setVisible(true);

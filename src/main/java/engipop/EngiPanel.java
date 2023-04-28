@@ -37,58 +37,73 @@ public class EngiPanel extends JPanel {
 		public String secondary() { return secondary; }
 		public String melee() { return melee; }
 		public String building() { return "TF_WEAPON_BUILDER_SPY"; } //dumb spy hardcode
+		
+		public static Classes toClass(String str) { //dumb
+			Classes c;
+			
+			switch(str.toLowerCase()) {
+				case "scout":
+					c = Classes.Scout;
+					break;
+				case "soldier":
+					c = Classes.Soldier;
+					break;
+				case "pyro":
+					c = Classes.Pyro;
+					break;
+				case "demoman":
+					c = Classes.Demoman;
+					break;
+				case "heavyweapons":
+					c = Classes.Heavyweapons;
+					break;
+				case "engineer":
+					c = Classes.Engineer;
+					break;
+				case "medic":
+					c = Classes.Medic;
+					break;
+				case "sniper":
+					c = Classes.Sniper;
+					break;
+				case "spy":
+					c = Classes.Spy;
+					break;
+				case "none":
+				default:
+					c = Classes.None;
+					break;
+			}
+			return c;
+		}
 	}
 	
 	//character item slots
 	public enum ItemSlot {
-		 NONE (-1),
-		 PRIMARY (0),
-		 SECONDARY (1),
-		 MELEE (2),
-		 BUILDING (3),
-		 CHARACTER (4),
-		 HAT1 (5),
-		 HAT2 (6),
-		 HAT3 (7);
-		 
-		 private final int slot;
-		 ItemSlot(int slot) {
-			 this.slot = slot;
-		 }
-		 public int getSlot() { return slot; }
-	}
-	
-	/*
-	//simplified version of the above
-	public enum ItemSlotAlternate {
-		//NONE (-1),
+		NONE (-1),
 		PRIMARY (0),
 		SECONDARY (1),
 		MELEE (2),
-		COSMETIC (3),
-		COSMETIC2 (4),
-		COSMETIC3 (5),
-		BUILDING (6);
-		
+		BUILDING (3),
+		COSMETIC1 (4),
+		COSMETIC2 (5),
+		COSMETIC3 (6),
+		CHARACTER (7);
+		//may need to add actionitem
+		 
 		private final int slot;
-		ItemSlotAlternate(int slot) {
+		ItemSlot(int slot) {
 			this.slot = slot;
 		}
 		public int getSlot() { return slot; }
-	} */
-	
-	public static final int PRIMARY = 0;
-	public static final int SECONDARY = 1;
-	public static final int MELEE = 2;
-	public static final int COSMETIC = 3;
-	public static final int COSMETIC2 = 4;
-	public static final int COSMETIC3 = 5;
-	public static final int BUILDING = 6;
-	
-	public static int tankDefaultHealth = 50000;
-	public static double tankDefaultSpeed = 75.0;
-	public static String tankDefaultName = "tankboss";
-	public static int maxActive = 22;
+	}
+
+	public static final int TANKDEFAULTHEALTH = 50000;
+	public static final double TANKDEFAULTSPEED = 75.0;
+	public static final String TANKDEFAULTNAME = "tankboss";
+	public static final int MAXACTIVE = 22;
+	public static final int BUSTERDEFAULTDMG = 3000;
+	public static final int BUSTERDEFAULTKILLS = 15;
 	
 	//method to position on grid bag layout
 	protected void addGB(Component comp, int x, int y) {

@@ -213,7 +213,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	}
 	
 	public void updatePanel(WaveSpawnNode wsn) { //sets panel components to reflect the node
-		wsn.printKeyVals();
+		//wsn.printKeyVals();
 		wsNameField.setText((String) wsn.getValueSingular(WaveSpawnNode.NAME));
 		wsWhereBox.setSelectedItem(wsn.getValueSingular(WaveSpawnNode.WHERE));
 		wsTotalSpin.setValue((int) wsn.getValueSingular(WaveSpawnNode.TOTALCOUNT));

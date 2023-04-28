@@ -57,7 +57,7 @@ public class Node {
 			keyVals.remove(key);
 			return;
 		}
-		else if(value.getClass() == List.class && ((List<String>) value).isEmpty()) {
+		else if(value == Collections.emptyList()) {
 			keyVals.remove(key);
 			return;
 		}
@@ -71,7 +71,7 @@ public class Node {
 	
 	//array value ver of above
 	public void putKey(String key, Object[] value) {
-		if(value.length > 0) {
+		if(!Arrays.asList(value).isEmpty()) {
 			keyVals.put(key, value);
 		}
 		else {
@@ -125,7 +125,7 @@ public class Node {
 		Set<String> stringSet = new HashSet<String>(
 				Arrays.asList(WaveSpawnNode.NAME, WaveSpawnNode.WAITFORALLDEAD, WaveSpawnNode.WAITFORALLSPAWNED));
 		
-		for(Entry<String, Object[]> entry : map.entrySet()) {
+		for(Entry<String, Object[]> entry : map.entrySet()) {			
 			if(entry.getValue()[0].getClass() == VDFNode.class) {
 				//List<Map<String, Object[]>> nodeArray = new ArrayList<Map<String, Object[]>>(entry.getValue().length);
 				Object[] nodeArray = new Object[entry.getValue().length];
@@ -141,20 +141,28 @@ public class Node {
 				//entry.setValue(new Object[] {nodeArray});
 			}
 			else if(!stringSet.contains(entry.getKey())) {
-				final String Digits = "(\\p{Digit}+)";
-				//decimal digit one or more times
-
+				final String Digits = "(\\p{Digit}+)"; //decimal digit one or more times
 				final String fpRegex =
-					("-?(" + //- 0 or 1 times
-					"("+Digits+"(\\.)?("+Digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
-					"(\\.("+Digits+")))"); //. , digits
-
-				if (Pattern.matches(fpRegex, myString)) {
-					Double.valueOf(myString); // Will not throw NumberFormatException
-				}	
-				else {
-				// Perform suitable alternative action
-				}	
+						("-?(" + //- 0 or 1 times
+						"("+Digits+"(\\.)?("+Digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
+						"(\\.("+Digits+")))"); //. , digits
+				Object[] array = new Object[entry.getValue().length];
+				
+				for(int i = 0; i < entry.getValue().length; i++) {
+					String str = (String) entry.getValue()[i];
+					if(str.contains(".") && Pattern.matches(fpRegex, str)) {
+						array[i] = Double.valueOf(str);
+					}	
+					else {
+						if(Pattern.matches(Digits, str)) {
+							array[i] = Integer.valueOf(str);
+							//this may also catch certain booleans/flags
+						}
+					}
+				}
+				if(array[0] != null) {
+					entry.setValue(array);
+				}
 			}
 		}	
 	}
@@ -176,8 +184,8 @@ public class Node {
         public PopNode() {
         	this.putKey(STARTINGCURRENCY, 400);
         	this.putKey(RESPAWNWAVETIME, 6);
-        	this.putKey(BUSTERDAMAGE, 3000);
-        	this.putKey(BUSTERKILLS, 15);
+        	this.putKey(BUSTERDAMAGE, EngiPanel.BUSTERDEFAULTDMG);
+        	this.putKey(BUSTERKILLS, EngiPanel.BUSTERDEFAULTKILLS);
         	this.putKey(BOTSATKINSPAWN, false);
         	this.putKey(FIXEDRESPAWNWAVETIME, false);
         	this.putKey(EVENTPOPFILE, false);
@@ -196,7 +204,9 @@ public class Node {
         		keyVals.remove("Wave");
         	}
         	
-        	if(((String) keyVals.get(EVENTPOPFILE)[0]).equalsIgnoreCase("Halloween")) {
+        	//may need to make sure this isn't a not string
+        	if(keyVals.containsKey(EVENTPOPFILE) && 
+        			((String) keyVals.get(EVENTPOPFILE)[0]).equalsIgnoreCase("Halloween")) {
         		keyVals.put(EVENTPOPFILE, new Object[] {true});
         	}
         	else {
@@ -212,10 +222,18 @@ public class Node {
         	}
         	
         	if(keyVals.containsKey(FIXEDRESPAWNWAVETIME)) {
+        		//since pure flag, if it's present then true
         		keyVals.put(FIXEDRESPAWNWAVETIME, new Object[] {true});
         	}
         	else {
         		keyVals.put(FIXEDRESPAWNWAVETIME, new Object[] {false});
+        	}
+        	
+        	if(!keyVals.containsKey(BUSTERDAMAGE)) {
+        		keyVals.put(BUSTERDAMAGE, new Object[] {EngiPanel.BUSTERDEFAULTDMG});
+        	}
+        	if(!keyVals.containsKey(BUSTERKILLS)) {
+        		keyVals.put(BUSTERKILLS, new Object[] {EngiPanel.BUSTERDEFAULTKILLS});
         	}
         }
         
@@ -408,6 +426,10 @@ public class Node {
     					supportLimited = true;
     				}
     			}
+    			keyVals.put(SUPPORT, new Object[] {true});
+    		}
+    		else {
+    			keyVals.put(SUPPORT, new Object[] {false});
     		}
     		
     		if(keyVals.containsKey(STARTWAVEOUTPUT)) {
@@ -498,19 +520,24 @@ public class Node {
     	public static final String HEALTH = "Health"; //int
     	public static final String SPEED = "Speed"; //float
     	public static final String NAME = "Name"; //string
-    	public static final String SKIN = "Skin"; //flag
+    	public static final String SKIN = "Skin"; //flag int
     	public static final String STARTINGPATHTRACKNODE = "StartingPathTrackNode"; //default ""
     	public static final String ONKILLEDOUTPUT = "OnKilledOutput";
     	public static final String ONBOMBDROPPEDOUTPUT = "OnBombDroppedOutput";
     	
     	public TankNode() {
-    		this.putKey(HEALTH, EngiPanel.tankDefaultHealth);
+    		this.putKey(HEALTH, EngiPanel.TANKDEFAULTHEALTH);
     		this.putKey(NAME, "tankboss");
     		this.putKey(SKIN, false);
     	}
     	
     	public TankNode(Map<String, Object[]> map) {
     		keyVals.putAll(map);
+    		
+    		//may need to check this
+    		if(!keyVals.containsKey(SKIN)) {
+    			this.putKey(SKIN, false);
+    		}
     		
     		if(keyVals.containsKey(ONKILLEDOUTPUT)) {
     			this.putKey(ONKILLEDOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(ONKILLEDOUTPUT)));
@@ -524,7 +551,6 @@ public class Node {
     }
     
     public static class TFBotNode extends Node { //node for tfbot spawners
-    	
     	public static final String CLASSNAME = "Class"; //class 
     	public static final String CLASSICON = "ClassIcon"; //string
     	public static final String NAME = "Name"; //string
@@ -533,7 +559,7 @@ public class Node {
     	public static final String TAGS = "Tag"; //List<String>
     	public static final String ATTRIBUTES = "Attribute";  //List<String>
     	public static final String ITEM = "Item"; //String[]
-    	public static final String ITEMATTRIBUTES = "ItemAttributes"; //List<HashMap<String, String>>
+    	public static final String ITEMATTRIBUTES = "ItemAttributes"; //object[] list<String>
 		//when read from VDF, is TreeMap[]
     	public static final String CHARACTERATTRIBUTES = "CharacterAttributes";
     	public static final String TEMPLATE = "Template"; //string
@@ -564,17 +590,26 @@ public class Node {
     	private boolean isItemsSorted;
     	//private Map<ItemSlot, HashMap<String, String>> itemAttributeList;
     	
+    	//consider allowing template only 
     	public TFBotNode() { //defaults
     		this.putKey(CLASSNAME, Classes.Scout);
     		this.putKey(CLASSICON, "scout");
     		this.putKey(SKILL, EASY);
-    		this.putKey(WEAPONRESTRICT, ANY);
+    		//this.putKey(WEAPONRESTRICT, ANY);
     		isItemsSorted = true;
     	}
     	 
     	//alternate constructor for read in tfbots
     	public TFBotNode(Map<String, Object[]> map) {
     		keyVals.putAll(map);
+    		
+    		if(keyVals.containsKey(CLASSNAME)) {
+    			this.putKey(CLASSNAME, Classes.toClass((String) this.getValueSingular(CLASSNAME)));
+    		}
+    		
+    		//if(!keyVals.containsKey(WEAPONRESTRICT)) {
+    		//	this.putKey(WEAPONRESTRICT, ANY);
+    		//}
     		
     		for(Entry<String, Object[]> entry : keyVals.entrySet()) {
     			if(entry.getValue().length > 1) {

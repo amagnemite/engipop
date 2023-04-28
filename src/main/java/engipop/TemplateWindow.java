@@ -79,8 +79,8 @@ public class TemplateWindow extends EngiWindow {
 	ButtonListManager templateBLManager = new ButtonListManager(addTemplateButton,
 			updateTemplateButton, removeTemplateButton);
 	
-	JLabel templateNameLabel = new JLabel("Wavespawn template name: ");
-	JTextField templateNameField = new JTextField("", 20);
+	JLabel templateNameLabel = new JLabel("Template name: ");
+	JTextField templateNameField = new JTextField("", 10);
 	
 	int generated = 1; //attempt to make sure names are unique
 	
@@ -144,6 +144,8 @@ public class TemplateWindow extends EngiWindow {
 		
 		addGB(feedback, 0, 0);
 		addGB(modePanel, 0, 1);
+		
+		gbConstraints.gridwidth = 2;
 		addGB(wsPanel, 0, 2);
 		addGB(spawnerPanel, 0, 3);
 		addGB(botPanel, 0, 4);
@@ -151,8 +153,8 @@ public class TemplateWindow extends EngiWindow {
 		
 		//addGB(botTemplatePanel, 1, 4);
 		gbConstraints.gridheight = 2;
-		addGB(templateButtonPanel, 1, 1);
-		addGB(listPanel, 1, 4);
+		addGB(templateButtonPanel, 2, 1);
+		addGB(listPanel, 2, 4);
 		
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 	}
@@ -284,8 +286,6 @@ public class TemplateWindow extends EngiWindow {
 				else {
 					currentBotNode = (TFBotNode) popNode.getBotTemplateMap().get(templateComboBox.getSelectedItem());
 					botPanel.updatePanel(currentBotNode);
-					
-					botPanel.getAttributesPanel().updateItemAttrInfo(currentBotNode); //check for no odd side effects
 				}
 				templateNameField.setText((String) templateComboBox.getSelectedItem());
 				templateBLManager.changeButtonState(States.SELECTED);

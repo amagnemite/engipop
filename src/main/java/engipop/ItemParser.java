@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import engipop.EngiPanel.ItemSlot;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParser;
 
@@ -73,7 +74,6 @@ public class ItemParser { //parse item schema, get weapons and hats
 	}
     
 	public void parse(File file, MainWindow window) {
-		//don't want to keep these three in memory
 		String schema = "";
 		VDFNode item;
 		VDFNode allPrefabs;
@@ -296,16 +296,16 @@ public class ItemParser { //parse item schema, get weapons and hats
 		
 		switch (slot) {
 			case "primary":
-				type = EngiPanel.PRIMARY;
+				type = ItemSlot.PRIMARY.getSlot();
 				break;
 			case "secondary":
-				type = EngiPanel.SECONDARY;
+				type = ItemSlot.SECONDARY.getSlot();
 				break;
 			case "melee":
-				type = EngiPanel.MELEE;
+				type = ItemSlot.MELEE.getSlot();
 				break;
 			case "cosmetic":
-				type = EngiPanel.COSMETIC;
+				type = ItemSlot.COSMETIC1.getSlot() - 1;
 				break;
 		}
 		

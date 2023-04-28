@@ -1,5 +1,6 @@
 package engipop;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
@@ -22,7 +23,6 @@ import engipop.Node.SpawnerType;
 import engipop.Node.SquadNode;
 import engipop.Node.TFBotNode;
 import engipop.Node.TankNode;
-import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
 
 //buttons to interface with backend / select panel visibility
@@ -89,7 +89,7 @@ public class NodePanelManager {
 		
 		squadRandomList.setSelectionModel(new NoDeselectionModel());
 		squadRandomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		//squadRandomListScroll.setMinimumSize();
+		squadRandomListScroll.setMinimumSize(new Dimension(12, squadRandomList.getPreferredScrollableViewportSize().height));
 		//squadRandomList.getPreferredScrollableViewportSize()
 		
 		//listAddWaveSpawn.setPreferredSize(new Dimension(159, 22));
@@ -101,6 +101,7 @@ public class NodePanelManager {
 		addSquadRandomBot.setVisible(false);
 		updateSquadRandomBot.setVisible(false);
 		removeSquadRandomBot.setVisible(false);
+		squadRandomListScroll.setVisible(false);
 		
 		initListeners();
 		initSpawnerSelector();
@@ -326,16 +327,15 @@ public class NodePanelManager {
 			if(tfbotBut.isSelected()) {
 				spawnerBLManager.changeButtonState(States.EMPTY);
 			}
-			botPanel.getAttributesPanel().setAttrToBotButtonsStates(false, false, States.DISABLE);//disable item attr editing if new node
+			//botPanel.setAttrToBotButtonsStates(false, false, States.DISABLE);//disable item attr editing if new node
 		}
 		else { //load input tfbot
 			currentBotNode = (TFBotNode) node;
 			if(tfbotBut.isSelected()) {
 				spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			}
-			botPanel.getAttributesPanel().setAttrToBotButtonsStates(true, false, States.NOSELECTION);
+			//botPanel.setAttrToBotButtonsStates(true, false, States.NOSELECTION);
 		}
-		botPanel.getAttributesPanel().updateItemAttrInfo(currentBotNode);
 		botPanel.updatePanel(currentBotNode);
 	}
 	
@@ -509,6 +509,7 @@ public class NodePanelManager {
 				removeSquadRandomBot.setVisible(true);
 				
 				updateSpawner.setVisible(false);
+				squadRandomListScroll.setVisible(true);
 				
 				try {
 					Node node = currentWSNode.getSpawner();
@@ -532,6 +533,7 @@ public class NodePanelManager {
 				
 				updateSpawner.setVisible(true);
 				squadRandomListModel.clear();
+				squadRandomListScroll.setVisible(false);
 			}					
 		});
 		randomBut.addItemListener(event -> { //functionally the same as squad, just with rc
@@ -541,6 +543,7 @@ public class NodePanelManager {
 				removeSquadRandomBot.setVisible(true);
 				
 				updateSpawner.setVisible(false);
+				squadRandomListScroll.setVisible(true);
 				
 				try {
 					Node node = currentWSNode.getSpawner();
@@ -564,6 +567,7 @@ public class NodePanelManager {
 				
 				updateSpawner.setVisible(true);
 				squadRandomListModel.clear();
+				squadRandomListScroll.setVisible(false);
 			}
 		});
 	}

@@ -543,7 +543,7 @@ public class TreeParse { //it is time to parse
 		indentCount++;
 		
 		indentPrintln(pw, "Name " + node.getName());
-		if(node.getHealth() != EngiPanel.tankDefaultHealth) {
+		if(node.getHealth() != EngiPanel.TANKDEFAULTHEALTH) {
 			indentPrint(pw, "Health ");
 			pw.println(node.getHealth());
 		}

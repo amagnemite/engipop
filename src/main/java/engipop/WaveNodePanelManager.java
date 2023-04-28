@@ -65,6 +65,9 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		waveList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		waveSpawnList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
+		waveList.setPrototypeCellValue("Wave 1");
+		waveSpawnList.setPrototypeCellValue("Wavespawn");
+		
 		addWave.setToolTipText("Creates an empty wave");
 		addWaveSpawn.setToolTipText("Creates an empty wavespawn");
 		
