@@ -37,6 +37,7 @@ public class PopulationParser { //parse .pop
 	public PopNode parsePopulation(File file) {
 		VDFNode root = null;
 		Object[] includes;
+		//Set<Object> defaultTemplates = new HashSet<Object>("robot_standard.pop", "robot_giant.pop", "robot_gatebot.pop");
 		//PopNode popNode;
 		
 		try {
@@ -54,6 +55,7 @@ public class PopulationParser { //parse .pop
 		root = root.getSubNode(root.lastKey()); //waveschedule is standard name, but can be named whatever user wants
 		
 		for(Object includedPop : includes) {
+			
 			parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + (String) includedPop));
 		}
 		

@@ -17,6 +17,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import engipop.ButtonListManager.States;
+import engipop.EngiPanel.Classes;
 import engipop.EngiWindow.NoDeselectionModel;
 import engipop.Node.RandomChoiceNode;
 import engipop.Node.SpawnerType;
@@ -89,13 +90,13 @@ public class NodePanelManager {
 		
 		squadRandomList.setSelectionModel(new NoDeselectionModel());
 		squadRandomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		squadRandomListScroll.setMinimumSize(new Dimension(12, squadRandomList.getPreferredScrollableViewportSize().height));
-		//squadRandomList.getPreferredScrollableViewportSize()
+		squadRandomListScroll.setMinimumSize(new Dimension(128, squadRandomList.getPreferredScrollableViewportSize().height));
+		//squadRandomListScroll.setMinimumSize(squadRandomList.getPreferredScrollableViewportSize());
+		//System.out.println(squadRandomList.getPreferredScrollableViewportSize());
 		
 		//listAddWaveSpawn.setPreferredSize(new Dimension(159, 22));
 		//+2 for padding or something
 		
-		//spawnerBLManager.changeButtonState(States.EMPTY);
 		squadRandomBLManager.changeButtonState(States.DISABLE);
 		
 		addSquadRandomBot.setVisible(false);
@@ -152,28 +153,15 @@ public class NodePanelManager {
 					//botPanel.updateNode(currentBotNode);
 					currentBotNode = new TFBotNode();
 					currentBotNode.connectNodes(currentWSNode);
-					//botPanel.getAttributesPanel().updateItemAttrInfo(currentBotNode); //other place where you can enter bot added state
-					spawnerInfo.setText(botSpawner);				
-					//currentBotNode = new TFBotNode();		
-					//if(currentWSNode.getParent() == null) { //may need to change here
-					//	feedback.setText("Bot successfully created, but the wavespawn it is linked to is currently unadded");
-					//}
-					//else {
-						//window.feedback.setText("Bot successfully created");
-					//}
-					
+					spawnerInfo.setText(botSpawner);
+					//window.feedback.setText("Bot successfully created");
 					break;
 				case (addTankMsg):
 					//tankPanel.updateNode(currentTankNode);
 					currentTankNode = new TankNode();
 					currentTankNode.connectNodes(currentWSNode);
 					spawnerInfo.setText(tankSpawner);
-					//if(currentWSNode.getParent() == null) {
-					//	feedback.setText("Tank successfully created, but the wavespawn it is linked to is currently unadded");
-					//}
-					//else {
-						//window.feedback.setText("Tank successfully created");
-					//}
+					//window.feedback.setText("Tank successfully created");
 					break;
 				case (addSquadMsg):
 					currentSquadNode = new SquadNode();
@@ -280,13 +268,15 @@ public class NodePanelManager {
 			
 			//prevent fits if index is reset
 			if(squadRandomIndex != -1) {
-				if(squadBut.isSelected()) {
-					currentBotNode = (TFBotNode) currentSquadNode.getChildren().get(squadRandomIndex);
+				Node currentParent = squadBut.isSelected() ? currentSquadNode : currentRCNode;
+				if(currentParent.getChildren().get(squadRandomIndex).getClass() == TFBotNode.class) {
+					currentBotNode = (TFBotNode) currentParent.getChildren().get(squadRandomIndex);
+					loadBot(false, currentBotNode);
 				}
 				else {
-					currentBotNode = (TFBotNode) currentRCNode.getChildren().get(squadRandomIndex);
+					window.feedback.setText("Possible nested randomchoice/squad! Unable to load");
 				}
-				loadBot(false, currentBotNode);
+				
 				squadRandomBLManager.changeButtonState(States.SELECTED);
 			}
 			else { //create a new bot 
@@ -374,8 +364,13 @@ public class NodePanelManager {
 			currentSquadNode = (SquadNode) currentWSNode.getSpawner();
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			if(currentSquadNode.hasChildren()) {
-				loadBot(false, currentSquadNode.getChildren().get(0));
-				getSquadRandomList();
+				if(currentSquadNode.getChildren().get(0).getClass() == TFBotNode.class) {
+					loadBot(false, currentSquadNode.getChildren().get(0));
+					getSquadRandomList();
+				}
+				else {
+					window.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+				}
 				squadRandomBLManager.changeButtonState(States.NOSELECTION);
 			}
 			else { //only allow children removal if there are children to remove
@@ -398,8 +393,13 @@ public class NodePanelManager {
 			currentRCNode = (RandomChoiceNode) currentWSNode.getSpawner();
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			if(currentRCNode.hasChildren()) {
-				loadBot(false, currentRCNode.getChildren().get(0));
-				getSquadRandomList();
+				if(currentSquadNode.getChildren().get(0).getClass() == TFBotNode.class) {
+					loadBot(false, currentRCNode.getChildren().get(0));
+					getSquadRandomList();
+				}
+				else {
+					window.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+				}
 				squadRandomBLManager.changeButtonState(States.NOSELECTION);
 			}
 			else {
@@ -411,9 +411,10 @@ public class NodePanelManager {
 	
 	protected void resetSpawnerState() {
 		spawnerInfo.setText(noSpawner);
-		//loadBot(true);
 		tfbotBut.setSelected(true);
 		spawnerBLManager.changeButtonState(States.DISABLE);
+		botPanel.setVisible(false);
+		//probably should hide spawner panel as well
 	}
 	
 	//refresh entire squadrandom list
@@ -435,12 +436,17 @@ public class NodePanelManager {
 	
 	//refresh singular element on squadrandom list
 	protected void setSquadRandomListElement(TFBotNode node) {
-		if(node.getValueSingular(TFBotNode.NAME) != null) {
+		if(node.containsKey(TFBotNode.NAME)) {
 			squadRandomListModel.addElement((String) node.getValueSingular(TFBotNode.NAME)); //this sucks
 		}
-		else {
+		else if(node.containsKey(TFBotNode.CLASSNAME)) {
 			squadRandomListModel.addElement(node.getValueSingular(TFBotNode.CLASSNAME).toString());
-			//classname is classname obj
+		}
+		else if(node.containsKey(TFBotNode.TEMPLATE)) {
+			squadRandomListModel.addElement((String) node.getValueSingular(TFBotNode.TEMPLATE));
+		}
+		else {
+			squadRandomListModel.addElement("Non TFBot spawner");
 		}
 	}
 	
@@ -490,7 +496,7 @@ public class NodePanelManager {
 						loadTank(false);
 					}
 					else {
-						spawnerBLManager.changeButtonState(ButtonListManager.States.REMOVEONLY);
+						spawnerBLManager.changeButtonState(States.REMOVEONLY);
 					}
 				}
 				catch (IndexOutOfBoundsException e) {

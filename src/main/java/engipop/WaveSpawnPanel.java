@@ -16,6 +16,8 @@ import engipop.Node.WaveSpawnNode;
 @SuppressWarnings("serial")
 public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener { //panel for creating wavespawns
 	
+	private static final int MIN = 0;
+	
 	JTextField wsNameField = new JTextField(20);
 	JTextField wsDeadField = new JTextField(20);
 	JTextField wsSpawnField = new JTextField(20);
@@ -51,17 +53,17 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	JCheckBox doDone = new JCheckBox("DoneOutput?");
 	
 	public WaveSpawnPanel(SecondaryWindow secondaryWindow) {
-		int initial = 1, min = 0, totalMax = 999, activeMax = 22, incr = 1, currMax = 30000, currIncr = 50;
+		int initial = 1, totalMax = 999, activeMax = 22, incr = 1, currMax = 30000, currIncr = 50;
 		double initWait = 0.0, minWait = 0.0, maxWait = 1000.0, incrWait = 1.0;
 		
-		secondaryWindow.addPropertyChangeListener(this);
+		secondaryWindow.addPropertyChangeListener(MainWindow.WAVESPAWN, this);
 		
 		JLabel label = new JLabel("WaveSpawn editor");
 		
-		SpinnerNumberModel totalModel = new SpinnerNumberModel(initial, min, totalMax, incr); //totalcount bots
-		SpinnerNumberModel spawnModel = new SpinnerNumberModel(initial, min, activeMax, incr); //spawncount
-		SpinnerNumberModel maxModel = new SpinnerNumberModel(initial, min, activeMax, incr); //maxactive
-		SpinnerNumberModel currModel = new SpinnerNumberModel(min, min, currMax, currIncr); //money
+		SpinnerNumberModel totalModel = new SpinnerNumberModel(initial, MIN, totalMax, incr); //totalcount bots
+		SpinnerNumberModel spawnModel = new SpinnerNumberModel(initial, MIN, activeMax, incr); //spawncount
+		SpinnerNumberModel maxModel = new SpinnerNumberModel(initial, MIN, activeMax, incr); //maxactive
+		SpinnerNumberModel currModel = new SpinnerNumberModel(MIN, MIN, currMax, currIncr); //money
 		SpinnerNumberModel betweenModel = new SpinnerNumberModel(initWait, minWait, maxWait, incrWait); //waitbeforestarting
 		SpinnerNumberModel startModel = new SpinnerNumberModel(initWait, minWait, maxWait, incrWait); //waitbetweenspawns
 		
@@ -216,7 +218,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		//wsn.printKeyVals();
 		wsNameField.setText((String) wsn.getValueSingular(WaveSpawnNode.NAME));
 		wsWhereBox.setSelectedItem(wsn.getValueSingular(WaveSpawnNode.WHERE));
-		wsTotalSpin.setValue((int) wsn.getValueSingular(WaveSpawnNode.TOTALCOUNT));
+		wsTotalSpin.setValue(wsn.getValueSingular(WaveSpawnNode.TOTALCOUNT));
 		wsMaxSpin.setValue(wsn.getValueSingular(WaveSpawnNode.MAXACTIVE));
 		wsSpawnSpin.setValue(wsn.getValueSingular(WaveSpawnNode.SPAWNCOUNT));
 		wsStartSpin.setValue(wsn.getValueSingular(WaveSpawnNode.WAITBEFORESTARTING));

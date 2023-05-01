@@ -13,8 +13,8 @@ import engipop.Node.*;
 @SuppressWarnings("serial")
 public class MainWindow extends EngiWindow {
 	public static final String ITEMPARSE = "itemparse";
-	public static final String BOTTEMPLATELISTFIXED = "bottemplatelistfixed";
-	public static final String WSTEMPLATELIST = "wstemplatelist";
+	public static final String TFBOT = "TFBOT";
+	public static final String WAVESPAWN = "WAVESPAWN";
 	
 	JMenuBar menuBar = new JMenuBar();
 	JMenu optionsMenu = new JMenu("Options");

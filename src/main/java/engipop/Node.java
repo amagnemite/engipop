@@ -124,45 +124,34 @@ public class Node {
 	public void copyVDFNode(Map<String, Object[]> map) {
 		Set<String> stringSet = new HashSet<String>(
 				Arrays.asList(WaveSpawnNode.NAME, WaveSpawnNode.WAITFORALLDEAD, WaveSpawnNode.WAITFORALLSPAWNED));
+		final String Digits = "(\\p{Digit}+)"; //decimal digit one or more times
+		final String fpRegex =
+				("-?(" + //- 0 or 1 times
+				"("+Digits+"(\\.)?("+Digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
+				"(\\.("+Digits+")))"); //. , digits
 		
-		for(Entry<String, Object[]> entry : map.entrySet()) {			
-			if(entry.getValue()[0].getClass() == VDFNode.class) {
-				//List<Map<String, Object[]>> nodeArray = new ArrayList<Map<String, Object[]>>(entry.getValue().length);
-				Object[] nodeArray = new Object[entry.getValue().length];
-				
-				for(int i = 0; i < entry.getValue().length; i++) {
+		for(Entry<String, Object[]> entry : map.entrySet()) {
+			Object[] nodeArray = new Object[entry.getValue().length];
+			
+			for(int i = 0; i < entry.getValue().length; i++) {
+				if(entry.getValue()[i].getClass() == VDFNode.class) {
 					Map<String, Object[]> subMap = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
 					subMap.putAll((VDFNode) entry.getValue()[i]);
 					copyVDFNode(subMap);
-					//nodeArray.add(subMap);
 					nodeArray[i] = subMap;
 				}
-				entry.setValue(nodeArray);
-				//entry.setValue(new Object[] {nodeArray});
-			}
-			else if(!stringSet.contains(entry.getKey())) {
-				final String Digits = "(\\p{Digit}+)"; //decimal digit one or more times
-				final String fpRegex =
-						("-?(" + //- 0 or 1 times
-						"("+Digits+"(\\.)?("+Digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
-						"(\\.("+Digits+")))"); //. , digits
-				Object[] array = new Object[entry.getValue().length];
-				
-				for(int i = 0; i < entry.getValue().length; i++) {
+				else if(!stringSet.contains(entry.getKey())) { //convert string numbers into ints/doubles
 					String str = (String) entry.getValue()[i];
 					if(str.contains(".") && Pattern.matches(fpRegex, str)) {
-						array[i] = Double.valueOf(str);
+						nodeArray[i] = Double.valueOf(str);
 					}	
-					else {
-						if(Pattern.matches(Digits, str)) {
-							array[i] = Integer.valueOf(str);
-							//this may also catch certain booleans/flags
-						}
+					else if(Pattern.matches(Digits, str)) {
+						nodeArray[i] = Integer.valueOf(str); //this may also catch certain booleans/flags
 					}
 				}
-				if(array[0] != null) {
-					entry.setValue(array);
-				}
+			}
+			if(nodeArray[0] != null) { //may need to double check this
+				entry.setValue(nodeArray);
 			}
 		}	
 	}
@@ -418,6 +407,25 @@ public class Node {
     			waitBetweenDeaths = true;
     		}
     		
+    		if(!keyVals.containsKey(TOTALCOUNT)) {
+    			this.putKey(TOTALCOUNT, 0);
+    		}
+    		if(!keyVals.containsKey(MAXACTIVE)) {
+    			this.putKey(MAXACTIVE, 0);
+    		}
+    		if(!keyVals.containsKey(SPAWNCOUNT)) {
+    			this.putKey(SPAWNCOUNT, 0);
+    		}
+    		if(!keyVals.containsKey(WAITBEFORESTARTING)) {
+    			this.putKey(WAITBEFORESTARTING, 0.0);
+    		}
+    		if(!keyVals.containsKey(WAITBETWEENSPAWNS)) {
+    			this.putKey(WAITBETWEENSPAWNS, 0.0);
+    		}
+    		if(!keyVals.containsKey(TOTALCURRENCY)) {
+    			this.putKey(TOTALCURRENCY, 0);
+    		}
+    		
     		//need to check this 
     		if(keyVals.containsKey(SUPPORT)) {
     			Object supportVal = keyVals.get(SUPPORT)[0];
@@ -607,16 +615,14 @@ public class Node {
     			this.putKey(CLASSNAME, Classes.toClass((String) this.getValueSingular(CLASSNAME)));
     		}
     		
-    		//if(!keyVals.containsKey(WEAPONRESTRICT)) {
-    		//	this.putKey(WEAPONRESTRICT, ANY);
-    		//}
+    		if(keyVals.containsKey(TAGS)) {
+    			List<Object> list = new ArrayList<Object>(Arrays.asList(keyVals.get(TAGS)));
+    			this.putKey(TAGS, list);
+    		}
     		
-    		for(Entry<String, Object[]> entry : keyVals.entrySet()) {
-    			if(entry.getValue().length > 1) {
-    				//converts an array to a list to an array containing a singular list
-    				List<Object> list = new ArrayList<Object>(Arrays.asList(entry.getValue()));
-    				entry.setValue(new Object[] {list});
-    			}
+    		if(keyVals.containsKey(ATTRIBUTES)) {
+    			List<Object> list = new ArrayList<Object>(Arrays.asList(keyVals.get(ATTRIBUTES)));
+    			this.putKey(ATTRIBUTES, list);
     		}
     	}
     	
@@ -672,21 +678,15 @@ public class Node {
     	}
     	
     	public SquadNode(Map<String, Object[]> map) {
-    		boolean match = false;
-    		String currentKey = "";
-    		
     		keyVals.putAll(map);
     		
     		//may want to use generic spawners here
-    		for(String key : keyVals.keySet()) {
-    			if(key.equalsIgnoreCase(WaveSpawnNode.TFBOT) && !key.equals(WaveSpawnNode.TFBOT)) {
-    				match = true;
-    				currentKey = key;
-    			}
-    		}
-    		
-    		if(match) {
-    			keyVals.put(WaveSpawnNode.TFBOT, keyVals.remove(currentKey));
+    		if(map.containsKey(WaveSpawnNode.TFBOT)) {
+	    		for(Object key : map.get(WaveSpawnNode.TFBOT)) {
+	    			TFBotNode node = new TFBotNode((Map<String, Object[]>) key);
+	    			node.connectNodes(this);
+	    		}
+	    		keyVals.remove(WaveSpawnNode.TFBOT);
     		}
     	}
     }
@@ -697,20 +697,15 @@ public class Node {
     	}
     	
     	public RandomChoiceNode(Map<String, Object[]> map) { 
-    		boolean match = false;
-    		String currentKey = "";
-    		
     		keyVals.putAll(map);
     		
-    		for(String key : keyVals.keySet()) {
-    			if(key.equalsIgnoreCase(WaveSpawnNode.TFBOT) && !key.equals(WaveSpawnNode.TFBOT)) {
-    				match = true;
-    				currentKey = key;
-    			}
-    		}
-    		
-    		if(match) {
-    			keyVals.put(WaveSpawnNode.TFBOT, keyVals.remove(currentKey));
+    		//may want to use generic spawners here
+    		if(map.containsKey(WaveSpawnNode.TFBOT)) {
+    			for(Object key : map.get(WaveSpawnNode.TFBOT)) {
+        			TFBotNode node = new TFBotNode((Map<String, Object[]>) key);
+        			node.connectNodes(this);
+        		}
+        		keyVals.remove(WaveSpawnNode.TFBOT);
     		}
     	}
     }

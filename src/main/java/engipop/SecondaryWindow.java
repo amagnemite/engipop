@@ -63,10 +63,12 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		//requestFocus();
 	}
 	
+	//listen to all changes
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
         propertySupport.addPropertyChangeListener(listener);
     }
 	
+	//listen to a specific change
 	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
         propertySupport.addPropertyChangeListener(propertyName, listener);
     }
@@ -166,7 +168,6 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 			file = fileChooser.getSelectedFile();
 			popNode = popParser.parsePopulation(file);
 			propertySupport.firePropertyChange("POPNODE", null, popNode);
-
 		});
 		
 		popPanel.addGB(feedback, 0, 0);
@@ -221,5 +222,9 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		busterKillSpinner.setValue(popNode.getValueSingular(PopNode.BUSTERKILLS));
 		atkSpawnBox.setSelected((boolean) popNode.getValueSingular(PopNode.BOTSATKINSPAWN));
 		//advancedBox.setSelected((boolean) popNode.getValueSingular(PopNode.ADVANCED));
+	}
+	
+	public void fireTemplateChange(String type, String oldName, String newName) {
+		propertySupport.firePropertyChange(type, oldName, newName);
 	}
 }

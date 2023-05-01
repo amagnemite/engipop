@@ -1,5 +1,6 @@
 package engipop;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -65,7 +66,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		waveList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		waveSpawnList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
-		waveList.setPrototypeCellValue("Wave 1");
+		//waveList.setPrototypeCellValue("Wave 10");
 		waveSpawnList.setPrototypeCellValue("Wavespawn");
 		
 		addWave.setToolTipText("Creates an empty wave");
@@ -81,8 +82,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		waveList.setSelectedIndex(0); //on init, have the 1st wave selected
 		waveSpawnList.setSelectedIndex(0); //same here
 		
-		//waveList.setvis
-		waveListScroll.setMinimumSize(waveList.getPreferredScrollableViewportSize());
+		waveListScroll.setMinimumSize(new Dimension(waveList.getPreferredScrollableViewportSize().width + 20,waveList.getPreferredScrollableViewportSize().height));
+		//i don't even know
 		waveSpawnListScroll.setMinimumSize(waveSpawnList.getPreferredScrollableViewportSize());
 	}
 	
@@ -148,7 +149,6 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			}
 			else { //remember that refreshing the list also causes index to be -1
 				//think about this since once something is selected -> selection won't be changed until something else is
-				//currentWaveLabel.setText("No wave selected");
 				waveBLManager.changeButtonState(States.EMPTY);
 				waveSpawnBLManager.changeButtonState(States.DISABLE);
 				spawnerBLManager.changeButtonState(States.DISABLE);
@@ -161,15 +161,13 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				
 				currentWaveNode = new WaveNode();
 				currentWaveNode.connectNodes(popNode);
-				//currentWaveLabel.setText("Editing wave " + Integer.toString(popNode.getChildren().size()));
 				
-				//getWaveList();
-				waveListModel.addElement("Wave");
+				waveListModel.addElement("Wave"); //TODO: add counter
 				
 				waveList.setSelectedIndex(waveListModel.getSize() - 1); //this also clears the ws list
 				
 				//does all the create a new wavespawn stuff
-				addWaveSpawn.doClick();
+				//addWaveSpawn.doClick();
 			} 
 		});
 		
@@ -178,25 +176,15 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				List<Node> list = popNode.getChildren();
 				window.feedback.setText(" ");
 				
-				//if(waveList.getSelectedIndex() != -1) { //if there's nothing selected, fallback to removing the last node 
-					list.remove(waveList.getSelectedIndex()); 
-					waveListModel.remove(waveList.getSelectedIndex());
-					
-					//getWaveList();
-					
-					if(list.size() == 0) {
-						//currentWaveNode = new WaveNode();
-						currentWaveLabel.setText("No waves");
-						currentWSLabel.setText("No wavespawns"); //not the best place
-						resetWaveState();
-					}
-					else { //set current wave and its subnodes
-						waveList.setSelectedIndex(list.size() - 1);
-					}
-				//} 
-				//else {
-				//	list.remove(list.size() - 1);
-				//}					
+				list.remove(waveList.getSelectedIndex()); 
+				waveListModel.remove(waveList.getSelectedIndex());
+				
+				if(list.size() == 0) {
+					resetWaveState();
+				}
+				else { //set current wave and its subnodes
+					waveList.setSelectedIndex(list.size() - 1);
+				}				
 			}
 		});
 		
@@ -206,36 +194,34 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			//don't update list since no real name
 		});
 		
-		waveSpawnList.addListSelectionListener(new ListSelectionListener() { //when wavespawn is selected from list
-			public void valueChanged(ListSelectionEvent l) {
-				int waveSpawnIndex = waveSpawnList.getSelectedIndex();
-				window.feedback.setText(" ");
+		waveSpawnList.addListSelectionListener(event -> { //when wavespawn is selected from list
+			int waveSpawnIndex = waveSpawnList.getSelectedIndex();
+			window.feedback.setText(" ");
+			
+			noneBut.setSelected(true);
+			//TODO: update this since only time there can be nothing selected is if the list is empty
+			
+			//prevent fits if index is reset
+			if(waveSpawnIndex != -1) {
+				currentWSNode = (WaveSpawnNode) currentWaveNode.getChildren().get(waveSpawnIndex);
+				//currentWSLabel.setText("Editing wavespawn " + waveSpawnListModel.get(waveSpawnIndex));
 				
-				noneBut.setSelected(true);
-				//TODO: update this since only time there can be nothing selected is if the list is empty
+				waveSpawnBLManager.changeButtonState(States.SELECTED);
+				wsPanel.updatePanel(currentWSNode);
 				
-				//prevent fits if index is reset
-				if(waveSpawnIndex != -1) {
-					currentWSNode = (WaveSpawnNode) currentWaveNode.getChildren().get(waveSpawnIndex);
-					//currentWSLabel.setText("Editing wavespawn " + waveSpawnListModel.get(waveSpawnIndex));
-					
-					waveSpawnBLManager.changeButtonState(States.SELECTED);
-					wsPanel.updatePanel(currentWSNode);
-					
-					if(currentWSNode.hasChildren()) {
-						checkSpawner(currentWSNode.getSpawner());
-					}
-					else {
-						//loadBot(true);
-						tfbotBut.setSelected(true);
-					}
+				if(currentWSNode.hasChildren()) {
+					checkSpawner(currentWSNode.getSpawner());
 				}
-				else { //disable updating when there is not a subwave explicitly selected
-					waveSpawnBLManager.changeButtonState(States.EMPTY);
-					spawnerBLManager.changeButtonState(States.DISABLE);
-					currentWSLabel.setText("No wavespawn selected");
+				else {
+					//loadBot(true);
+					tfbotBut.setSelected(true);
 				}
-			}		
+			}
+			else { //disable updating when there is not a subwave explicitly selected
+				waveSpawnBLManager.changeButtonState(States.EMPTY);
+				spawnerBLManager.changeButtonState(States.DISABLE);
+				currentWSLabel.setText("No wavespawn selected");
+			}
 		});
 		
 		addWaveSpawn.addActionListener(new ActionListener() { //add button is clicked
@@ -250,12 +236,12 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				waveSpawnList.setSelectedIndex(waveSpawnListModel.getSize() - 1);
 				
 				//getWaveSpawnList();
-				//currentWSLabel.setText("Editing wavespawn " + waveSpawnListModel.lastElement());
 				wsPanel.updatePanel(currentWSNode);
 				spawnerInfo.setText(noSpawner);
 
 				//loadBot(true);
 				tfbotBut.setSelected(true);
+				wsPanel.setVisible(true);
 			}
 		});
 		
@@ -276,7 +262,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 					
 					if(list.size() == 0) { //if no wavespawns again
 						resetWaveSpawnState(States.EMPTY);
-						//currentWSNode = new WaveSpawnNode();
+						wsPanel.setVisible(false);
 						currentWSLabel.setText("No wavespawns");
 					}
 					else {
@@ -308,8 +294,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		waveListModel.clear();
 		
 		for(int i = 0; i < length; i++) {
-			//waveListModel.addElement("Wave " + Integer.toString(i + 1));
-			waveListModel.addElement("Wave");
+			waveListModel.addElement("Wave " + Integer.toString(i + 1));
+			//waveListModel.addElement("Wave");
 		}
 		waveList.setSelectedIndex(0);
 	}
@@ -321,14 +307,16 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 
 		for(int i = 0; i < length; i++) {
 			WaveSpawnNode t = (WaveSpawnNode) currentWaveNode.getChildren().get(i);
-			if(t.containsKey(WaveSpawnNode.NAME) && !((String) t.getValueSingular(WaveSpawnNode.NAME)).isEmpty()) {
-				waveSpawnListModel.addElement((String) t.getValueSingular(WaveSpawnNode.NAME)); //this is awful
+			//if(t.containsKey(WaveSpawnNode.NAME) && !((String) t.getValueSingular(WaveSpawnNode.NAME)).isEmpty()) {
+			if(t.containsKey(WaveSpawnNode.NAME)) {
+				waveSpawnListModel.addElement((String) t.getValueSingular(WaveSpawnNode.NAME));
 			}
 			else {
 				waveSpawnListModel.addElement(Integer.toString(i));
 			}
 		}
-		waveSpawnListScroll.revalidate();
+		waveSpawnList.setSelectedIndex(0);
+		//waveSpawnListScroll.revalidate();
 	}
 	
 	//reset panels to fresh state whenever a node/its parents are removed
@@ -340,19 +328,16 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	}
 	
 	private void resetWaveSpawnState(States state) {
-		wsPanel.updatePanel(new WaveSpawnNode());
+		currentWSNode = new WaveSpawnNode();
+		wsPanel.updatePanel(currentWSNode);
 		waveSpawnListModel.clear();	
 		waveSpawnBLManager.changeButtonState(state);
 		resetSpawnerState();
 	}
-	
-	/*
-	public PopNode getPopNode() {
-		return this.popNode;
-	} */
-	
+
 	public void propertyChange(PropertyChangeEvent evt) {
 		this.popNode = (PopNode) evt.getNewValue();
 		getWaveList();
+		window.revalidate();
 	}
 }
