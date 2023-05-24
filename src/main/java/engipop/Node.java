@@ -165,6 +165,7 @@ public class Node {
     	public static final String BUSTERKILLS = "AddSentryBusterWhenKillCountExceeds"; //int
     	public static final String BOTSATKINSPAWN = "CanBotsAttackWhileInSpawnRoom"; //boolean / string
     	public static final String ADVANCED = "Advanced"; //boolean
+    	public static final String MISSION = "Mission";
     	
     	private int mapIndex = -1;
     	private Map<String, Node> wsTemplateMap;

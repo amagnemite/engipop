@@ -28,7 +28,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 	String[] tags = {"bot_giant", "bot_squad_member"}; //potentially move bot_giant
 	
-	EngiWindow window;
+	EngiWindow containingWindow;
 	EngiPanel attrPanel = new EngiPanel();
 	
 	//DefaultComboBoxModel<String> classModel;
@@ -91,7 +91,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	ButtonListManager attrBLManager = new ButtonListManager(addAttributeToListButton,
 			updateAttributeValueButton, removeAttributeFromList);
 	
-	public BotPanel(EngiWindow window, MainWindow mainWindow, SecondaryWindow secondaryWindow) {
+	public BotPanel(EngiWindow containingWindow, MainWindow mainWindow, SecondaryWindow secondaryWindow) {
 		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
 		
 		setLayout(gbLayout);
@@ -99,7 +99,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		//this.parser = parser;
 		
-		this.window = window;
+		this.containingWindow = containingWindow;
 		secondaryWindow.addPropertyChangeListener(this);
 		mainWindow.addPropertyChangeListener(this);
 		
@@ -769,7 +769,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				itemAttrListModel.addElement((String) itemAttributeBox.getSelectedItem());
 			} //prevent duplicate entries in the visual list
 			else {
-				window.updateFeedback("Attribute already in list");
+				containingWindow.updateFeedback("Attribute already in list");
 			}
 			//currentAttributeMap.put((String) itemAttributeBox.getSelectedItem(), null);
 			itemAttrList.setSelectedValue((String) itemAttributeBox.getSelectedItem(), false);
@@ -780,14 +780,14 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		updateAttributeValueButton.addActionListener(event -> {
 			if(attrValueField.getText().isEmpty()) {
-				window.updateFeedback("No value to add to attribute");
+				containingWindow.updateFeedback("No value to add to attribute");
 			}
 			else { //put attr - value pair in map
 				currentAttributeMap.put((String) itemAttributeBox.getSelectedItem(), attrValueField.getText());
 				itemAttrListModel.setElementAt((String) itemAttributeBox.getSelectedItem() + " " + attrValueField.getText(), 
 						itemAttrList.getSelectedIndex());
 				
-				window.updateFeedback("Attribute value added");
+				containingWindow.updateFeedback("Attribute value added");
 			}
 		});
 		

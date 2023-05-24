@@ -149,6 +149,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 		addGB(tankPanel, 0, 4);
 		
 		//addGB(botTemplatePanel, 1, 4);
+		gbConstraints.gridwidth = 1;
 		gbConstraints.gridheight = 2;
 		addGB(templateButtonPanel, 2, 1);
 		addGB(listPanel, 2, 4);
@@ -479,5 +480,6 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		this.popNode = (PopNode) evt.getNewValue();
+		//force a reload
 	}
 }

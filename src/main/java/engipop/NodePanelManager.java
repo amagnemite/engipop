@@ -54,7 +54,7 @@ public class NodePanelManager {
 	SquadNode currentSquadNode = new SquadNode();
 	RandomChoiceNode currentRCNode = new RandomChoiceNode();
 	
-	EngiWindow window;
+	EngiWindow containingWindow;
 	BotPanel botPanel;
 	TankPanel tankPanel;
 	
@@ -83,8 +83,8 @@ public class NodePanelManager {
 	JRadioButton noneBut = new JRadioButton("none");
 	//hidden button to ensure the buttongroup state always changes, so can't go from say tfbot to tfbot, which wouldn't cause a state change
 	
-	public NodePanelManager(EngiWindow window, BotPanel botPanel, TankPanel tankPanel) {
-		this.window = window;
+	public NodePanelManager(EngiWindow containingWindow, BotPanel botPanel, TankPanel tankPanel) {
+		this.containingWindow = containingWindow;
 		this.botPanel = botPanel;
 		this.tankPanel = tankPanel;
 		
@@ -188,11 +188,11 @@ public class NodePanelManager {
 		updateSpawner.addActionListener(event -> { //update current spawner
 			if(tankBut.isSelected()) {
 				tankPanel.updateNode(currentTankNode);
-				window.feedback.setText("Tank successfully updated");
+				containingWindow.feedback.setText("Tank successfully updated");
 			}
 			else {
 				botPanel.updateNode(currentBotNode);
-				window.feedback.setText("Bot successfully updated");
+				containingWindow.feedback.setText("Bot successfully updated");
 			}
 		});
 		
@@ -204,7 +204,7 @@ public class NodePanelManager {
 		});
 		
 		addSquadRandomBot.addActionListener(event -> { //squad/rc specific button for adding bots to them
-			window.feedback.setText(" ");
+			containingWindow.feedback.setText(" ");
 			
 			//botPanel.updateNode(currentBotNode);
 			currentBotNode = new TFBotNode();
@@ -224,7 +224,7 @@ public class NodePanelManager {
 		
 		updateSquadRandomBot.addActionListener(event -> { //squad/rc specific button to update bots
 			botPanel.updateNode(currentBotNode);
-			window.feedback.setText("Bot successfully updated");
+			containingWindow.feedback.setText("Bot successfully updated");
 			
 			//similar logic to setsquadrandomlistelement but uses set instead of addelement to update
 			if(currentBotNode.containsKey(TFBotNode.NAME)) {
@@ -264,7 +264,7 @@ public class NodePanelManager {
 		
 		squadRandomList.addListSelectionListener(event -> { //list of squad/random's bots
 			int squadRandomIndex = squadRandomList.getSelectedIndex();
-			window.feedback.setText(" ");
+			containingWindow.feedback.setText(" ");
 			
 			//prevent fits if index is reset
 			if(squadRandomIndex != -1) {
@@ -274,7 +274,7 @@ public class NodePanelManager {
 					loadBot(false, currentBotNode);
 				}
 				else {
-					window.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					containingWindow.feedback.setText("Possible nested randomchoice/squad! Unable to load");
 				}
 				
 				squadRandomBLManager.changeButtonState(States.SELECTED);
@@ -369,7 +369,7 @@ public class NodePanelManager {
 					getSquadRandomList();
 				}
 				else {
-					window.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					containingWindow.feedback.setText("Possible nested randomchoice/squad! Unable to load");
 				}
 				squadRandomBLManager.changeButtonState(States.NOSELECTION);
 			}
@@ -398,7 +398,7 @@ public class NodePanelManager {
 					getSquadRandomList();
 				}
 				else {
-					window.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					containingWindow.feedback.setText("Possible nested randomchoice/squad! Unable to load");
 				}
 				squadRandomBLManager.changeButtonState(States.NOSELECTION);
 			}
