@@ -1,21 +1,16 @@
 package engipop;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.text.Position;
 
 import engipop.ButtonListManager.States;
@@ -38,6 +33,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	//ComboBoxModel<String> templateModel; //double check if access to model is actually needed
 	
 	JTextField nameField = new JTextField(30); //max bot name is ~32
+	JTextField tagField = new JTextField(5);
 	JComboBox<Classes> classBox = new JComboBox<Classes>(Classes.values());
 	JComboBox<String> iconBox = new JComboBox<String>(iconModel);
 	JComboBox<String> templateBox = new JComboBox<String>(templateModel); 
@@ -113,7 +109,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		botAttributeList = new JList<String>(setAttributesList());
 		
 		iconBox.setPrototypeDisplayValue("heavyweapons_healonkill_giant");
-		templateBox.setPrototypeDisplayValue("T_TFBot_Giant_Soldier_Spammer");
+		templateBox.setPrototypeDisplayValue("Giant Rapid Fire Demo Chief (T_TFBot_Giant_Demo_Spammer_Reload_Chief)");
 		tagList.setPrototypeCellValue("bot_squad_member");
 		
 		//setIconBox(iconBox, iconModel, "Scout");
@@ -362,9 +358,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		//skip if we don't have a class to compare to
 		if(tf.getValueSingular(TFBotNode.CLASSNAME) != Classes.None && !tf.isItemsSorted() && tf.containsKey(TFBotNode.ITEM)) {
 			Classes cclass = (Classes) tf.getValueSingular(TFBotNode.CLASSNAME);
-			String[] itemslots = new String[TFBotNode.ITEMCOUNT];
+			List<String> newItemsList = new ArrayList<String>(TFBotNode.ITEMCOUNT);
 			 
-			List<String> itemsList = new ArrayList<String>(Arrays.asList((String[]) tf.getValueArray(TFBotNode.ITEM)));
+			List<String> itemsList = (List<String>) tf.getValueSingular(TFBotNode.ITEM);
 			
 			//this for is somewhat unclear
 			for(int slot = ItemSlot.PRIMARY.getSlot(); slot < ItemSlot.BUILDING.getSlot(); slot++) {
@@ -376,11 +372,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 						if(slot == ItemSlot.COSMETIC1.getSlot()) {
 							switch(sublist.size()) { 
 								case 3: //flow down
-									itemslots[ItemSlot.COSMETIC3.getSlot()] = sublist.get(2);
+									newItemsList.add(ItemSlot.COSMETIC3.getSlot(), sublist.get(2));
 								case 2:
-									itemslots[ItemSlot.COSMETIC2.getSlot()] = sublist.get(1);
+									newItemsList.add(ItemSlot.COSMETIC2.getSlot(), sublist.get(1));
 								case 1:
-									itemslots[ItemSlot.COSMETIC1.getSlot()] = sublist.get(0);
+									newItemsList.add(ItemSlot.COSMETIC1.getSlot(), sublist.get(0));
 									break;
 								default:
 									break;
@@ -390,7 +386,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 					}
 					else if(slot != ItemSlot.COSMETIC2.getSlot() && slot != ItemSlot.COSMETIC1.getSlot()) { //handle cosmetics all in one go
 						itemsList.removeAll(sublist);
-						itemslots[slot] = sublist.get(0);
+						newItemsList.add(slot, sublist.get(0));
 						//should not have multiple primary/secondary/melees/buildings, so should be 1 length array
 					}
 				}
@@ -400,7 +396,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				}
 			}
 			tf.setItemsSorted(true);
-			tf.putKey(TFBotNode.ITEM, itemslots);
+			tf.putKey(TFBotNode.ITEM, newItemsList);
 		}
 		
 		if(tf.containsKey(TFBotNode.ITEM)) {
@@ -496,7 +492,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	}
 	
 	void setIconBox(DefaultComboBoxModel<String> model, Classes str) { //set icon list depending on class
-		//todo: load icons from 
+		//todo: load icons from folder
 		model.removeAllElements();
 		
 		switch (str) {
@@ -655,11 +651,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 	//copy templatepanel's bot template model data to botpanel's template model
 	//TODO: remove this or move where appropriate for templatewindow
-	public void updateTemplateModel(DefaultComboBoxModel<String> model) {
+	public void updateTemplateModel(Map<String, String> templateMap) {
 		templateModel.removeAllElements();
 		
-		for(int i = 0; i < model.getSize(); i++) {
-			templateModel.addElement(model.getElementAt(i));
+		for(String templateName: templateMap.keySet()) {
+			templateModel.addElement(templateName);
 		}
 
 		templateBox.setSelectedIndex(-1); //default to no template
@@ -688,6 +684,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 					templateModel.insertElementAt((String) evt.getNewValue(), index);
 				}
 				//templateBox.setSelectedIndex(-1);
+				break;
+			case MainWindow.BOTTEMPLATEMAP: 
+				updateTemplateModel((Map<String, String>) evt.getNewValue());
 				break;
 			default:
 				break;

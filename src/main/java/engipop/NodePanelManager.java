@@ -57,6 +57,8 @@ public class NodePanelManager {
 	EngiWindow containingWindow;
 	BotPanel botPanel;
 	TankPanel tankPanel;
+	EngiPanel listPanel = new EngiPanel();
+	EngiPanel spawnerPanel = new EngiPanel();
 	
 	JButton addSpawner = new JButton(addBotMsg);
 	JButton updateSpawner = new JButton(updateBotMsg);
@@ -105,40 +107,27 @@ public class NodePanelManager {
 		squadRandomListScroll.setVisible(false);
 		
 		initListeners();
-		initSpawnerSelector();
-	}
-	
-	public JPanel makeListPanel() {
-		EngiPanel panel = new EngiPanel();
 		
-		panel.setLayout(panel.gbLayout);
-		panel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		panel.gbConstraints.insets = new Insets(5, 0, 5, 5);
+		listPanel.setLayout(listPanel.gbLayout);
+		listPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
+		listPanel.gbConstraints.insets = new Insets(5, 0, 5, 5);
 		
-		panel.addGB(addSpawner, 0, 0);
-		panel.addGB(updateSpawner, 0, 1);
-		panel.addGB(removeSpawner, 0, 2);
+		listPanel.addGB(addSpawner, 0, 0);
+		listPanel.addGB(updateSpawner, 0, 1);
+		listPanel.addGB(removeSpawner, 0, 2);
 		
-		panel.addGB(addSquadRandomBot, 0, 3);
-		panel.addGB(updateSquadRandomBot, 0, 4);
-		panel.addGB(removeSquadRandomBot, 0, 5);
+		listPanel.addGB(addSquadRandomBot, 0, 3);
+		listPanel.addGB(updateSquadRandomBot, 0, 4);
+		listPanel.addGB(removeSquadRandomBot, 0, 5);
 		
-		panel.gbConstraints.gridheight = 3;
-		panel.addGB(squadRandomListScroll, 1, 0);	
+		listPanel.gbConstraints.gridheight = 3;
+		listPanel.addGB(squadRandomListScroll, 1, 0);
 		
-		return panel;
-	}
-	
-	public JPanel makeSpawnerPanel() {
-		JPanel panel = new JPanel();
-		
-		panel.add(tfbotBut);
-		panel.add(tankBut);
-		panel.add(squadBut);
-		panel.add(randomBut);
-		panel.add(spawnerInfo);
-		
-		return panel;
+		spawnerPanel.add(tfbotBut);
+		spawnerPanel.add(tankBut);
+		spawnerPanel.add(squadBut);
+		spawnerPanel.add(randomBut);
+		spawnerPanel.add(spawnerInfo);
 	}
 	
 	//will need new contexts later
@@ -282,6 +271,132 @@ public class NodePanelManager {
 			else { //create a new bot 
 				loadBot(true);
 				squadRandomBLManager.changeButtonState(States.EMPTY);
+			}
+		});
+		
+ButtonGroup spawnerGroup = new ButtonGroup();
+		
+		spawnerGroup.add(noneBut);
+		spawnerGroup.add(tfbotBut);
+		spawnerGroup.add(tankBut);
+		spawnerGroup.add(squadBut);
+		spawnerGroup.add(randomBut);
+		spawnerGroup.setSelected(tfbotBut.getModel(), true);
+		//todo: add mob and sentrygun here
+		
+		//radio buttons control visibility, button states only if selected button mismatches linked spawner
+		
+		tfbotBut.addItemListener(event -> {
+			if(event.getStateChange() == ItemEvent.SELECTED) {
+				try { //indexoutofbounds if no spawner
+					Node node = currentWSNode.getSpawner();
+					
+					if(node.getClass() == TFBotNode.class) {
+						//if currentWSNode has a tfbot, show it
+						loadBot(false, node);
+					}
+					else {	
+						spawnerBLManager.changeButtonState(States.REMOVEONLY);
+					}
+					
+				}
+				catch (IndexOutOfBoundsException e) {
+					loadBot(true);
+				}
+			}
+		});
+		tankBut.addItemListener(event -> {
+			if(event.getStateChange() == ItemEvent.SELECTED) {
+				botPanel.setVisible(false);
+				tankPanel.setVisible(true);
+				
+				try { //if currentwsnode doesn't have anything linked
+					Node node = currentWSNode.getSpawner();
+					
+					//currentBotNode != null &&
+					if(node.getClass() == TankNode.class) {
+						//if currentWSNode has a tank, show it
+						loadTank(false);
+					}
+					else {
+						spawnerBLManager.changeButtonState(States.REMOVEONLY);
+					}
+				}
+				catch (IndexOutOfBoundsException e) {
+					loadTank(true);
+				}
+			}
+			else {
+				tankPanel.setVisible(false);
+				botPanel.setVisible(true);
+			}			
+		});
+		squadBut.addItemListener(event -> {
+			if(event.getStateChange() == ItemEvent.SELECTED) { //only set srbot buttons visible in squad or random mode
+				addSquadRandomBot.setVisible(true);
+				updateSquadRandomBot.setVisible(true);
+				removeSquadRandomBot.setVisible(true);
+				
+				updateSpawner.setVisible(false);
+				squadRandomListScroll.setVisible(true);
+				
+				try {
+					Node node = currentWSNode.getSpawner();
+					
+					if(node.getClass() == SquadNode.class) {
+						loadSquad(false);
+					}
+					else {
+						spawnerBLManager.changeButtonState(States.REMOVEONLY); //allow squad node removal only, disable subnode tfbot editing
+						squadRandomBLManager.changeButtonState(States.DISABLE);
+					}
+				}
+				catch (IndexOutOfBoundsException e) {
+					loadSquad(true);
+				}	
+			}
+			else {
+				addSquadRandomBot.setVisible(false);
+				updateSquadRandomBot.setVisible(false);
+				removeSquadRandomBot.setVisible(false);
+				
+				updateSpawner.setVisible(true);
+				squadRandomListModel.clear();
+				squadRandomListScroll.setVisible(false);
+			}					
+		});
+		randomBut.addItemListener(event -> { //functionally the same as squad, just with rc
+			if(event.getStateChange() == ItemEvent.SELECTED) {
+				addSquadRandomBot.setVisible(true);
+				updateSquadRandomBot.setVisible(true);
+				removeSquadRandomBot.setVisible(true);
+				
+				updateSpawner.setVisible(false);
+				squadRandomListScroll.setVisible(true);
+				
+				try {
+					Node node = currentWSNode.getSpawner();
+					
+					if(node.getClass() == RandomChoiceNode.class) {
+						loadRandom(false);
+					}
+					else {
+						spawnerBLManager.changeButtonState(States.REMOVEONLY); //allow squad node removal only, disable subnode tfbot editing
+						squadRandomBLManager.changeButtonState(States.DISABLE);
+					}
+				}
+				catch (IndexOutOfBoundsException e) {
+					loadRandom(true);
+				}
+			}
+			else {
+				addSquadRandomBot.setVisible(false);
+				updateSquadRandomBot.setVisible(false);
+				removeSquadRandomBot.setVisible(false);
+				
+				updateSpawner.setVisible(true);
+				squadRandomListModel.clear();
+				squadRandomListScroll.setVisible(false);
 			}
 		});
 	}
@@ -450,134 +565,6 @@ public class NodePanelManager {
 		}
 	}
 	
-	protected void initSpawnerSelector() { //inits the spawner related radio buttons
-		ButtonGroup spawnerGroup = new ButtonGroup();
-		
-		spawnerGroup.add(noneBut);
-		spawnerGroup.add(tfbotBut);
-		spawnerGroup.add(tankBut);
-		spawnerGroup.add(squadBut);
-		spawnerGroup.add(randomBut);
-		spawnerGroup.setSelected(tfbotBut.getModel(), true);
-		//todo: add mob and sentrygun here
-		
-		//radio buttons control visibility, button states only if selected button mismatches linked spawner
-		
-		tfbotBut.addItemListener(event -> {
-			if(event.getStateChange() == ItemEvent.SELECTED) {
-				try { //indexoutofbounds if no spawner
-					Node node = currentWSNode.getSpawner();
-					
-					if(node.getClass() == TFBotNode.class) {
-						//if currentWSNode has a tfbot, show it
-						loadBot(false, node);
-					}
-					else {	
-						spawnerBLManager.changeButtonState(States.REMOVEONLY);
-					}
-					
-				}
-				catch (IndexOutOfBoundsException e) {
-					loadBot(true);
-				}
-			}
-		});
-		tankBut.addItemListener(event -> {
-			if(event.getStateChange() == ItemEvent.SELECTED) {
-				botPanel.setVisible(false);
-				tankPanel.setVisible(true);
-				
-				try { //if currentwsnode doesn't have anything linked
-					Node node = currentWSNode.getSpawner();
-					
-					//currentBotNode != null &&
-					if(node.getClass() == TankNode.class) {
-						//if currentWSNode has a tank, show it
-						loadTank(false);
-					}
-					else {
-						spawnerBLManager.changeButtonState(States.REMOVEONLY);
-					}
-				}
-				catch (IndexOutOfBoundsException e) {
-					loadTank(true);
-				}
-			}
-			else {
-				tankPanel.setVisible(false);
-				botPanel.setVisible(true);
-			}			
-		});
-		squadBut.addItemListener(event -> {
-			if(event.getStateChange() == ItemEvent.SELECTED) { //only set srbot buttons visible in squad or random mode
-				addSquadRandomBot.setVisible(true);
-				updateSquadRandomBot.setVisible(true);
-				removeSquadRandomBot.setVisible(true);
-				
-				updateSpawner.setVisible(false);
-				squadRandomListScroll.setVisible(true);
-				
-				try {
-					Node node = currentWSNode.getSpawner();
-					
-					if(node.getClass() == SquadNode.class) {
-						loadSquad(false);
-					}
-					else {
-						spawnerBLManager.changeButtonState(States.REMOVEONLY); //allow squad node removal only, disable subnode tfbot editing
-						squadRandomBLManager.changeButtonState(States.DISABLE);
-					}
-				}
-				catch (IndexOutOfBoundsException e) {
-					loadSquad(true);
-				}	
-			}
-			else {
-				addSquadRandomBot.setVisible(false);
-				updateSquadRandomBot.setVisible(false);
-				removeSquadRandomBot.setVisible(false);
-				
-				updateSpawner.setVisible(true);
-				squadRandomListModel.clear();
-				squadRandomListScroll.setVisible(false);
-			}					
-		});
-		randomBut.addItemListener(event -> { //functionally the same as squad, just with rc
-			if(event.getStateChange() == ItemEvent.SELECTED) {
-				addSquadRandomBot.setVisible(true);
-				updateSquadRandomBot.setVisible(true);
-				removeSquadRandomBot.setVisible(true);
-				
-				updateSpawner.setVisible(false);
-				squadRandomListScroll.setVisible(true);
-				
-				try {
-					Node node = currentWSNode.getSpawner();
-					
-					if(node.getClass() == RandomChoiceNode.class) {
-						loadRandom(false);
-					}
-					else {
-						spawnerBLManager.changeButtonState(States.REMOVEONLY); //allow squad node removal only, disable subnode tfbot editing
-						squadRandomBLManager.changeButtonState(States.DISABLE);
-					}
-				}
-				catch (IndexOutOfBoundsException e) {
-					loadRandom(true);
-				}
-			}
-			else {
-				addSquadRandomBot.setVisible(false);
-				updateSquadRandomBot.setVisible(false);
-				removeSquadRandomBot.setVisible(false);
-				
-				updateSpawner.setVisible(true);
-				squadRandomListModel.clear();
-				squadRandomListScroll.setVisible(false);
-			}
-		});
-	}
-	
 	//various panel state updates
 	public void setSelectedButton(SpawnerType type) {
 		switch(type) {
@@ -607,5 +594,13 @@ public class NodePanelManager {
 	
 	public void setWSNode(WaveSpawnNode currentWSNode) {
 		this.currentWSNode = currentWSNode;
+	}
+	
+	public JPanel getListPanel() {
+		return this.listPanel;
+	}
+	
+	public JPanel getSpawnerPanel() {
+		return this.spawnerPanel;
 	}
 }

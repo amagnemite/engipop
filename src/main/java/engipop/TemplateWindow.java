@@ -93,8 +93,6 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 		botPanel = new BotPanel(this, mainWindow, w2);
 		tankPanel = new TankPanel(w2);
 		spawnerListManager = new NodePanelManager(this, botPanel, tankPanel);
-		listPanel = spawnerListManager.makeListPanel();
-		spawnerPanel = spawnerListManager.makeSpawnerPanel();
 		
 		tankPanel.setVisible(false);
 		

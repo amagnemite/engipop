@@ -3,17 +3,13 @@ package engipop;
 import java.awt.GridBagConstraints;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.List;
 
 import javax.swing.*;
 
 import engipop.ButtonListManager.States;
 import engipop.EngiWindow.NoDeselectionModel;
-import engipop.Node.PopNode;
-import engipop.Node.RandomChoiceNode;
-import engipop.Node.SpawnerType;
-import engipop.Node.SquadNode;
-import engipop.Node.TFBotNode;
-import engipop.Node.TankNode;
+import engipop.Node.*;
 
 @SuppressWarnings("serial")
 public class MissionWindow extends EngiWindow implements PropertyChangeListener{
@@ -26,7 +22,8 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	JPanel spawnerPanel;
 	
 	//PopNode popNode;
-	Object[] missionArray;
+	List<Node> missionArray;
+	MissionNode currentMissionNode = new MissionNode();
 	TFBotNode currentBotNode = new TFBotNode();
 	TankNode currentTankNode = new TankNode();
 	SquadNode currentSquadNode = new SquadNode();
@@ -39,9 +36,10 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	ButtonListManager missionBLManager = new ButtonListManager(addMission,
 			updateMission, removeMission);
 	
-	JList<String> missionList = new JList<String>();
+	DefaultListModel<String> missionListModel = new DefaultListModel<String>();
 	DefaultComboBoxModel<String> whereModel = new DefaultComboBoxModel<String>();
-	
+
+	JList<String> missionList = new JList<String>(missionListModel);
 	JComboBox<String> whereBox = new JComboBox<String>(whereModel);
 	JComboBox<String> objectiveBox = new JComboBox<String>(new String[] {"DestroySentries", "Sniper", "Spy", "Engineer"});
 	JSpinner initialCooldownSpinner = new JSpinner();
@@ -50,7 +48,6 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	JSpinner runSpinner = new JSpinner();
 	JSpinner desiredSpinner = new JSpinner();
 	
-	private int firstEmptySlot = 0;
 	
 	public MissionWindow(MainWindow mainWindow, SecondaryWindow secondaryWindow) {
 		super("Mission editor");
@@ -61,7 +58,7 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		double dMin = 0.0;
 		
 		secondaryWindow.addPropertyChangeListener("POPNODE", this);
-		missionArray = mainWindow.getPopNode().getValueArray(PopNode.MISSION);
+		missionArray = (List<Node>) mainWindow.getPopNode().getValueSingular(PopNode.MISSION);
 		
 		SpinnerNumberModel initialCooldownModel = new SpinnerNumberModel(dMin, dMin, null, 1.0);
 		SpinnerNumberModel cooldownModel = new SpinnerNumberModel(dMin, dMin, null, 1.0);
@@ -78,8 +75,8 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		JLabel runLabel = new JLabel("RunForThisManyWaves:");
 		JLabel desiredLabel = new JLabel("DesiredCount:");
 		
-		JPanel listPanel = spawnerListManager.makeListPanel();
-		JPanel spawnerPanel = spawnerListManager.makeSpawnerPanel();
+		JPanel listPanel = spawnerListManager.getListPanel();
+		JPanel spawnerPanel = spawnerListManager.getSpawnerPanel();
 		botPanel = new BotPanel(this, mainWindow, secondaryWindow);
 		tankPanel = new TankPanel(secondaryWindow);
 		spawnerListManager = new NodePanelManager(this, botPanel, tankPanel);
@@ -140,7 +137,7 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 			spawnerListManager.setSelectedButton(SpawnerType.NONE);
 			
 			if(index != -1) { //only happens when no nodes
-				spawnerListManager.checkSpawner((Node) missionArray[index]);
+				spawnerListManager.checkSpawner(missionArray.get(index));
 			}
 			else {
 				missionBLManager.changeButtonState(States.EMPTY);
@@ -149,28 +146,49 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		});
 		
 		addMission.addActionListener(event -> {
+			currentMissionNode = new MissionNode();
+			currentBotNode = new TFBotNode();
+			missionArray.add(currentMissionNode);
+			updatePanel(currentMissionNode);
 			
+			missionListModel.addElement(MissionNode.DESTROYSENTRIES);
 		});
 		updateMission.addActionListener(event -> {
+			updateNode(currentMissionNode);
 			
+			String name = (String) currentMissionNode.getValueSingular(MissionNode.OBJECTIVE) + " " +
+					currentMissionNode.getValueSingular(MissionNode.BEGINATWAVE).toString();
+			missionListModel.set(missionList.getSelectedIndex(), name);
 		});
 		removeMission.addActionListener(event -> {
-			
+			if(missionList.getSelectedIndex() != 1) {
+				missionArray.remove(missionList.getSelectedIndex());
+				missionListModel.remove(missionList.getSelectedIndex());
+				
+				if(missionArray.size() == 0) {
+					//disable spawner stuff
+					missionBLManager.changeButtonState(States.EMPTY);
+				}
+				else {
+					missionList.setSelectedIndex(missionArray.size() - 1);
+				}
+			}
 		});
 	}
 	
-	private void updatePanel(Node spawner) {
+	private void updatePanel(MissionNode mission) {
 		
+		botPanel.updatePanel(currentBotNode);
 	}
 	
-	private void updateNode(Node spawner) {
+	private void updateNode(MissionNode mission) {
 		
 		
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		PopNode popNode = (PopNode) evt.getNewValue();
-		missionArray = popNode.getValueArray(PopNode.MISSION);
+		missionArray = (List<Node>) popNode.getValueSingular(PopNode.MISSION);
 		//force a list reload
 	}
 }

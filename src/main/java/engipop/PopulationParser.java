@@ -2,10 +2,11 @@ package engipop;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
@@ -17,16 +18,8 @@ import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParser;
 
 public class PopulationParser { //parse .pop
-	//ideally we only have 1 instance of this per panel/whatever
-	//that parses any population put into it
-	private final static String WAVESPAWNSUFFIX = "WAVESPAWN";
-	private final static String TFBOTSUFFIX = "TFBOT";
-	
 	private EngiWindow window;
 	private SettingsWindow setWindow;
-	public Map<String, String> botTemplateMap = new HashMap<String, String>();
-	public Map<String, String> wsTemplateMap = new HashMap<String, String>();
-	//key: bot/ws name + template name, value: file name
 	
 	public PopulationParser(EngiWindow window, SettingsWindow setWindow) {
 		this.window = window;
@@ -34,14 +27,19 @@ public class PopulationParser { //parse .pop
 	}
 	
 	//parses entire population
-	public PopNode parsePopulation(File file) {
+	public PopNode parsePopulation(File file, Map<String, String> botTemplateStringMap, Map<String, String> wsTemplateStringMap) {
 		VDFNode root = null;
 		Object[] includes;
-		//Set<Object> defaultTemplates = new HashSet<Object>("robot_standard.pop", "robot_giant.pop", "robot_gatebot.pop");
+		Set<String> defaultTemplates = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+		defaultTemplates.addAll(Arrays.asList("robot_standard.pop", "robot_giant.pop", "robot_gatebot.pop"));
 		//PopNode popNode;
 		
 		try {
 			root = new VDFParser().parse(ItemParser.readFile(file.toPath(), StandardCharsets.US_ASCII));
+			if(root == null) {
+				window.updateFeedback(file.getName() + " is not a population file");
+				return null;
+			}
 			
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
@@ -50,38 +48,50 @@ public class PopulationParser { //parse .pop
 			return null;
 		}
 		
-		//once again, need error checking here
-		includes = root.get(root.firstKey());
-		root = root.getSubNode(root.lastKey()); //waveschedule is standard name, but can be named whatever user wants
-		
-		for(Object includedPop : includes) {
-			
-			parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + (String) includedPop));
+		if(root.size() > 2) {
+			window.updateFeedback("Population file has too many root keys");
+			return null;
 		}
 		
-		//parse templates
-		//parse missions
+		if(root.containsKey("#include") || root.containsKey("#base")) {
+			includes = root.get(root.firstKey());
+			
+			for(Object includedPop : includes) {
+				if(defaultTemplates.contains(includedPop)) {
+					URL popURL = MainWindow.class.getResource("/" + (String) includedPop);
+					parseTemplates(new File(popURL.getFile()), botTemplateStringMap, wsTemplateStringMap);
+				}
+				else {
+					parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + (String) includedPop), 
+						botTemplateStringMap, wsTemplateStringMap);
+				}
+			}
+		}
+		
+		root = root.getSubNode(root.lastKey()); //waveschedule is standard name, but can be named whatever user wants
 		return new PopNode(root);
 	}
 	
 	//parses one template pop at a time
-	public void parseTemplates(File file) {
+	public void parseTemplates(File file, Map<String, String> botTemplateStringMap, Map<String, String> wsTemplateStringMap) {
 		String filename = file.getName().substring(0, file.getName().length() - 4);
 		VDFNode root = null;
 		VDFNode templates = null;
-		boolean hasTemplates = false;
 	
 		//this is kinda awful, probably should do something better
 		//excludes name and template
-		Set<String> wsKeys = new HashSet<String>(Arrays.asList("Where", "TotalCount", "MaxActive", "SpawnCount",
+		Set<String> wsKeys = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+		Set<String> botKeys = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+		Set<String> overlappingKeys = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+		wsKeys.addAll(Arrays.asList("Where", "TotalCount", "MaxActive", "SpawnCount",
 				"WaitBeforeStarting", "WaitBetweenSpawns", "WaitBetweenSpawnsAfterDeath", "TotalCurrency", 
 				"WaitForAllSpawned", "WaitForAllDead", "Support", "StartWaveOutput", "FirstSpawnOutput",
 				"LastSpawnOutput", "DoneOutput"));
-		Set<String> botKeys = new HashSet<String>(Arrays.asList("Class", "ClassIcon", "Health",
+		botKeys.addAll(Arrays.asList("Class", "ClassIcon", "Health",
 				"Scale", "TeleportWhere", "AutoJumpMin", "AutoJumpMax", "Skill", "WeaponRestrictions",
 				"BehaviorModifiers", "MaxVisionRange", "Item", "Attributes", "ItemAttributes",
 				"CharacterAttributes", "EventChangeAttributes"));
-		Set<String> overlappingKeys = new HashSet<String>(Arrays.asList("Template", "Name"));
+		overlappingKeys.addAll(Arrays.asList("Template", "Name"));
 				
 		LinkedList<Entry<String, Object[]>> templateQueue = new LinkedList<Entry<String, Object[]>>();
 		
@@ -96,43 +106,33 @@ public class PopulationParser { //parse .pop
 		}
 		root = root.getSubNode(root.lastKey());
 		
-		Iterator<String> iterator = root.keySet().iterator();
-		
-		while(iterator.hasNext() && !hasTemplates) {
-			String key = iterator.next();
+		if(root.containsKey("Templates")) { //templates to process
+			templates = root.getSubNode("Templates");
 			
-			if(key.toUpperCase().equals("TEMPLATES")) {
-				hasTemplates = true;
-				templates = root.getSubNode(key);
-			}
-		}
-		
-		if(hasTemplates) { //no templates to process
 			for(Entry<String, Object[]> entry : templates.entrySet()) {
 				VDFNode node = templates.getSubNode(entry.getKey());		
-				Set<String> subset = new HashSet<String>(node.keySet()); //copies
+				Set<String> subset = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER); //copies
+				subset.addAll(node.keySet());
 				String name = null;
 				
-				//for now assume people capitalize their keyvals
 				if(subset.retainAll(botKeys)) { //keep all keys that are also in botkeys
 					if(node.containsKey("Name")) {
 						name = node.getString("Name");
-						
 					}
 					else {
 						name = node.getString("Class");
 					}
-					name = name + "(" + entry.getKey() + ")";
+					name = name != null ? name + " (" + entry.getKey() + ")" : "(" + entry.getKey() + ")";
 					
-					botTemplateMap.put(name, filename);
+					botTemplateStringMap.put(name, filename);
 				}
 				else if(subset.retainAll(wsKeys)) {
 					if(node.containsKey("Name")) {
 						name = node.getString("Name");
 					}
-					name = name + "(" + entry.getKey() + ")";
+					name = name != null ? name + " (" + entry.getKey() + ")" : "(" + entry.getKey() + ")";
 					
-					wsTemplateMap.put(name, filename);
+					wsTemplateStringMap.put(name, filename);
 				}
 				else if(subset.retainAll(overlappingKeys)) { //contains template, name or both, handle later
 					templateQueue.add(entry);
@@ -142,9 +142,7 @@ public class PopulationParser { //parse .pop
 					//wsTemplateParent.putTemplate(filename, wsTemplateParent);
 					//need conversion here
 				}
-				
 			}
-			
 		}
 		else {
 			window.updateFeedback("No templates to process");

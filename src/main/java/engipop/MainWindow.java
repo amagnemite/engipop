@@ -15,23 +15,26 @@ public class MainWindow extends EngiWindow {
 	public static final String ITEMPARSE = "itemparse";
 	public static final String TFBOT = "TFBOT";
 	public static final String WAVESPAWN = "WAVESPAWN";
+	public static final String BOTTEMPLATEMAP = "BOTTEMPLATEMAP";
 	
 	JMenuBar menuBar = new JMenuBar();
 	JMenu optionsMenu = new JMenu("Options");
+	JMenu editorsMenu = new JMenu("Editors");
+	JMenu utilitiesMenu = new JMenu("Utilities");
 	
 	//todo: update botpanel
 	JMenuItem popSet = new JMenuItem("Open population settings");
 	JMenuItem settings = new JMenuItem("Open Engipop settings");
-	JMenuItem templateSet = new JMenuItem("Template settings");
+	JMenuItem templateSet = new JMenuItem("Template editor");
+	JMenuItem timeline = new JMenuItem("Minimum timeline viewer");
 	
 	WavePanel wavePanel;
 	WaveSpawnPanel wsPanel;
 	BotPanel botPanel;
 	TankPanel tankPanel;
 	WaveNodePanelManager waveNodeManager;
-	
-	JPanel spawnerPanel;
-	JPanel listPanel;
+	//JPanel listPanel;
+	//JPanel spawnerPanel;
 	
 	JButton createPop = new JButton("Create popfile"); //may consider putting this in window
 	
@@ -72,13 +75,26 @@ public class MainWindow extends EngiWindow {
 				settingsWindow.setVisible(true);
 			}
 		});
-		
-		templateSet.setMaximumSize(new Dimension(150, 50));
+		timeline.addActionListener(event -> {
+			JFileChooser c = new JFileChooser();
+			c.showSaveDialog(this);
+			//if(result == JFileChooser.CANCEL_OPTION) return;
+			try { //double check
+				File file = c.getSelectedFile();
+				new MinTimeline().parsePopulation(file);
+			}
+			catch(Exception e) {
+				
+			}
+		});
 		
 		optionsMenu.add(settings);
 		optionsMenu.add(popSet);
+		editorsMenu.add(templateSet);
+		utilitiesMenu.add(timeline);
 		menuBar.add(optionsMenu);
-		menuBar.add(templateSet);
+		menuBar.add(editorsMenu);
+		menuBar.add(utilitiesMenu);
 		setJMenuBar(menuBar);		
 
 		botPanel = new BotPanel(this, this, secondaryWindow);
@@ -87,8 +103,8 @@ public class MainWindow extends EngiWindow {
 		tankPanel = new TankPanel(secondaryWindow);
 		
 		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, botPanel, tankPanel, secondaryWindow);
-		listPanel = waveNodeManager.makeListPanel();
-		spawnerPanel = waveNodeManager.makeSpawnerPanel();
+		JPanel listPanel = waveNodeManager.getListPanel();
+		JPanel spawnerPanel = waveNodeManager.getSpawnerPanel();
 		
 		tankPanel.setVisible(false);
 		//tankPanel.setPreferredSize(botPanel.getPreferredSize());

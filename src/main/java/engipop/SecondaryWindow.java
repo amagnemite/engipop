@@ -7,6 +7,8 @@ import java.awt.event.MouseListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.*;
 
@@ -21,6 +23,10 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	public static final String TAGS = "tags";
 	public static final String TANKSPAWNS = "tankspawn";
 	public static final String TANKRELAY = "tankrelay";
+	
+	private Map<String, String> botTemplateStringMap = new HashMap<String, String>();
+	private Map<String, String> wsTemplateStringMap = new HashMap<String, String>();
+	//key: bot/ws name + template name, value: file name
 	
 	EngiPanel popPanel = new EngiPanel();
 	DefaultComboBoxModel<String> mapsModel = new DefaultComboBoxModel<String>();
@@ -166,13 +172,12 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 			
 			fileChooser.showOpenDialog(this);
 			file = fileChooser.getSelectedFile();
-			popNode = popParser.parsePopulation(file);
-			propertySupport.firePropertyChange("POPNODE", null, popNode);
+			if(file != null) {
+				popNode = popParser.parsePopulation(file, botTemplateStringMap, wsTemplateStringMap);
+				propertySupport.firePropertyChange("POPNODE", null, popNode);
+				propertySupport.firePropertyChange(MainWindow.BOTTEMPLATEMAP, null, botTemplateStringMap);
+			}
 		});
-		
-		popPanel.addGB(feedback, 0, 0);
-		
-		popPanel.addGB(mapLabel, 0, 1);
 		popPanel.addGB(maps, 1, 1);
 		
 		popPanel.addGB(loadPop, 2, 1);
@@ -224,6 +229,7 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		//advancedBox.setSelected((boolean) popNode.getValueSingular(PopNode.ADVANCED));
 	}
 	
+	//wrapper
 	public void fireTemplateChange(String type, String oldName, String newName) {
 		propertySupport.firePropertyChange(type, oldName, newName);
 	}

@@ -181,15 +181,16 @@ public class TreeParse { //it is time to parse
 			pw.println("{");
 			
 			//indentCount++;
-			printPopulation(pw, root);
+			//printPopulation(pw, root);
 			
 			//pain
 			for(int i = 0; i < waveCount; i++) {
-				printWave(pw, (WaveNode) root.getChildren().get(i));
+				//printWave(pw, (WaveNode) root.getChildren().get(i));
 			}
 			indentCount--;
 			pw.println("}");
 			pw.close();
+			fw.close();
 			
 		}
 		catch (FileNotFoundException e){
@@ -200,7 +201,7 @@ public class TreeParse { //it is time to parse
 		}
 	
 	}
-	
+	/*
 	private void printPopulation(PrintWriter pw, PopNode root) { //population settings
 		Map<String, Object[]> mapCopy = root.getMap();
 		
@@ -592,6 +593,7 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "}");
 		System.out.println("printed random");
 	}
+	*/
 	
 	private void indentPrint(PrintWriter pw, String text) {
 		pw.print(indent.substring(0, indentCount + 1) + text);

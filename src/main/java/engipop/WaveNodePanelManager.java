@@ -10,8 +10,6 @@ import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import engipop.ButtonListManager.States;
 import engipop.EngiWindow.NoDeselectionModel;
@@ -53,6 +51,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			SecondaryWindow secondaryWindow) {
 		super(window, botPanel, tankPanel);
 		initWaveListeners();
+		listPanel.removeAll(); //wavenode has a different layout than node, so need to set up here
 		
 		this.wavePanel = wavePanel;
 		this.wsPanel = wsPanel;
@@ -85,42 +84,36 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		waveListScroll.setMinimumSize(new Dimension(waveList.getPreferredScrollableViewportSize().width + 20,waveList.getPreferredScrollableViewportSize().height));
 		//i don't even know
 		waveSpawnListScroll.setMinimumSize(waveSpawnList.getPreferredScrollableViewportSize());
-	}
-	
-	public JPanel makeListPanel() {
-		EngiPanel panel = new EngiPanel();
 		
-		panel.setLayout(panel.gbLayout);
-		panel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		panel.gbConstraints.insets = new Insets(5, 0, 5, 5);
+		listPanel.gbConstraints = new GridBagConstraints(); //dump the one from NodePanelManager
+		listPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
+		listPanel.gbConstraints.insets = new Insets(5, 0, 5, 5);
 		
 		//addGB(currentWaveLabel, 0, 0);
-		panel.addGB(addWave, 0, 1);
-		panel.addGB(updateWave, 0, 2);
-		panel.addGB(removeWave, 0, 3);
+		listPanel.addGB(addWave, 0, 1);
+		listPanel.addGB(updateWave, 0, 2);
+		listPanel.addGB(removeWave, 0, 3);
 		
 		//addGB(currentWSLabel, 0, 4);
-		panel.addGB(addWaveSpawn, 0, 5);
-		panel.addGB(updateWaveSpawn, 0, 6);
-		panel.addGB(removeWaveSpawn, 0, 7);
+		listPanel.addGB(addWaveSpawn, 0, 5);
+		listPanel.addGB(updateWaveSpawn, 0, 6);
+		listPanel.addGB(removeWaveSpawn, 0, 7);
 		
-		panel.addGB(addSpawner, 0, 8);
-		panel.addGB(updateSpawner, 0, 9);
-		panel.addGB(removeSpawner, 0, 10);
+		listPanel.addGB(addSpawner, 0, 8);
+		listPanel.addGB(updateSpawner, 0, 9);
+		listPanel.addGB(removeSpawner, 0, 10);
 		
-		panel.addGB(addSquadRandomBot, 0, 11);
-		panel.addGB(updateSquadRandomBot, 0, 12);
-		panel.addGB(removeSquadRandomBot, 0, 13);
+		listPanel.addGB(addSquadRandomBot, 0, 11);
+		listPanel.addGB(updateSquadRandomBot, 0, 12);
+		listPanel.addGB(removeSquadRandomBot, 0, 13);
 		
-		panel.gbConstraints.gridheight = 3;
-		panel.addGB(waveListScroll, 1, 1);
-		panel.addGB(waveSpawnListScroll, 1, 5);
-		panel.addGB(squadRandomListScroll, 1, 8);
-				
-		return panel;
+		listPanel.gbConstraints.gridheight = 3;
+		listPanel.addGB(waveListScroll, 1, 1);
+		listPanel.addGB(waveSpawnListScroll, 1, 5);
+		listPanel.addGB(squadRandomListScroll, 1, 8);
 	}
 	
-	//can't override 
+	//can't override nodepanel's
 	protected void initWaveListeners() {
 		waveList.addListSelectionListener(event -> { //when a wave is selected from list
 			int waveIndex = waveList.getSelectedIndex();
@@ -139,10 +132,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 					waveSpawnList.setSelectedIndex(0);
 				}
 				else { //should only happen if user removes all wavespawns
-					waveSpawnListModel.clear();
 					waveSpawnList.setSelectedIndex(-1);
-					waveSpawnBLManager.changeButtonState(States.EMPTY);
-					
+					waveSpawnListModel.clear();
 					//tfbotBut.setSelected(true);
 					//spawnerInfo.setText(noSpawner);
 				}

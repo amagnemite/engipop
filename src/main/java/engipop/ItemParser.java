@@ -148,7 +148,11 @@ public class ItemParser { //parse item schema, get weapons and hats
 		spyItems.add(spyBuilding);
 	}
 	
-	static String readFile(Path path, Charset encoding) throws IOException {
+	public static String readFile(Path path, Charset encoding) throws IOException {
+		//if(!path.endsWith(".pop")) { //if not a popfile
+		//	return null;
+		//}
+		
 		byte[] encoded = Files.readAllBytes(path);
 		return new String(encoded, encoding);
 	}
@@ -179,7 +183,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 					try {
 						String prefabString = node.getString("prefab"); //null ptrs here if no prefab
 						String equip = "";
-						VDFNode wepPrefab = new VDFNode();
+						VDFNode wepPrefab = new VDFNode(String.CASE_INSENSITIVE_ORDER);
 						VDFNode classNode = null;
 						
 						if((prefabString.contains("weapon_") && !prefabString.contains("case")) || 
@@ -257,10 +261,10 @@ public class ItemParser { //parse item schema, get weapons and hats
 		pyroCosmetics.add("The Burning Bongos");
 		demomanCosmetics.add("Six Pack Abs");
 		//dumb mistake here
-		soldierPrimary.add("Upgradeable TF_WEAPON_ROCKETLAUNCHER");
+		//soldierPrimary.add("Upgradeable TF_WEAPON_ROCKETLAUNCHER");
 	}
 	
-	String getPrefabString(VDFNode allPrefabs, String fabs) { //get the weapon prefab
+	private String getPrefabString(VDFNode allPrefabs, String fabs) { //get the weapon prefab
 		int first = 0;
 		int last = 0;
 		

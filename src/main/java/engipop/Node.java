@@ -168,8 +168,8 @@ public class Node {
     	public static final String MISSION = "Mission";
     	
     	private int mapIndex = -1;
-    	private Map<String, Node> wsTemplateMap;
-    	private Map<String, Node> botTemplateMap;
+    	private Map<String, Node> wsTemplateMap = new HashMap<String, Node>();
+    	private Map<String, Node> botTemplateMap = new HashMap<String, Node>();
 
         public PopNode() {
         	this.putKey(STARTINGCURRENCY, 400);
@@ -274,6 +274,11 @@ public class Node {
     	public static final String BEGINATWAVE = "BeginAtWave"; //int
     	public static final String RUNFORTHISMANYWAVES = "RunForThisManyWaves"; //int
     	public static final String DESIREDCOUNT = "DesiredCount"; //int
+    	
+    	public static final String DESTROYSENTRIES = "DestroySentries";
+    	public static final String SNIPER = "Sniper";
+    	public static final String SPY = "Spy";
+    	public static final String ENGINEER = "Engineer";
     	//spawner
     }
     
@@ -567,7 +572,7 @@ public class Node {
     	public static final String WEAPONRESTRICT = "WeaponRestriction"; //weaponrestriction
     	public static final String TAGS = "Tag"; //List<String>
     	public static final String ATTRIBUTES = "Attribute";  //List<String>
-    	public static final String ITEM = "Item"; //String[]
+    	public static final String ITEM = "Item"; //List<Object>
     	public static final String ITEMATTRIBUTES = "ItemAttributes"; //object[] list<String>
 		//when read from VDF, is TreeMap[]
     	public static final String CHARACTERATTRIBUTES = "CharacterAttributes";
@@ -624,6 +629,12 @@ public class Node {
     		if(keyVals.containsKey(ATTRIBUTES)) {
     			List<Object> list = new ArrayList<Object>(Arrays.asList(keyVals.get(ATTRIBUTES)));
     			this.putKey(ATTRIBUTES, list);
+    		}
+    		
+    		if(keyVals.containsKey(ITEM)) {
+    			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
+    			list.addAll(Arrays.asList(keyVals.get(ITEM)));
+    			this.putKey(ITEM, list);
     		}
     	}
     	
