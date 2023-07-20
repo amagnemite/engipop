@@ -27,7 +27,7 @@ import javax.swing.JTextField;
 @SuppressWarnings("serial")
 public class SettingsWindow extends EngiWindow {
 	static File cfgFileName = new File("engiconfig.cfg");
-	private static final String scriptsPath = "tf2 scripts path";
+	private static final String scriptsPath = "ScriptsPath";
 	private static final String itemsTxtPath = "\\items\\items_game.txt";
 	
 	//String itemsTxtPath;
@@ -154,6 +154,8 @@ public class SettingsWindow extends EngiWindow {
 					//value = substring starting at where the = is + 1
 				}
 				if(modifiedConfig.isEmpty() || modifiedConfig.get(scriptsPath).equals("null")) {
+					//TODO: this will error if modifiedConfig is not empty but scriptsPath isn't present
+					//also may need a way to remove old vars
 					modifiedConfig.put(scriptsPath, null);
 				} //there may be othe rpossibly null values, in which case it'd be better handle nulls generically
 			}

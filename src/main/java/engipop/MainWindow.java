@@ -26,6 +26,7 @@ public class MainWindow extends EngiWindow {
 	JMenuItem popSet = new JMenuItem("Open population settings");
 	JMenuItem settings = new JMenuItem("Open Engipop settings");
 	JMenuItem templateSet = new JMenuItem("Template editor");
+	JMenuItem missionSet = new JMenuItem("Mission editor");
 	JMenuItem timeline = new JMenuItem("Minimum timeline viewer");
 	
 	WavePanel wavePanel;
@@ -57,6 +58,7 @@ public class MainWindow extends EngiWindow {
 		SettingsWindow settingsWindow = new SettingsWindow(this);
 		SecondaryWindow secondaryWindow = new SecondaryWindow(settingsWindow, popNode);
 		TemplateWindow tempWindow = new TemplateWindow(this, secondaryWindow);
+		MissionWindow missionWindow = new MissionWindow(this, secondaryWindow);
 			
 		settingsWindow.initConfig();	
 		
@@ -67,6 +69,11 @@ public class MainWindow extends EngiWindow {
 		templateSet.addActionListener(event -> {
 			if(!tempWindow.isVisible()) {
 				tempWindow.setVisible(true);
+			}
+		});
+		missionSet.addActionListener(event -> {
+			if(!missionWindow.isVisible()) {
+				missionWindow.setVisible(true);
 			}
 		});
 		settings.addActionListener(event -> {
@@ -91,6 +98,7 @@ public class MainWindow extends EngiWindow {
 		optionsMenu.add(settings);
 		optionsMenu.add(popSet);
 		editorsMenu.add(templateSet);
+		editorsMenu.add(missionSet);
 		utilitiesMenu.add(timeline);
 		menuBar.add(optionsMenu);
 		menuBar.add(editorsMenu);

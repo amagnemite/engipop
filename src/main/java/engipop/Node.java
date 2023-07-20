@@ -120,7 +120,7 @@ public class Node {
 		return this.keyVals;
 	}
 	
-	//converts child vdfnodes into case insensitive treemaps
+	//converts child vdfnodes into <String, Object> maps
 	public void copyVDFNode(Map<String, Object[]> map) {
 		Set<String> stringSet = new HashSet<String>(
 				Arrays.asList(WaveSpawnNode.NAME, WaveSpawnNode.WAITFORALLDEAD, WaveSpawnNode.WAITFORALLSPAWNED));
@@ -129,31 +129,59 @@ public class Node {
 				("-?(" + //- 0 or 1 times
 				"("+Digits+"(\\.)?("+Digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
 				"(\\.("+Digits+")))"); //. , digits
+		/*
+		Map<String, Object> newMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
 		
 		for(Entry<String, Object[]> entry : map.entrySet()) {
-			Object[] nodeArray = new Object[entry.getValue().length];
+			List<Object> nodeArray = new ArrayList<Object>();
 			
 			for(int i = 0; i < entry.getValue().length; i++) {
-				if(entry.getValue()[i].getClass() == VDFNode.class) {
-					Map<String, Object[]> subMap = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
-					subMap.putAll((VDFNode) entry.getValue()[i]);
-					copyVDFNode(subMap);
-					nodeArray[i] = subMap;
+				if(entry.getValue()[i] instanceof Map) {
+					nodeArray.add(copyVDFNode((VDFNode) entry.getValue()[i]));
 				}
 				else if(!stringSet.contains(entry.getKey())) { //convert string numbers into ints/doubles
 					String str = (String) entry.getValue()[i];
 					if(str.contains(".") && Pattern.matches(fpRegex, str)) {
-						nodeArray[i] = Double.valueOf(str);
+						nodeArray.add(Double.valueOf(str));
 					}	
 					else if(Pattern.matches(Digits, str)) {
-						nodeArray[i] = Integer.valueOf(str); //this may also catch certain booleans/flags
+						nodeArray.add(Integer.valueOf(str)); //this may also catch certain booleans/flags
 					}
 				}
 			}
-			if(nodeArray[0] != null) { //may need to double check this
-				entry.setValue(nodeArray);
+			if(entry.getValue().length == 1) {
+				newMap.put(entry.getKey(), entry.getValue()[0]);
 			}
-		}	
+			else {
+				newMap.put(entry.getKey(), nodeArray);
+			}
+		} */
+		for(Entry<String, Object[]> entry : map.entrySet()) {
+            Object[] nodeArray = new Object[entry.getValue().length];
+            
+            for(int i = 0; i < entry.getValue().length; i++) {
+                if(entry.getValue()[i].getClass() == VDFNode.class) {
+                    Map<String, Object[]> subMap = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+                    subMap.putAll((VDFNode) entry.getValue()[i]);
+                    copyVDFNode(subMap);
+                    nodeArray[i] = subMap;
+                }
+                else if(!stringSet.contains(entry.getKey())) { //convert string numbers into ints/doubles
+                    String str = (String) entry.getValue()[i];
+                    if(str.contains(".") && Pattern.matches(fpRegex, str)) {
+                        nodeArray[i] = Double.valueOf(str);
+                    }    
+                    else if(Pattern.matches(Digits, str)) {
+                        nodeArray[i] = Integer.valueOf(str); //this may also catch certain booleans/flags
+                    }
+                }
+            }
+            if(nodeArray[0] != null) { //may need to double check this
+                entry.setValue(nodeArray);
+            }
+        }   
+		
+		//return newMap; 
 	}
     
     public static class PopNode extends Node {
@@ -179,12 +207,13 @@ public class Node {
         	this.putKey(BOTSATKINSPAWN, false);
         	this.putKey(FIXEDRESPAWNWAVETIME, false);
         	this.putKey(EVENTPOPFILE, false);
+        	this.putKey(MISSION, new ArrayList<Node>());
         	//this.putKey(ADVANCED, false);
         }
         
 		public PopNode(Map<String, Object[]> map) { //constructor for read in nodes  	
-        	this.copyVDFNode(map);
-        	keyVals.putAll(map);
+			this.copyVDFNode(map);
+			keyVals.putAll(map);
         	
         	if(keyVals.containsKey("Wave")) {
         		for(Object wave : keyVals.get("Wave")) {
@@ -196,7 +225,7 @@ public class Node {
         	
         	//may need to make sure this isn't a not string
         	if(keyVals.containsKey(EVENTPOPFILE) && 
-        			((String) keyVals.get(EVENTPOPFILE)[0]).equalsIgnoreCase("Halloween")) {
+        			((String) keyVals.get(EVENTPOPFILE)[0]).equals("Halloween")) {
         		keyVals.put(EVENTPOPFILE, new Object[] {true});
         	}
         	else {
@@ -204,15 +233,14 @@ public class Node {
         	}
         	
         	String atk = (String) keyVals.get(BOTSATKINSPAWN)[0];
-        	if(atk != null && (atk.equalsIgnoreCase("no") || atk.equalsIgnoreCase("false"))) {
+        	if(atk != null && (atk.equals("no") || atk.equals("false"))) {
         		keyVals.put(BOTSATKINSPAWN, new Object[] {false});
         	}
         	else {
         		keyVals.put(BOTSATKINSPAWN, new Object[] {true});
         	}
         	
-        	if(keyVals.containsKey(FIXEDRESPAWNWAVETIME)) {
-        		//since pure flag, if it's present then true
+        	if(keyVals.containsKey(FIXEDRESPAWNWAVETIME)) { //presence of flag is true
         		keyVals.put(FIXEDRESPAWNWAVETIME, new Object[] {true});
         	}
         	else {
@@ -224,6 +252,14 @@ public class Node {
         	}
         	if(!keyVals.containsKey(BUSTERKILLS)) {
         		keyVals.put(BUSTERKILLS, new Object[] {EngiPanel.BUSTERDEFAULTKILLS});
+        	}
+        	
+        	if(keyVals.containsKey(MISSION)) {
+        		List<Node> array = new ArrayList<Node>();
+        		for(Object mission : keyVals.get(MISSION)) {
+        			array.add(new MissionNode((Map<String, Object[]>) mission));
+        		}
+        		keyVals.put(MISSION, new Object[] {array});
         	}
         }
         
@@ -280,6 +316,19 @@ public class Node {
     	public static final String SPY = "Spy";
     	public static final String ENGINEER = "Engineer";
     	//spawner
+    	
+    	public MissionNode() {
+    		this.putKey(OBJECTIVE, DESTROYSENTRIES);
+    		this.putKey(INITIALCOOLDOWN, 0);
+    		this.putKey(COOLDOWNTIME, 0);
+    		this.putKey(BEGINATWAVE, 1);
+    		this.putKey(RUNFORTHISMANYWAVES, 1);
+    		this.putKey(DESIREDCOUNT, 1);
+    	}
+    	
+    	public MissionNode(Map<String, Object[]> map) {
+    		keyVals.putAll(map);
+    	}
     }
     
     public static class WaveNode extends Node { 

@@ -1,6 +1,7 @@
 package engipop;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.text.Position;
 
 import engipop.ButtonListManager.States;
@@ -19,7 +21,7 @@ import engipop.Node.TFBotNode;
 //todo: add some sort of sanity checking for itemattributes
 @SuppressWarnings("serial")
 public class BotPanel extends EngiPanel implements PropertyChangeListener { //class to make the panel for bot creation/editing
-	private final static int ATTRMAX = 20;
+	private final static int ATTRMAX = 20; //apparently the game stops parsing attributes after the 20th
 	
 	String[] tags = {"bot_giant", "bot_squad_member"}; //potentially move bot_giant
 	
@@ -28,7 +30,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 	//DefaultComboBoxModel<String> classModel;
 	DefaultComboBoxModel<String> iconModel = new DefaultComboBoxModel<String>();
-	DefaultListModel<String> tagModel = new DefaultListModel<String>();
+	//DefaultListModel<String> tagModel = new DefaultListModel<String>();
+	DefaultTableModel tagModel = new DefaultTableModel(0, 1);
 	DefaultComboBoxModel<String> templateModel = new DefaultComboBoxModel<String>();
 	//ComboBoxModel<String> templateModel; //double check if access to model is actually needed
 	
@@ -37,7 +40,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JComboBox<Classes> classBox = new JComboBox<Classes>(Classes.values());
 	JComboBox<String> iconBox = new JComboBox<String>(iconModel);
 	JComboBox<String> templateBox = new JComboBox<String>(templateModel); 
-	JList<String> tagList = new JList<String>(tags);
+	JTable tagList = new JTable(tagModel);
 	JList<String> botAttributeList;
 	
 	List<JComboBox<String>> itemLists = new ArrayList<JComboBox<String>>();
@@ -89,6 +92,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 	public BotPanel(EngiWindow containingWindow, MainWindow mainWindow, SecondaryWindow secondaryWindow) {
 		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
+		JTextField cellEditor = new JTextField();
 		
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
@@ -110,9 +114,13 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		iconBox.setPrototypeDisplayValue("heavyweapons_healonkill_giant");
 		templateBox.setPrototypeDisplayValue("Giant Rapid Fire Demo Chief (T_TFBot_Giant_Demo_Spammer_Reload_Chief)");
-		tagList.setPrototypeCellValue("bot_squad_member");
+		//tagList.setPrototypeCellValue("bot_squad_member");
+		botAttributeList.setPrototypeCellValue("BecomeSpectatorOnDeath");
 		
 		//setIconBox(iconBox, iconModel, "Scout");
+		
+		tagModel.addRow(new String[] {"+"});
+		tagList.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cellEditor));
 		
 		classBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent a) {
@@ -144,7 +152,33 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 		});
 		
+		cellEditor.addKeyListener(new KeyListener() { //todo: cell editor
+			public void keyTyped(KeyEvent k) {
+			}
+
+			public void keyReleased(KeyEvent k) {
+			}
+
+			public void keyPressed(KeyEvent k) {
+				int currentRow = tagList.getEditingRow();
+				
+				if(currentRow == tagList.getRowCount() - 1) { //editing the last row, add a new one
+					tagModel.addRow(new String[] {"+"});
+				}
+				else {
+					if(cellEditor.getText().isBlank() && k.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+						tagModel.removeRow(currentRow);
+						
+						//if(tagList.getRowCount() == 0) {
+						//	tagModel.addRow(new String[] {"+"});
+						//}
+					}
+				}
+			}
+		});
+		
 		classBox.setSelectedIndex(0);
+		tagList.setTableHeader(null);
 		
 		iconBox.setEditable(true);
 		primaryList.setEditable(true);
@@ -213,7 +247,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		nameField.setMinimumSize(nameField.getPreferredSize());
 		classBox.setMinimumSize(classBox.getPreferredSize());
 		iconBox.setMinimumSize(iconBox.getPreferredSize()); //double check this once custom input happens
-		tagListPane.setMinimumSize(tagList.getPreferredScrollableViewportSize());
+		//tagListPane.setMinimumSize(tagList.getPreferredScrollableViewportSize());
+		tagListPane.setMinimumSize(new Dimension(200, 100));
 		attributesListPane.setMinimumSize(botAttributeList.getPreferredScrollableViewportSize());
 		
 		addGB(botClass, 0, 0);
@@ -282,7 +317,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	}
 	
 	public void updatePanel(TFBotNode tf) {
-		int[] indices = new int[tagList.getModel().getSize()]; //max possible taglist
+		int[] indices = new int[tagList.getModel().getRowCount()]; //max possible taglist
 		
 		classBox.setSelectedItem(tf.getValueSingular(TFBotNode.CLASSNAME));
 		//if(tf.containsKey(TFBotNode.CLASSNAME)) {
@@ -327,17 +362,25 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			wepGroup.setSelected(anyBut.getModel(), true);
 		}
 		
+		tagList.clearSelection();
 		if(tf.containsKey(TFBotNode.TAGS)) {
+			List<String> tags = new ArrayList<String>();
+			tags.addAll((List<String>) tf.getValueSingular(TFBotNode.TAGS));
+			//List<String> tags = (List<String>) tf.getValueSingular(TFBotNode.TAGS);
 			
-			List<String> tags = (List<String>) tf.getValueSingular(TFBotNode.TAGS);
-			for(int i = 0; i < tags.size(); i++) { //get indices so they can be selected
-				indices[i] = tagList.getNextMatch(tags.get(i), 0, Position.Bias.Forward);
-				//System.out.println(indices[i]);
+			//select all the tags that are already in the tagmodel
+			for(int i = 0; i < tagModel.getRowCount(); i++) {
+				if(tags.contains(tagModel.getValueAt(i, 0))) {
+					tagList.changeSelection(i, 1, true, false);
+					tags.remove(tagModel.getValueAt(i, 0));
+				}
 			}
-			tagList.setSelectedIndices(indices);
-		}
-		else {
-			tagList.clearSelection();
+			
+			//then add new tags that weren't added
+			for(String newTag : tags) {
+				tagModel.addRow(new String[] {newTag});
+				tagList.changeSelection(tagModel.getRowCount() - 1, 0, true, false);
+			}
 		}
 		
 		if(tf.containsKey(TFBotNode.ATTRIBUTES)) {
@@ -450,6 +493,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	}
 	
 	public void updateNode(TFBotNode tf) { //put values into node
+		List<String> tags = new ArrayList<String>(4);
+		
 		tf.putKey(TFBotNode.CLASSNAME, classBox.getSelectedItem());
 		tf.putKey(TFBotNode.CLASSICON, iconBox.getSelectedItem()); //string
 		tf.putKey(TFBotNode.NAME, nameField.getText());
@@ -459,8 +504,13 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 		
 		tf.putKey(TFBotNode.TEMPLATE, templateBox.getSelectedItem());
-		tf.putKey(TFBotNode.TAGS, tagList.getSelectedValuesList());
 		
+		for(int row : tagList.getSelectedRows()) {
+			tags.add((String) tagList.getValueAt(row, 0));
+		}
+		tf.putKey(TFBotNode.TAGS, tags);
+		
+		//TODO: make this a list
 		String[] array = new String[TFBotNode.ITEMCOUNT];
 		
 		array[ItemSlot.PRIMARY.getSlot()] = (String) primaryList.getSelectedItem();
@@ -616,15 +666,15 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	}
 	
 	public void updateTagList(List<String> list) { //add custom tags to list
-		tagModel.clear();
+		tagModel.setRowCount(0);
 		
 		for(String s : tags) { //add the constant tags
-			tagModel.addElement(s);
+			tagModel.addRow(new String[]{s});
 		}
 		for(String s : list) { //then add the variable ones
-			tagModel.addElement(s);
+			tagModel.addRow(new String[]{s});
 		}
-		tagList.setModel(tagModel);
+		//tagList.setModel(tagModel);
 	}
 	
 	//no reason to hold this in memory since it gets put in attributeslist and is done with
@@ -666,7 +716,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		switch(evt.getPropertyName()) {
 			case SecondaryWindow.TAGS:
 				updateTagList((List<String>) evt.getNewValue()); //this should always be a list<string>, may want to sanity check though
-				tagList.setFixedCellWidth(-1);
+				//tagList.setFixedCellWidth(-1);
 				break;
 			case MainWindow.ITEMPARSE:
 				setItemParser((ItemParser) evt.getNewValue());

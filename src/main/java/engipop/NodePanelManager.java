@@ -48,13 +48,13 @@ public class NodePanelManager {
 	static final String squadSpawner = "Current spawner type: squad";
 	static final String randomSpawner = "Current spawner type: randomchoice";
 	
-	WaveSpawnNode currentWSNode = new WaveSpawnNode();
-	TFBotNode currentBotNode = new TFBotNode();
-	TankNode currentTankNode = new TankNode();
-	SquadNode currentSquadNode = new SquadNode();
-	RandomChoiceNode currentRCNode = new RandomChoiceNode();
+	protected WaveSpawnNode currentWSNode = new WaveSpawnNode();
+	protected TFBotNode currentBotNode = new TFBotNode();
+	protected TankNode currentTankNode = new TankNode();
+	protected SquadNode currentSquadNode = new SquadNode();
+	protected RandomChoiceNode currentRCNode = new RandomChoiceNode();
 	
-	EngiWindow containingWindow;
+	protected EngiWindow containingWindow;
 	BotPanel botPanel;
 	TankPanel tankPanel;
 	EngiPanel listPanel = new EngiPanel();
@@ -274,7 +274,7 @@ public class NodePanelManager {
 			}
 		});
 		
-ButtonGroup spawnerGroup = new ButtonGroup();
+		ButtonGroup spawnerGroup = new ButtonGroup();
 		
 		spawnerGroup.add(noneBut);
 		spawnerGroup.add(tfbotBut);
@@ -547,6 +547,7 @@ ButtonGroup spawnerGroup = new ButtonGroup();
 		for(Node botNode : node.getChildren()) {
 			setSquadRandomListElement((TFBotNode) botNode);
 		}
+		squadRandomList.setSelectedIndex(0);
 	}
 	
 	//refresh singular element on squadrandom list
