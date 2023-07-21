@@ -169,6 +169,7 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 				fileChooser = new JFileChooser();
 			}			
 			File file = null;
+			fileChooser.setFileFilter(new PopFileFilter());
 			
 			fileChooser.showOpenDialog(this);
 			file = fileChooser.getSelectedFile();

@@ -4,12 +4,14 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.File;
 import java.net.URL;
 
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.filechooser.FileFilter;
 
 @SuppressWarnings("serial")
 //generic jframe time
@@ -56,5 +58,33 @@ public class EngiWindow extends JFrame {
 	    public void removeSelectionInterval(int index0, int index1) {
 	    	
 	    }
+	}
+	
+	public static class PopFileFilter extends FileFilter {
+
+		public boolean accept(File file) {
+			if(file.isDirectory()) {
+				return true;
+			}
+			
+			String extension = file.getName();
+			int i = extension.lastIndexOf('.');
+			if (i > 0 && i < extension.length() - 1) {
+				extension = extension.substring(i+1).toLowerCase();
+	        }
+			else {
+				return false;
+			}
+			
+			if(extension.equals("pop")) {
+				return true;
+			}
+			return false;
+		}
+
+		public String getDescription() {
+			return "Population files (.pop)";
+		}
+		
 	}
 }

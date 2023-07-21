@@ -194,6 +194,7 @@ public class Node {
     	public static final String BOTSATKINSPAWN = "CanBotsAttackWhileInSpawnRoom"; //boolean / string
     	public static final String ADVANCED = "Advanced"; //boolean
     	public static final String MISSION = "Mission";
+    	public static final String TEMPLATE = "Template";
     	
     	private int mapIndex = -1;
     	private Map<String, Node> wsTemplateMap = new HashMap<String, Node>();
@@ -232,9 +233,11 @@ public class Node {
         		keyVals.put(EVENTPOPFILE, new Object[] {false});
         	}
         	
-        	String atk = (String) keyVals.get(BOTSATKINSPAWN)[0];
-        	if(atk != null && (atk.equals("no") || atk.equals("false"))) {
-        		keyVals.put(BOTSATKINSPAWN, new Object[] {false});
+        	if(keyVals.containsKey(BOTSATKINSPAWN)) {
+        		String atk = (String) keyVals.get(BOTSATKINSPAWN)[0];
+        		if((atk.equalsIgnoreCase("no") || atk.equalsIgnoreCase("false"))) {
+        			keyVals.put(BOTSATKINSPAWN, new Object[] {false});
+        		}
         	}
         	else {
         		keyVals.put(BOTSATKINSPAWN, new Object[] {true});
@@ -385,13 +388,13 @@ public class Node {
     	
     	public RelayNode(Map<String, Object[]> map) {
     		for(Entry<String, Object[]> entry : map.entrySet()) {
-    			if(entry.getKey().equalsIgnoreCase(TARGET)) {
+    			if(entry.getKey().equals(TARGET)) {
     				this.putKey(TARGET, entry.getValue());
     			}
-    			else if(entry.getKey().equalsIgnoreCase(ACTION)) {
+    			else if(entry.getKey().equals(ACTION)) {
     				this.putKey(ACTION, entry.getValue());
     			}
-    			else if(entry.getKey().equalsIgnoreCase(PARAM)) { 
+    			else if(entry.getKey().equals(PARAM)) { 
     				this.putKey(PARAM, entry.getValue());
     			}
     			else { //delay
@@ -440,6 +443,7 @@ public class Node {
     	public static final String TANK = "Tank";
     	public static final String SQUAD = "Squad";
     	public static final String RANDOMCHOICE = "RandomChoice";
+    	//TODO: fix support
     	
     	private boolean waitBetweenDeaths; //betweenspawns and betweenspawnsafterdeath are mutually exclusive
     	private boolean supportLimited;
@@ -625,8 +629,7 @@ public class Node {
     	public static final String TAGS = "Tag"; //List<String>
     	public static final String ATTRIBUTES = "Attribute";  //List<String>
     	public static final String ITEM = "Item"; //List<Object>
-    	public static final String ITEMATTRIBUTES = "ItemAttributes"; //object[] list<String>
-		//when read from VDF, is TreeMap[]
+    	public static final String ITEMATTRIBUTES = "ItemAttributes"; //List<Map<String, String>>
     	public static final String CHARACTERATTRIBUTES = "CharacterAttributes";
     	public static final String TEMPLATE = "Template"; //string
     	public static final String HEALTH = "Health"; //int
@@ -637,9 +640,11 @@ public class Node {
     	public static final String MAXVISIONRANGE = "MaxVisionRange"; //int
     	public static final String TELEPORTWHERE = "TeleportWhere"; //string
     	public static final String EVENTCHANGEATTRIBUTES = "EventChangeAttributes";
+    	public static final String ITEMNAME = "ItemName";
     	
     	public static final int ITEMCOUNT = 7;
     	
+    	public static final String NOSKILL = "N/A";
     	public static final String EASY = "Easy";
     	public static final String NORMAL = "Normal";
     	public static final String HARD = "Hard";
@@ -661,7 +666,7 @@ public class Node {
     		this.putKey(CLASSNAME, Classes.Scout);
     		this.putKey(CLASSICON, "scout");
     		this.putKey(SKILL, EASY);
-    		//this.putKey(WEAPONRESTRICT, ANY);
+    		this.putKey(WEAPONRESTRICT, ANY);
     		isItemsSorted = true;
     	}
     	 
@@ -690,6 +695,20 @@ public class Node {
     			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
     			list.addAll(Arrays.asList(keyVals.get(ITEM)));
     			this.putKey(ITEM, list);
+    		}
+    		
+    		if(keyVals.containsKey(ITEMATTRIBUTES)) {
+    			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
+    			list.addAll(Arrays.asList(keyVals.get(ITEMATTRIBUTES))); //list of map<string, object[]>
+    			this.putKey(ITEMATTRIBUTES, list);
+    		}
+    		
+    		if(!keyVals.containsKey(SKILL)) {
+    			this.putKey(SKILL, NOSKILL);
+    		}
+    		
+    		if(!keyVals.containsKey(WEAPONRESTRICT)) {
+    			this.putKey(WEAPONRESTRICT, ANY);
     		}
     	}
     	

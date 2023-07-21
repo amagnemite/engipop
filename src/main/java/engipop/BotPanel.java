@@ -83,7 +83,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JButton removeAttributeFromList = new JButton("Remove attribute");
 	
 	JComboBox<String> itemAttributeBox; //make this a jtree
-	Object[] attributeMapsArray = new Object[TFBotNode.ITEMCOUNT]; //contains all item attribute maps
+	List<Map<String, String>> attributeMapsArray = new ArrayList<Map<String, String>>(TFBotNode.ITEMCOUNT); //contains all item attribute maps
 	Map<String, String> currentAttributeMap = new HashMap<String, String>();
 	Map<String, String> currentCharAttributeMap = new HashMap<String, String>();
 	
@@ -458,7 +458,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			//setHatVisibility((String) hat3List.getSelectedItem(), hat3AttrBut);
 		}
 		if(tf.containsKey(TFBotNode.ITEMATTRIBUTES)) {
-			attributeMapsArray = tf.getValueArray(TFBotNode.ITEMATTRIBUTES);
+			attributeMapsArray = (List<Map<String, String>>) tf.getValueSingular(TFBotNode.ITEMATTRIBUTES);
 			/*
 				updateComponents(false);
 				setAttrButRed();
@@ -479,7 +479,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			} */
 		}
 		else {
-			attributeMapsArray = new Object[TFBotNode.ITEMCOUNT];
+			attributeMapsArray = new ArrayList<Map<String, String>>(TFBotNode.ITEMCOUNT);
 		}
 		if(tf.containsKey(TFBotNode.CHARACTERATTRIBUTES)) {
 			currentCharAttributeMap = (Map<String, String>) tf.getValueSingular(TFBotNode.CHARACTERATTRIBUTES);
@@ -874,7 +874,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			//if(attributeMaps[index.getSlot()] == null) {
 			//	attributeMaps[index.getSlot()] = new HashMap<String, String>();
 			//}
-			currentAttributeMap = (Map<String, String>) attributeMapsArray[index.getSlot()];
+			currentAttributeMap = (Map<String, String>) attributeMapsArray.get(index.getSlot());
 		}
 		
 		attrValueField.setText(null);

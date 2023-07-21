@@ -3,15 +3,17 @@ package engipop;
 import javax.swing.*;
 
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.io.IOException;
 
 import engipop.Node.*;
 
 //main class
 @SuppressWarnings("serial")
-public class MainWindow extends EngiWindow {
+public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	public static final String ITEMPARSE = "itemparse";
 	public static final String TFBOT = "TFBOT";
 	public static final String WAVESPAWN = "WAVESPAWN";
@@ -60,7 +62,8 @@ public class MainWindow extends EngiWindow {
 		TemplateWindow tempWindow = new TemplateWindow(this, secondaryWindow);
 		MissionWindow missionWindow = new MissionWindow(this, secondaryWindow);
 			
-		settingsWindow.initConfig();	
+		settingsWindow.initConfig();
+		secondaryWindow.addPropertyChangeListener("POPNODE", this);
 		
 		popSet.addActionListener(event -> {
 			secondaryWindow.updatePopPanel();
@@ -128,6 +131,7 @@ public class MainWindow extends EngiWindow {
 		});
 		
 		addGB(feedback, 0, 1);
+		addGB(createPop, 2, 6);
 		
 		gbConstraints.gridwidth = 2;
 		addGB(wavePanel, 0, 2);
@@ -201,9 +205,10 @@ public class MainWindow extends EngiWindow {
 	
 	private void generateFile() { //get filename/place to save pop at
 		JFileChooser c = new JFileChooser();
+		c.setFileFilter(new PopFileFilter());
 		c.showSaveDialog(this);
 		//if(result == JFileChooser.CANCEL_OPTION) return;
-		try { //double check
+		//try { //double check
 			File file = c.getSelectedFile();
 			if(file.exists()) { //confirm overwrite
 				int op = JOptionPane.showConfirmDialog(this, "Overwrite this file?");
@@ -216,9 +221,13 @@ public class MainWindow extends EngiWindow {
 				new TreeParse().parseTree(file, popNode);
 				feedback.setText("Popfile successfully generated!");
 			}
-		}
-		catch(Exception e) {
+		//}
+		//catch(IOException i) {
 			
-		}
+		//}
+	}
+
+	public void propertyChange(PropertyChangeEvent evt) {
+		this.popNode = (PopNode) evt.getNewValue();
 	}
 }
