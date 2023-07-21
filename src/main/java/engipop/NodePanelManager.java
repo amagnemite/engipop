@@ -224,7 +224,6 @@ public class NodePanelManager {
 				squadRandomListModel.set(squadRandomList.getSelectedIndex(), currentBotNode.getValueSingular(TFBotNode.CLASSNAME).toString());
 			}
 		});
-		
 			
 		removeSquadRandomBot.addActionListener(event -> { //squad/rc button to remove bots from them
 			if(squadRandomList.getSelectedIndex() != -1) {

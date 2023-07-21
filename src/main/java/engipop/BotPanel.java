@@ -55,7 +55,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 	JComboBox<String> itemAttributesListBox;
 	
-	ItemParser parser; //make sure all botpanels have same list
+	static ItemParser parser; //make sure all botpanels have same list
 	
 	JLabel botBuilding = new JLabel("Sapper: ");
 	
@@ -96,8 +96,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
-		
-		//this.parser = parser;
 		
 		this.containingWindow = containingWindow;
 		secondaryWindow.addPropertyChangeListener(this);
@@ -443,17 +441,17 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 		
 		if(tf.containsKey(TFBotNode.ITEM)) {
-			String[] array = (String[]) tf.getValueArray(TFBotNode.ITEM);
+			List<String> array = (List<String>) tf.getValueSingular(TFBotNode.ITEM);
 			
-			primaryList.setSelectedItem(array[ItemSlot.PRIMARY.getSlot()]);
-			secList.setSelectedItem(array[ItemSlot.SECONDARY.getSlot()]);
-			meleeList.setSelectedItem(array[ItemSlot.MELEE.getSlot()]);
+			primaryList.setSelectedItem(array.get(ItemSlot.PRIMARY.getSlot()));
+			secList.setSelectedItem(array.get(ItemSlot.SECONDARY.getSlot()));
+			meleeList.setSelectedItem(array.get(ItemSlot.MELEE.getSlot()));
 			if(tf.getValueSingular(TFBotNode.CLASSNAME) == Classes.Spy) {
-				buildingList.setSelectedItem(array[ItemSlot.BUILDING.getSlot()]);
+				buildingList.setSelectedItem(array.get(ItemSlot.BUILDING.getSlot()));
 			}
-			hat1List.setSelectedItem(array[ItemSlot.COSMETIC1.getSlot()]);
-			hat2List.setSelectedItem(array[ItemSlot.COSMETIC2.getSlot()]);
-			hat3List.setSelectedItem(array[ItemSlot.COSMETIC3.getSlot()]);
+			hat1List.setSelectedItem(array.get(ItemSlot.COSMETIC1.getSlot()));
+			hat2List.setSelectedItem(array.get(ItemSlot.COSMETIC2.getSlot()));
+			hat3List.setSelectedItem(array.get(ItemSlot.COSMETIC3.getSlot()));
 			
 			//setHatVisibility((String) hat1List.getSelectedItem(), hat1AttrBut);
 			//setHatVisibility((String) hat2List.getSelectedItem(), hat2AttrBut);
@@ -616,12 +614,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 	}
 	
-	//update item lists
-	public void setItemParser(ItemParser parser) {
-		this.parser = parser;
-		setClassItems(Classes.Scout); //since force updating, just default to first class
-	}
-	
 	public void setClassItems(Classes index) { //take class and get items from the parser
 		primaryList.removeAllItems();
 		secList.removeAllItems();
@@ -718,8 +710,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				updateTagList((List<String>) evt.getNewValue()); //this should always be a list<string>, may want to sanity check though
 				//tagList.setFixedCellWidth(-1);
 				break;
-			case MainWindow.ITEMPARSE:
-				setItemParser((ItemParser) evt.getNewValue());
+			case MainWindow.ITEMPARSE:			
+				BotPanel.parser = (ItemParser) evt.getNewValue();
+				//may want to make this update once total instead of every botpanel
+				//setClassItems(Classes.Scout); //since force updating, just default to first class
 				break;
 			case MainWindow.TFBOT:
 				if(evt.getOldValue() == null) {

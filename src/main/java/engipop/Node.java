@@ -161,10 +161,10 @@ public class Node {
             
             for(int i = 0; i < entry.getValue().length; i++) {
                 if(entry.getValue()[i].getClass() == VDFNode.class) {
-                    Map<String, Object[]> subMap = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
-                    subMap.putAll((VDFNode) entry.getValue()[i]);
-                    copyVDFNode(subMap);
-                    nodeArray[i] = subMap;
+                   // Map<String, Object[]> subMap = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+                    //subMap.putAll((VDFNode) entry.getValue()[i]);
+                    copyVDFNode((VDFNode) entry.getValue()[i]);
+                    nodeArray[i] = (entry.getValue()[i]);
                 }
                 else if(!stringSet.contains(entry.getKey())) { //convert string numbers into ints/doubles
                     String str = (String) entry.getValue()[i];
@@ -172,7 +172,7 @@ public class Node {
                         nodeArray[i] = Double.valueOf(str);
                     }    
                     else if(Pattern.matches(Digits, str)) {
-                        nodeArray[i] = Integer.valueOf(str); //this may also catch certain booleans/flags
+                        nodeArray[i] = (Integer.valueOf(str)); //this may also catch certain booleans/flags
                     }
                 }
             }
@@ -598,7 +598,10 @@ public class Node {
     		keyVals.putAll(map);
     		
     		//may need to check this
-    		if(!keyVals.containsKey(SKIN)) {
+    		if(keyVals.containsKey(SKIN)) {
+    			this.putKey(SKIN, true);
+    		}
+    		else {	
     			this.putKey(SKIN, false);
     		}
     		
@@ -668,6 +671,9 @@ public class Node {
     		
     		if(keyVals.containsKey(CLASSNAME)) {
     			this.putKey(CLASSNAME, Classes.toClass((String) this.getValueSingular(CLASSNAME)));
+    		}
+    		else {
+    			this.putKey(CLASSNAME, Classes.None);
     		}
     		
     		if(keyVals.containsKey(TAGS)) {
