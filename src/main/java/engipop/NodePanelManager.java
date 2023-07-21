@@ -133,6 +133,7 @@ public class NodePanelManager {
 	//will need new contexts later
 	protected void initListeners() { //inits all the button/list listeners
 		addSpawner.addActionListener(event -> {
+			containingWindow.feedback.setText(" ");
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			botPanel.setVisible(true);
 			

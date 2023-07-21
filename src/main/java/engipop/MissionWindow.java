@@ -49,9 +49,6 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	JSpinner runSpinner = new JSpinner();
 	JSpinner desiredSpinner = new JSpinner();
 	
-	feedback = new JLabel();
-	
-	
 	public MissionWindow(MainWindow mainWindow, SecondaryWindow secondaryWindow) {
 		super("Mission editor");
 		setSize(1100, 600);
@@ -78,6 +75,7 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		JLabel beginLabel = new JLabel("BeginAtWave:");
 		JLabel runLabel = new JLabel("RunForThisManyWaves:");
 		JLabel desiredLabel = new JLabel("DesiredCount:");
+		feedback = new JLabel();
 		
 		botPanel = new BotPanel(this, mainWindow, secondaryWindow);
 		tankPanel = new TankPanel(secondaryWindow);
@@ -187,19 +185,7 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 				missionArray.remove(missionList.getSelectedIndex());
 				missionListModel.remove(missionList.getSelectedIndex());
 				
-				if(missionArray.size() == 0) {
-					//disable spawner stuff
-					/*
-					missionBLManager.changeButtonState(States.EMPTY);
-					spawnerListManager.setButtonState(States.DISABLE);
-					botPanel.setVisible(false);
-					missionPanel.setVisible(false);
-					*/
-					missionList.setSelectedIndex(-1);
-				}
-				else {
-					missionList.setSelectedIndex(missionArray.size() - 1);
-				}
+				missionList.setSelectedIndex(missionArray.size() - 1);
 			}
 		});
 	}
