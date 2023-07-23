@@ -89,16 +89,16 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	
 	public void updatePanel(WaveNode wave) { 
 		if(wave.containsKey(WaveNode.STARTWAVEOUTPUT)) {
-			startRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.STARTWAVEOUTPUT)).getValueSingular(RelayNode.TARGET));
+			startRelay.setSelectedItem(((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).getValue(RelayNode.TARGET));
 		}
 		
 		if(wave.containsKey(WaveNode.DONEOUTPUT)) {
-			doneRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.DONEOUTPUT)).getValueSingular(RelayNode.TARGET)); //possibly make this not mandatory
+			doneRelay.setSelectedItem(((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).getValue(RelayNode.TARGET)); //possibly make this not mandatory
 		}
 		
 		if(wave.containsKey(WaveNode.INITWAVEOUTPUT)) { //not mandatory, so may not exist
 			doInit.setSelected(true);
-			initRelay.setSelectedItem(((RelayNode) wave.getValueSingular(WaveNode.INITWAVEOUTPUT)).getValueSingular(RelayNode.TARGET));
+			initRelay.setSelectedItem(((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).getValue(RelayNode.TARGET));
 		}
 		else {
 			doInit.setSelected(false);
@@ -106,14 +106,14 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	}
 	
 	public void updateNode(WaveNode wave) {
-		((RelayNode) wave.getValueSingular(WaveNode.STARTWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) startRelay.getSelectedItem());
-		((RelayNode) wave.getValueSingular(WaveNode.DONEOUTPUT)).putKey(RelayNode.TARGET, (String) doneRelay.getSelectedItem());
+		((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) startRelay.getSelectedItem());
+		((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).putKey(RelayNode.TARGET, (String) doneRelay.getSelectedItem());
 		
 		if(doInit.isSelected()) {
-			if(wave.getValueSingular(WaveNode.INITWAVEOUTPUT) == null) { //make relay if data is entered and no relay exists
+			if(wave.getValue(WaveNode.INITWAVEOUTPUT) == null) { //make relay if data is entered and no relay exists
 				wave.putKey(WaveNode.INITWAVEOUTPUT, new RelayNode());
 			}
-			((RelayNode) wave.getValueSingular(WaveNode.INITWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) initRelay.getSelectedItem());
+			((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) initRelay.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
 			wave.removeKey(WaveNode.INITWAVEOUTPUT);

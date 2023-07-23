@@ -317,14 +317,14 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	public void updatePanel(TFBotNode tf) {
 		int[] indices = new int[tagList.getModel().getRowCount()]; //max possible taglist
 		
-		classBox.setSelectedItem(tf.getValueSingular(TFBotNode.CLASSNAME));
+		classBox.setSelectedItem(tf.getValue(TFBotNode.CLASSNAME));
 		//if(tf.containsKey(TFBotNode.CLASSNAME)) {
 		//	setIconBox(iconModel, (Classes) tf.getValueSingular(TFBotNode.CLASSNAME)); //values of classname are classes from enum
 		//}
-		iconBox.setSelectedItem(tf.getValueSingular(TFBotNode.CLASSICON));
-		nameField.setText((String) tf.getValueSingular(TFBotNode.NAME));
+		iconBox.setSelectedItem(tf.getValue(TFBotNode.CLASSICON));
+		nameField.setText((String) tf.getValue(TFBotNode.NAME));
 		if(tf.containsKey(TFBotNode.SKILL)) { //TODO: sort out skill
-			switch ((String) tf.getValueSingular(TFBotNode.SKILL)) {
+			switch ((String) tf.getValue(TFBotNode.SKILL)) {
 				case TFBotNode.EASY:
 					skillGroup.setSelected(easyBut.getModel(), true);
 					break;
@@ -340,7 +340,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 		}
 		if(tf.containsKey(TFBotNode.WEAPONRESTRICT)) {
-			switch ((String) tf.getValueSingular(TFBotNode.WEAPONRESTRICT)) {
+			switch ((String) tf.getValue(TFBotNode.WEAPONRESTRICT)) {
 				//case TFBotNode.ANY:
 				default:
 					wepGroup.setSelected(anyBut.getModel(), true);
@@ -362,9 +362,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		tagList.clearSelection();
 		if(tf.containsKey(TFBotNode.TAGS)) {
-			List<String> tags = new ArrayList<String>();
-			tags.addAll((List<String>) tf.getValueSingular(TFBotNode.TAGS));
-			//List<String> tags = (List<String>) tf.getValueSingular(TFBotNode.TAGS);
+			List<Object> tags = new ArrayList<Object>();
+			tags.addAll(tf.getListValue(TFBotNode.TAGS));
 			
 			//select all the tags that are already in the tagmodel
 			for(int i = 0; i < tagModel.getRowCount(); i++) {
@@ -375,16 +374,16 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 			
 			//then add new tags that weren't added
-			for(String newTag : tags) {
-				tagModel.addRow(new String[] {newTag});
+			for(Object newTag : tags) {
+				tagModel.addRow(new String[] {(String) newTag});
 				tagList.changeSelection(tagModel.getRowCount() - 1, 0, true, false);
 			}
 		}
 		
 		if(tf.containsKey(TFBotNode.ATTRIBUTES)) {
-			List<String> attr = (List<String>) tf.getValueSingular(TFBotNode.ATTRIBUTES);
+			List<Object> attr = tf.getListValue(TFBotNode.ATTRIBUTES);
 			for(int i = 0; i < attr.size(); i++) { //get indices so they can be selected
-				indices[i] = botAttributeList.getNextMatch(attr.get(i), 0, Position.Bias.Forward);
+				indices[i] = botAttributeList.getNextMatch((String) attr.get(i), 0, Position.Bias.Forward);
 				//System.out.println(indices[i]);
 			}
 			botAttributeList.setSelectedIndices(indices);
@@ -393,15 +392,15 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			botAttributeList.clearSelection();
 		}
 		
-		templateBox.setSelectedItem((String) tf.getValueSingular(TFBotNode.TEMPLATE));
+		templateBox.setSelectedItem((String) tf.getValue(TFBotNode.TEMPLATE));
 		
 		//sort items here if bot isn't sorted already
 		//skip if we don't have a class to compare to
-		if(tf.getValueSingular(TFBotNode.CLASSNAME) != Classes.None && !tf.isItemsSorted() && tf.containsKey(TFBotNode.ITEM)) {
-			Classes cclass = (Classes) tf.getValueSingular(TFBotNode.CLASSNAME);
+		if(tf.getValue(TFBotNode.CLASSNAME) != Classes.None && !tf.isItemsSorted() && tf.containsKey(TFBotNode.ITEM)) {
+			Classes cclass = (Classes) tf.getValue(TFBotNode.CLASSNAME);
 			List<String> newItemsList = new ArrayList<String>(TFBotNode.ITEMCOUNT);
 			 
-			List<String> itemsList = (List<String>) tf.getValueSingular(TFBotNode.ITEM);
+			List<Object> itemsList = tf.getListValue(TFBotNode.ITEM);
 			
 			//this for is somewhat unclear
 			for(int slot = ItemSlot.PRIMARY.getSlot(); slot < ItemSlot.BUILDING.getSlot(); slot++) {
@@ -441,12 +440,12 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 		
 		if(tf.containsKey(TFBotNode.ITEM)) {
-			List<String> array = (List<String>) tf.getValueSingular(TFBotNode.ITEM);
+			List<Object> array = tf.getListValue(TFBotNode.ITEM);
 			
 			primaryList.setSelectedItem(array.get(ItemSlot.PRIMARY.getSlot()));
 			secList.setSelectedItem(array.get(ItemSlot.SECONDARY.getSlot()));
 			meleeList.setSelectedItem(array.get(ItemSlot.MELEE.getSlot()));
-			if(tf.getValueSingular(TFBotNode.CLASSNAME) == Classes.Spy) {
+			if(tf.getValue(TFBotNode.CLASSNAME) == Classes.Spy) {
 				buildingList.setSelectedItem(array.get(ItemSlot.BUILDING.getSlot()));
 			}
 			hat1List.setSelectedItem(array.get(ItemSlot.COSMETIC1.getSlot()));
@@ -458,7 +457,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			//setHatVisibility((String) hat3List.getSelectedItem(), hat3AttrBut);
 		}
 		if(tf.containsKey(TFBotNode.ITEMATTRIBUTES)) {
-			attributeMapsArray = (List<Map<String, String>>) tf.getValueSingular(TFBotNode.ITEMATTRIBUTES);
+			List<Object> list = tf.getListValue(TFBotNode.ITEMATTRIBUTES);
+			for(Object entry : list) {
+				attributeMapsArray.add((Map<String, String>) entry); //TODO: check this
+			}
 			/*
 				updateComponents(false);
 				setAttrButRed();
@@ -482,7 +484,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			attributeMapsArray = new ArrayList<Map<String, String>>(TFBotNode.ITEMCOUNT);
 		}
 		if(tf.containsKey(TFBotNode.CHARACTERATTRIBUTES)) {
-			currentCharAttributeMap = (Map<String, String>) tf.getValueSingular(TFBotNode.CHARACTERATTRIBUTES);
+			currentCharAttributeMap = (Map<String, String>) tf.getValue(TFBotNode.CHARACTERATTRIBUTES);
 		}
 		else {
 			currentCharAttributeMap = new HashMap<String, String>();
@@ -508,18 +510,20 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 		tf.putKey(TFBotNode.TAGS, tags);
 		
-		//TODO: make this a list
-		String[] array = new String[TFBotNode.ITEMCOUNT];
+		List<String> array = new ArrayList<String>(TFBotNode.ITEMCOUNT);
 		
-		array[ItemSlot.PRIMARY.getSlot()] = (String) primaryList.getSelectedItem();
-		array[ItemSlot.SECONDARY.getSlot()] = (String) secList.getSelectedItem();
-		array[ItemSlot.MELEE.getSlot()] = (String) meleeList.getSelectedItem();
+		array.add(ItemSlot.PRIMARY.getSlot(), (String) primaryList.getSelectedItem());
+		array.add(ItemSlot.SECONDARY.getSlot(), (String) secList.getSelectedItem());
+		array.add(ItemSlot.MELEE.getSlot(), (String) meleeList.getSelectedItem());
 		if(classBox.getSelectedItem() == Classes.Spy) {
-			array[ItemSlot.BUILDING.getSlot()] = (String) buildingList.getSelectedItem();
+			array.add(ItemSlot.BUILDING.getSlot(), (String) buildingList.getSelectedItem());
 		}
-		array[ItemSlot.COSMETIC1.getSlot()] = (String) hat1List.getSelectedItem();
-		array[ItemSlot.COSMETIC2.getSlot()] = (String) hat2List.getSelectedItem();
-		array[ItemSlot.COSMETIC3.getSlot()] = (String) hat3List.getSelectedItem();
+		else {
+			array.add(ItemSlot.BUILDING.getSlot(), null);
+		}
+		array.add(ItemSlot.COSMETIC1.getSlot(), (String) hat1List.getSelectedItem());
+		array.add(ItemSlot.COSMETIC2.getSlot(), (String) hat2List.getSelectedItem());
+		array.add(ItemSlot.COSMETIC3.getSlot(), (String) hat3List.getSelectedItem());
 		//item attributes are added separately
 		
 		tf.putKey(TFBotNode.ITEM, array);
@@ -784,8 +788,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		attrPanel.gbConstraints.fill = GridBagConstraints.NONE;
 		attrPanel.addGB(updateAttributeValueButton, 1, 1);
-		
-		
 		
 		//attrPanel.gbConstraints.gridwidth = 2;
 		//attrPanel.gbConstraints.gridheight = 6;

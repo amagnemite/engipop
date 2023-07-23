@@ -87,6 +87,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		});
 		timeline.addActionListener(event -> {
 			JFileChooser c = new JFileChooser();
+			c.setFileFilter(new PopFileFilter());
 			c.showSaveDialog(this);
 			//if(result == JFileChooser.CANCEL_OPTION) return;
 			try { //double check

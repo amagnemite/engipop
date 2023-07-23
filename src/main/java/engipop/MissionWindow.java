@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
@@ -23,7 +24,7 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	//JPanel spawnerPanel; for now only do bots
 	
 	//PopNode popNode;
-	List<MissionNode> missionArray;
+	List<MissionNode> missionArray = new ArrayList<MissionNode>();
 	MissionNode currentMissionNode = new MissionNode();
 	TFBotNode currentBotNode = new TFBotNode();
 	//TankNode currentTankNode = new TankNode();
@@ -59,7 +60,9 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		double dMin = 0.0;
 		
 		secondaryWindow.addPropertyChangeListener("POPNODE", this);
-		missionArray = (List<MissionNode>) mainWindow.getPopNode().getValueSingular(PopNode.MISSION);
+		for(Object item :  mainWindow.getPopNode().getListValue(PopNode.MISSION)) {
+			missionArray.add((MissionNode) item);
+		}
 		
 		SpinnerNumberModel initialCooldownModel = new SpinnerNumberModel(dMin, dMin, null, 1.0);
 		SpinnerNumberModel cooldownModel = new SpinnerNumberModel(dMin, dMin, null, 1.0);
@@ -176,8 +179,8 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		updateMission.addActionListener(event -> {
 			updateNode(currentMissionNode);
 			
-			String name = (String) currentMissionNode.getValueSingular(MissionNode.OBJECTIVE) + " " +
-					currentMissionNode.getValueSingular(MissionNode.BEGINATWAVE).toString();
+			String name = (String) currentMissionNode.getValue(MissionNode.OBJECTIVE) + " " +
+					currentMissionNode.getValue(MissionNode.BEGINATWAVE).toString();
 			missionListModel.set(missionList.getSelectedIndex(), name);
 		});
 		removeMission.addActionListener(event -> {
@@ -191,13 +194,13 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	}
 	
 	private void updatePanel(MissionNode mission) {
-		whereBox.setSelectedItem(mission.getValueSingular(MissionNode.WHERE));
-		objectiveBox.setSelectedItem(mission.getValueSingular(MissionNode.OBJECTIVE));
-		initialCooldownSpinner.setValue(mission.getValueSingular(MissionNode.INITIALCOOLDOWN));
-		cooldownSpinner.setValue(mission.getValueSingular(MissionNode.COOLDOWNTIME));
-		beginSpinner.setValue(mission.getValueSingular(MissionNode.BEGINATWAVE));
-		runSpinner.setValue(mission.getValueSingular(MissionNode.RUNFORTHISMANYWAVES));
-		desiredSpinner.setValue(mission.getValueSingular(MissionNode.DESIREDCOUNT));
+		whereBox.setSelectedItem(mission.getValue(MissionNode.WHERE));
+		objectiveBox.setSelectedItem(mission.getValue(MissionNode.OBJECTIVE));
+		initialCooldownSpinner.setValue(mission.getValue(MissionNode.INITIALCOOLDOWN));
+		cooldownSpinner.setValue(mission.getValue(MissionNode.COOLDOWNTIME));
+		beginSpinner.setValue(mission.getValue(MissionNode.BEGINATWAVE));
+		runSpinner.setValue(mission.getValue(MissionNode.RUNFORTHISMANYWAVES));
+		desiredSpinner.setValue(mission.getValue(MissionNode.DESIREDCOUNT));
 		
 		spawnerListManager.loadBot(false, currentBotNode);
 	}
@@ -216,7 +219,9 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		PopNode popNode = (PopNode) evt.getNewValue();
-		missionArray = (List<MissionNode>) popNode.getValueSingular(PopNode.MISSION);
+		for(Object node : popNode.getListValue(PopNode.MISSION)) {
+			missionArray.add((MissionNode) node);
+		}
 		//force a list reload
 	}
 }

@@ -51,13 +51,13 @@ public class TreeParse { //it is time to parse
 
 		//all waves need to have a start
 		
-		stopCheck = ((RelayNode) wave.getValueSingular(WaveNode.STARTWAVEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "StartWaveOutput";
+		stopCheck = ((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "StartWaveOutput";
 		if(stopCheck.isEmpty() && !lastWave) { //all waves need done except last wave
-			stopCheck = ((RelayNode) wave.getValueSingular(WaveNode.DONEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "DoneOutput";
+			stopCheck = ((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "DoneOutput";
 			
 		}
 		if(stopCheck.isEmpty() && wave.containsKey(WaveNode.INITWAVEOUTPUT)) { 
-			stopCheck = ((RelayNode) wave.getValueSingular(WaveNode.INITWAVEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "InitWaveOutput";
+			stopCheck = ((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "InitWaveOutput";
 		}
 		
 		if(stopCheck.isEmpty()) {
@@ -73,7 +73,7 @@ public class TreeParse { //it is time to parse
 	//check ws relays here
 	private String checkWaveSpawn(WaveSpawnNode ws, int waveNum) {
 		String stopCheck = ""; //may not even get into the checks in here
-		String errorString = "Wavespawn " + (String) ws.getValueSingular(WaveSpawnNode.NAME) + " in wave " + waveNum 
+		String errorString = "Wavespawn " + (String) ws.getValue(WaveSpawnNode.NAME) + " in wave " + waveNum 
 				+ " has an empty ";
 		//name can be potentially empty here
 		//warning no where
@@ -82,19 +82,19 @@ public class TreeParse { //it is time to parse
 		
 		//this gets set to the last offending relay
 		if(ws.containsKey(WaveSpawnNode.STARTWAVEOUTPUT)) {
-			stopCheck = ((RelayNode) ws.getValueSingular(WaveSpawnNode.STARTWAVEOUTPUT)).containsKey(RelayNode.TARGET)
+			stopCheck = ((RelayNode) ws.getValue(WaveSpawnNode.STARTWAVEOUTPUT)).containsKey(RelayNode.TARGET)
 					? "" : errorString + "StartWaveOutput";
 		}
 		if(ws.containsKey(WaveSpawnNode.FIRSTSPAWNOUTPUT)) {
-			stopCheck = ((RelayNode) ws.getValueSingular(WaveSpawnNode.FIRSTSPAWNOUTPUT)).containsKey(RelayNode.TARGET)
+			stopCheck = ((RelayNode) ws.getValue(WaveSpawnNode.FIRSTSPAWNOUTPUT)).containsKey(RelayNode.TARGET)
 					? "" : errorString + "FirstSpawnOutput";
 		}
 		if(ws.containsKey(WaveSpawnNode.LASTSPAWNOUTPUT)) {
-			stopCheck = ((RelayNode) ws.getValueSingular(WaveSpawnNode.LASTSPAWNOUTPUT)).containsKey(RelayNode.TARGET)
+			stopCheck = ((RelayNode) ws.getValue(WaveSpawnNode.LASTSPAWNOUTPUT)).containsKey(RelayNode.TARGET)
 					? "" : errorString + "LastSpawnOutput";
 		}
 		if(ws.containsKey(WaveSpawnNode.DONEOUTPUT)) {
-			stopCheck = ((RelayNode) ws.getValueSingular(WaveSpawnNode.DONEOUTPUT)).containsKey(RelayNode.TARGET)
+			stopCheck = ((RelayNode) ws.getValue(WaveSpawnNode.DONEOUTPUT)).containsKey(RelayNode.TARGET)
 					? "" : errorString + "DoneOutput";
 		}
 		
@@ -110,7 +110,7 @@ public class TreeParse { //it is time to parse
 				checkBot((TFBotNode) ws.getSpawner());
 			}
 			else if(ws.getSpawner().getClass() == TankNode.class) {
-				stopCheck = checkTank((TankNode) ws.getSpawner(), waveNum, (String) ws.getValueSingular(WaveSpawnNode.NAME));
+				stopCheck = checkTank((TankNode) ws.getSpawner(), waveNum, (String) ws.getValue(WaveSpawnNode.NAME));
 			}
 			else if(ws.getSpawner().getClass() == SquadNode.class || ws.getSpawner().getClass() == RandomChoiceNode.class) {
 				checkSquadRandom(ws.getSpawner());
@@ -122,10 +122,10 @@ public class TreeParse { //it is time to parse
 	
 	//unlike wave/spawn, for now just strip out stock weapons here so they don't get unnecessarily printed
 	private void checkBot(TFBotNode bot) {
-		EngiPanel.Classes botClass = (EngiPanel.Classes) bot.getValueSingular(TFBotNode.CLASSNAME);
+		EngiPanel.Classes botClass = (EngiPanel.Classes) bot.getValue(TFBotNode.CLASSNAME);
 		
 		if(bot.containsKey(TFBotNode.ITEM)) {
-			List<String> itemList = (List<String>) bot.getValueSingular(TFBotNode.ITEM);
+			List<Object> itemList = bot.getListValue(TFBotNode.ITEM);
 			
 			itemList.remove(botClass.primary());
 			itemList.remove(botClass.secondary());
@@ -150,11 +150,11 @@ public class TreeParse { //it is time to parse
 		String errorString = "Tank in wavespawn " + wsName + " in wave " + waveNum + " has an empty ";
 		
 		if(tank.containsKey(TankNode.ONKILLEDOUTPUT)) {
-			stopCheck = ((RelayNode) tank.getValueSingular(TankNode.ONKILLEDOUTPUT)).containsKey(RelayNode.TARGET)
+			stopCheck = ((RelayNode) tank.getValue(TankNode.ONKILLEDOUTPUT)).containsKey(RelayNode.TARGET)
 					? "" : errorString + "OnKilledOutput";
 		}
 		if(tank.containsKey(TankNode.ONBOMBDROPPEDOUTPUT)) {
-			stopCheck = ((RelayNode) tank.getValueSingular(TankNode.ONBOMBDROPPEDOUTPUT)).containsKey(RelayNode.TARGET)
+			stopCheck = ((RelayNode) tank.getValue(TankNode.ONBOMBDROPPEDOUTPUT)).containsKey(RelayNode.TARGET)
 					? "" : errorString + "OnKilledOutput";
 		}
 		
@@ -190,14 +190,14 @@ public class TreeParse { //it is time to parse
 			pw.println("WaveSchedule");
 			pw.println("{");
 			
-			indentCount++;
+			//indentCount++;
 			printPopulation(pw, root);
 			
 			//pain
 			for(int i = 0; i < waveCount; i++) {
 				printWave(pw, (WaveNode) root.getChildren().get(i));
 			}
-			indentCount--;
+			//indentCount--;
 			pw.println("}");
 			pw.close();
 			fw.close();
@@ -212,15 +212,15 @@ public class TreeParse { //it is time to parse
 	
 	}
 	
-	private void printGenericMap(PrintWriter pw, Map<String, Object[]> map) {
-		for(Entry<String, Object[]> entry : map.entrySet()) {
+	private void printGenericMap(PrintWriter pw, Map<String, List<Object>> map) {
+		for(Entry<String, List<Object>> entry : map.entrySet()) {
 			for(Object subentry : entry.getValue()) {
 				if(subentry instanceof Map) {
 					indentPrintln(pw, entry.getKey());
 					indentPrintln(pw, "{");
 					indentCount++;
 					
-					printGenericMap(pw, (Map<String, Object[]>) subentry);
+					printGenericMap(pw, (Map<String, List<Object>>) subentry);
 					
 					indentCount--;
 					indentPrintln(pw, "}");
@@ -233,46 +233,46 @@ public class TreeParse { //it is time to parse
 	}
 
 	private void printPopulation(PrintWriter pw, PopNode root) { //population settings
-		Map<String, Object[]> mapCopy = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		mapCopy.putAll(root.getMap()); //do this to prevent case issues
 		
 		if(root.containsKey(PopNode.STARTINGCURRENCY)) {
-			indentPrint(pw, "StartingCurrency ");
-			pw.println(mapCopy.remove(PopNode.STARTINGCURRENCY)[0]);
+			indentPrintln(pw, "StartingCurrency " + root.getValue(PopNode.STARTINGCURRENCY));
+			mapCopy.remove(PopNode.STARTINGCURRENCY);
 		}
 		
 		if(root.containsKey(PopNode.RESPAWNWAVETIME)) {
-			if((int) root.getValueSingular(PopNode.RESPAWNWAVETIME) != 10) {
-				indentPrintln(pw, "RespawnWaveTime " + root.getValueSingular(PopNode.RESPAWNWAVETIME));
+			if((int) root.getValue(PopNode.RESPAWNWAVETIME) != 10) {
+				indentPrintln(pw, "RespawnWaveTime " + root.getValue(PopNode.RESPAWNWAVETIME));
 			}
 			mapCopy.remove(PopNode.RESPAWNWAVETIME);
 		}
 		
-		if((boolean) root.getValueSingular(PopNode.EVENTPOPFILE)) { //double check these escapes
+		if((boolean) root.getValue(PopNode.EVENTPOPFILE)) { //double check these escapes
 			indentPrintln(pw, "EventPopfile Halloween");
 		}
 		mapCopy.remove(PopNode.EVENTPOPFILE);
 		
-		if((boolean) root.getValueSingular(PopNode.FIXEDRESPAWNWAVETIME)) {
+		if((boolean) root.getValue(PopNode.FIXEDRESPAWNWAVETIME)) {
 			indentPrintln(pw, "FixedRespawnWaveTime 1");
 		}
 		mapCopy.remove(PopNode.FIXEDRESPAWNWAVETIME);
 		
 		if(root.containsKey(PopNode.BUSTERDAMAGE)) {
-			if((int) root.getValueSingular(PopNode.BUSTERDAMAGE) != EngiPanel.BUSTERDEFAULTDMG) {
-				indentPrintln(pw, "AddSentryBusterWhenDamageDealtExceeds " + root.getValueSingular(PopNode.BUSTERDAMAGE));
+			if((int) root.getValue(PopNode.BUSTERDAMAGE) != EngiPanel.BUSTERDEFAULTDMG) {
+				indentPrintln(pw, "AddSentryBusterWhenDamageDealtExceeds " + root.getValue(PopNode.BUSTERDAMAGE));
 			}
 			mapCopy.remove(PopNode.BUSTERDAMAGE);
 		}
 		
 		if(root.containsKey(PopNode.BUSTERKILLS)) {
-			if((int) root.getValueSingular(PopNode.BUSTERKILLS) != EngiPanel.BUSTERDEFAULTKILLS) {
-				indentPrintln(pw, "AddSentryBusterWhenKillCountExceeds " + root.getValueSingular(PopNode.BUSTERKILLS));
+			if((int) root.getValue(PopNode.BUSTERKILLS) != EngiPanel.BUSTERDEFAULTKILLS) {
+				indentPrintln(pw, "AddSentryBusterWhenKillCountExceeds " + root.getValue(PopNode.BUSTERKILLS));
 			}
 			mapCopy.remove(PopNode.BUSTERKILLS);
 		}
 		
-		if(!(boolean) root.getValueSingular(PopNode.BOTSATKINSPAWN)) {
+		if(!(boolean) root.getValue(PopNode.BOTSATKINSPAWN)) {
 			indentPrintln(pw, "CanBotsAttackWhileInSpawnRoom no");
 		} //double check if a nonexistent bots attack allows spawn attacks
 		mapCopy.remove(PopNode.BOTSATKINSPAWN);
@@ -291,7 +291,7 @@ public class TreeParse { //it is time to parse
 	}
 	
 	private void printWave(PrintWriter pw, WaveNode node) { //a wave
-		Map<String, Object[]> mapCopy = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		mapCopy.putAll(node.getMap());
 		
 		indentPrintln(pw, "Wave");
@@ -299,17 +299,17 @@ public class TreeParse { //it is time to parse
 		indentCount++;
 		
 		if(node.containsKey(WaveNode.STARTWAVEOUTPUT)) {
-			printRelay(pw, "StartWaveOutput", (RelayNode) node.getValueSingular(WaveNode.STARTWAVEOUTPUT));
+			printRelay(pw, "StartWaveOutput", (RelayNode) node.getValue(WaveNode.STARTWAVEOUTPUT));
 			mapCopy.remove(WaveNode.STARTWAVEOUTPUT);
 		}
 		
 		if(node.containsKey(WaveNode.DONEOUTPUT)) {
-			printRelay(pw, "DoneOutput", (RelayNode) node.getValueSingular(WaveNode.DONEOUTPUT));
+			printRelay(pw, "DoneOutput", (RelayNode) node.getValue(WaveNode.DONEOUTPUT));
 			mapCopy.remove(WaveNode.DONEOUTPUT);
 		} //since tree was already validated upstream, only final wave should pass this case
 		
 		if(node.containsKey(WaveNode.INITWAVEOUTPUT)) {
-			printRelay(pw, "InitWaveOutput", (RelayNode) node.getValueSingular(WaveNode.INITWAVEOUTPUT));
+			printRelay(pw, "InitWaveOutput", (RelayNode) node.getValue(WaveNode.INITWAVEOUTPUT));
 			mapCopy.remove(WaveNode.INITWAVEOUTPUT);
 		}
 		
@@ -330,7 +330,7 @@ public class TreeParse { //it is time to parse
 		indentCount++;
 		
 		//this will lead to some very unhinged formatting for vscripts but that's a later problem
-		node.getMap().forEach((k, v) -> indentPrintln(pw, k + " " + "\"" + v[0] + "\""));
+		node.getMap().forEach((k, v) -> indentPrintln(pw, k + " " + "\"" + v.get(0) + "\""));
 		
 		indentCount--;
 		indentPrintln(pw, "}");
@@ -340,7 +340,7 @@ public class TreeParse { //it is time to parse
 		Node spawner = node.hasChildren() ? node.getSpawner() : null;
 		//since spawnerless wavespawns are valid
 		
-		Map<String, Object[]> mapCopy = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		mapCopy.putAll(node.getMap());
 		
 		indentPrintln(pw, "WaveSpawn");
@@ -348,7 +348,8 @@ public class TreeParse { //it is time to parse
 		indentCount++;
 		
 		if(node.containsKey(WaveSpawnNode.NAME)) {
-			indentPrintln(pw, "Name \"" + mapCopy.remove(WaveSpawnNode.NAME)[0] + "\"");
+			indentPrintln(pw, "Name \"" + node.getValue(WaveSpawnNode.NAME) + "\"");
+			mapCopy.remove(WaveSpawnNode.NAME);
 		}
 		if(node.containsKey(WaveSpawnNode.WHERE)) { //somewhat redundant check 
 			if(spawner != null && spawner.getClass() != TankNode.class) { //no wheres for tanks
@@ -360,51 +361,53 @@ public class TreeParse { //it is time to parse
 		
 		//spinners don't allow empty values
 		if(node.containsKey(WaveSpawnNode.TOTALCOUNT)) {
-			if((int) node.getValueSingular(WaveSpawnNode.TOTALCOUNT) > 0) {
-				indentPrintln(pw, "TotalCount " + node.getValueSingular(WaveSpawnNode.TOTALCOUNT));
+			if((int) node.getValue(WaveSpawnNode.TOTALCOUNT) > 0) {
+				indentPrintln(pw, "TotalCount " + node.getValue(WaveSpawnNode.TOTALCOUNT));
 			}
 			mapCopy.remove(WaveSpawnNode.TOTALCOUNT);
 		}
 		if(node.containsKey(WaveSpawnNode.MAXACTIVE)) {
-			if((int) node.getValueSingular(WaveSpawnNode.MAXACTIVE) > 0) {
-				indentPrintln(pw, "MaxActive " + node.getValueSingular(WaveSpawnNode.MAXACTIVE));
+			if((int) node.getValue(WaveSpawnNode.MAXACTIVE) > 0) {
+				indentPrintln(pw, "MaxActive " + node.getValue(WaveSpawnNode.MAXACTIVE));
 			}
 			mapCopy.remove(WaveSpawnNode.MAXACTIVE);
 		}
 		if(node.containsKey(WaveSpawnNode.SPAWNCOUNT)) {
-			if((int) node.getValueSingular(WaveSpawnNode.SPAWNCOUNT) > 1) {
-				indentPrintln(pw, "SpawnCount " + node.getValueSingular(WaveSpawnNode.SPAWNCOUNT));
+			if((int) node.getValue(WaveSpawnNode.SPAWNCOUNT) > 1) {
+				indentPrintln(pw, "SpawnCount " + node.getValue(WaveSpawnNode.SPAWNCOUNT));
 			}
 			mapCopy.remove(WaveSpawnNode.SPAWNCOUNT);
 		}
 		//if((double) node.getValueSingular(WaveSpawnNode.WAITBEFORESTARTING) > 0.0) {
 		if(node.containsKey(WaveSpawnNode.WAITBEFORESTARTING)) {
-			indentPrint(pw, "WaitBeforeStarting ");
-			pw.println(mapCopy.remove(WaveSpawnNode.WAITBEFORESTARTING)[0]);
+			indentPrintln(pw, "WaitBeforeStarting " + node.getValue(WaveSpawnNode.WAITBEFORESTARTING));
+			mapCopy.remove(WaveSpawnNode.WAITBEFORESTARTING);
 		}
 		//if((double) node.getValueSingular(WaveSpawnNode.WAITBETWEENSPAWNS) > 0.0) {
 		if(node.containsKey(WaveSpawnNode.WAITBETWEENSPAWNS)) {
 			if(node.getBetweenDeaths()) { //boolean keys should also always be true or false
-				indentPrint(pw, "WaitBetweenSpawnsAfterDeath ");
-				pw.println(mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH)[0]);
+				indentPrintln(pw, "WaitBetweenSpawnsAfterDeath " + node.getValue(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH));
+				mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH);
 			}
 			else {
-				indentPrint(pw, "WaitBetweenSpawns ");
-				pw.println(mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNS)[0]);
+				indentPrintln(pw, "WaitBetweenSpawns " + node.getValue(WaveSpawnNode.WAITBETWEENSPAWNS));
+				mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNS);
 			}
 		}
 		
 		if(node.containsKey(WaveSpawnNode.TOTALCURRENCY)) {
-			if((int) node.getValueSingular(WaveSpawnNode.TOTALCURRENCY) > 0) {
-				indentPrintln(pw, "TotalCurrency " + node.getValueSingular(WaveSpawnNode.TOTALCURRENCY));
+			if((int) node.getValue(WaveSpawnNode.TOTALCURRENCY) > 0) {
+				indentPrintln(pw, "TotalCurrency " + node.getValue(WaveSpawnNode.TOTALCURRENCY));
 			}
 			mapCopy.remove(WaveSpawnNode.TOTALCURRENCY);
 		}
 		if(node.containsKey(WaveSpawnNode.WAITFORALLSPAWNED)) {
-			indentPrintln(pw, "WaitForAllSpawned \"" + mapCopy.remove(WaveSpawnNode.WAITFORALLSPAWNED)[0] + "\"");
+			indentPrintln(pw, "WaitForAllSpawned \"" + node.getValue(WaveSpawnNode.WAITFORALLSPAWNED) + "\"");
+			mapCopy.remove(WaveSpawnNode.WAITFORALLSPAWNED);
 		}
 		if(node.containsKey(WaveSpawnNode.WAITFORALLDEAD)) {
-			indentPrintln(pw, "WaitForAllDead \"" + mapCopy.remove(WaveSpawnNode.WAITFORALLDEAD)[0] + "\"");
+			indentPrintln(pw, "WaitForAllDead \"" + node.getValue(WaveSpawnNode.WAITFORALLDEAD) + "\"");
+			mapCopy.remove(WaveSpawnNode.WAITFORALLDEAD);
 		}
 		
 		if(node.containsKey(WaveSpawnNode.SUPPORT)) {
@@ -418,17 +421,21 @@ public class TreeParse { //it is time to parse
 		}
 		
 		if(node.containsKey(WaveSpawnNode.STARTWAVEOUTPUT)) {
-			printRelay(pw, "StartWaveOutput", (RelayNode) mapCopy.remove(WaveSpawnNode.STARTWAVEOUTPUT)[0]);
+			printRelay(pw, "StartWaveOutput", (RelayNode) node.getValue(WaveSpawnNode.STARTWAVEOUTPUT));
+			mapCopy.remove(WaveSpawnNode.STARTWAVEOUTPUT);
 		}
 		
 		if(mapCopy.containsKey(WaveSpawnNode.FIRSTSPAWNOUTPUT)) {
-			printRelay(pw, "FirstSpawnOutput", (RelayNode) mapCopy.remove(WaveSpawnNode.FIRSTSPAWNOUTPUT)[0]);
+			printRelay(pw, "FirstSpawnOutput", (RelayNode) node.getValue(WaveSpawnNode.FIRSTSPAWNOUTPUT));
+			mapCopy.remove(WaveSpawnNode.FIRSTSPAWNOUTPUT);
 		}	
 		if(mapCopy.containsKey(WaveSpawnNode.LASTSPAWNOUTPUT)) {
-			printRelay(pw, "LastSpawnOutput", (RelayNode) mapCopy.remove(WaveSpawnNode.LASTSPAWNOUTPUT)[0]);
+			printRelay(pw, "LastSpawnOutput", (RelayNode) node.getValue(WaveSpawnNode.LASTSPAWNOUTPUT));
+			mapCopy.remove(WaveSpawnNode.LASTSPAWNOUTPUT);
 		}
 		if(mapCopy.containsKey(WaveSpawnNode.DONEOUTPUT)) {
-			printRelay(pw, "DoneOutput", (RelayNode) mapCopy.remove(WaveSpawnNode.DONEOUTPUT)[0]);
+			printRelay(pw, "DoneOutput", (RelayNode) node.getValue(WaveSpawnNode.DONEOUTPUT));
+			mapCopy.remove(WaveSpawnNode.DONEOUTPUT);
 		}
 		
 		printGenericMap(pw, mapCopy);
@@ -459,65 +466,69 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
-		Map<String, Object[]> mapCopy = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		mapCopy.putAll(node.getMap());
 		
 		//these are hardcoded to force a specific print order
 		//otherwise would need some conversion to a sortedmap + a comparator of some sort
 		
 		if(node.containsKey(TFBotNode.CLASSNAME)) {
-			if(node.getValueSingular(TFBotNode.CLASSNAME) != Classes.None) {
-				indentPrintln(pw, "Class " + node.getValueSingular(TFBotNode.CLASSNAME));
+			if(node.getValue(TFBotNode.CLASSNAME) != Classes.None) {
+				indentPrintln(pw, "Class " + node.getValue(TFBotNode.CLASSNAME));
 			}
 			mapCopy.remove(TFBotNode.CLASSNAME);
 		}
 		
 		if(node.containsKey(TFBotNode.CLASSICON)) { //todo: probably should check for empty icon strings
-			String value = (String) mapCopy.remove(TFBotNode.CLASSICON)[0];
-			if(!(value.equalsIgnoreCase(node.getValueSingular(TFBotNode.CLASSNAME).toString()))) {
+			String value = (String) node.getValue(TFBotNode.CLASSICON);
+			if(!(value.equalsIgnoreCase(node.getValue(TFBotNode.CLASSNAME).toString()))) {
 				//if classicon is not equal to the string version of its classname
 				if(!value.equals("heavy")) { //dumb workaround to heavyweapons != heavy
 					indentPrintln(pw, "ClassIcon " + value);
 				}	
 			}
+			mapCopy.remove(TFBotNode.CLASSICON);
 		}
 		
 		if(node.containsKey(TFBotNode.NAME)) { 
-			indentPrintln(pw, "Name \"" + mapCopy.remove(TFBotNode.NAME)[0] + "\"");
+			indentPrintln(pw, "Name \"" + node.getValue(TFBotNode.NAME) + "\"");
+			mapCopy.remove(TFBotNode.NAME);
 		}
 		
 		if(node.containsKey(TFBotNode.SKILL)) {
-			String skill = (String) mapCopy.remove(TFBotNode.SKILL)[0];
+			String skill = (String) node.getValue(TFBotNode.SKILL);
 			if(!skill.equals(TFBotNode.NOSKILL) && !skill.equals(TFBotNode.EASY)) {
 				indentPrintln(pw, "Skill " + skill);
 			}
+			mapCopy.remove(TFBotNode.SKILL);
 		}	
 		
 		if(node.containsKey(TFBotNode.WEAPONRESTRICT)) {
-			if(!node.getValueSingular(TFBotNode.WEAPONRESTRICT).equals(TFBotNode.ANY)) {
-				indentPrintln(pw, "WeaponRestrictions " + node.getValueSingular(TFBotNode.WEAPONRESTRICT));
+			if(!node.getValue(TFBotNode.WEAPONRESTRICT).equals(TFBotNode.ANY)) {
+				indentPrintln(pw, "WeaponRestrictions " + node.getValue(TFBotNode.WEAPONRESTRICT));
 			}
 			mapCopy.remove(TFBotNode.WEAPONRESTRICT);
 		}	
 		
 		if(node.containsKey(TFBotNode.ITEM)) {
-			for(Object item : (List<Object>) mapCopy.remove(TFBotNode.ITEM)[0]) {
+			for(Object item : (List<Object>) mapCopy.remove(TFBotNode.ITEM)) {
 				indentPrintln(pw, "Item \"" + item + "\"");
 			}
 		}
 		
 		if(node.containsKey(TFBotNode.TAGS)) {
-			for(Object tag : (List<Object>) mapCopy.remove(TFBotNode.TAGS)[0]) {
+			for(Object tag : (List<Object>) mapCopy.remove(TFBotNode.TAGS)) {
 				indentPrintln(pw, "Tag " + tag);
 			}
 		}
 		
 		//this trainwreck needs rewritten
 		if(node.containsKey(TFBotNode.ITEMATTRIBUTES)) {
-			List<Map<String, Object[]>> mapList = (List<Map<String, Object[]>>) mapCopy.remove(TFBotNode.ITEMATTRIBUTES)[0];
+			List<Object> mapList = mapCopy.remove(TFBotNode.ITEMATTRIBUTES);
 			
-			for(Map<String, Object[]> submap : mapList ) {
-				printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), mapList.indexOf(submap), node, submap);
+			for(Object submap : mapList ) {
+				printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), 
+						mapList.indexOf((Map<String, List<Object>>) submap), node, (Map<String, List<Object>>) submap);
 			}
 		}
 		
@@ -569,7 +580,7 @@ public class TreeParse { //it is time to parse
 		System.out.println("printed tfbot");
 	}
 	
-	private void printAttr(PrintWriter pw, EngiPanel.Classes tfClass, int slot, TFBotNode botNode, Map<String, Object[]> attrNode) {
+	private void printAttr(PrintWriter pw, EngiPanel.Classes tfClass, int slot, TFBotNode botNode, Map<String, List<Object>> attrNode) {
 		Object itemName = null;
 		
 		if(slot == ItemSlot.CHARACTER.getSlot()) { //different subtree name
@@ -577,7 +588,7 @@ public class TreeParse { //it is time to parse
 		}
 		else {
 			indentPrintln(pw, "ItemAttributes");
-			itemName = attrNode.get(TFBotNode.ITEMNAME)[0];
+			itemName = attrNode.get(TFBotNode.ITEMNAME).get(0);
 		}
 		indentPrintln(pw, "{");
 		indentCount++;
@@ -614,11 +625,11 @@ public class TreeParse { //it is time to parse
 		//fix this
 		attrNode.forEach((k, v) -> {
 			if(!k.equals(PETALTNAME) && 
-					!(((String) k).equalsIgnoreCase((String) attrNode.get(TFBotNode.ITEMNAME)[0])) ) {
-				indentPrintln(pw, "\"" + k + "\"" + " " + v[0]);
+					!(((String) k).equalsIgnoreCase((String) attrNode.get(TFBotNode.ITEMNAME).get(0))) ) {
+				indentPrintln(pw, "\"" + k + "\"" + " " + v.get(0));
 			}
 			else { //super super long 
-				indentPrintln(pw, "\"counts as assister is some kind of pet this update is going to be awesome\" " + v[0]);
+				indentPrintln(pw, "\"counts as assister is some kind of pet this update is going to be awesome\" " + v.get(0));
 			}
 		}
 			
@@ -634,15 +645,17 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
-		Map<String, Object[]> mapCopy = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		mapCopy.putAll(node.getMap());
 		
 		if(node.containsKey(TankNode.NAME)) {
-			indentPrintln(pw, "Name " + mapCopy.remove(TankNode.NAME)[0]);
+			indentPrintln(pw, "Name " + node.getValue(TankNode.NAME));
+			mapCopy.remove(TankNode.NAME);
 		}
 		
 		if(node.containsKey(TankNode.HEALTH)) {
-			indentPrintln(pw, "Health " + mapCopy.remove(TankNode.HEALTH)[0]);
+			indentPrintln(pw, "Health " + node.getValue(TankNode.HEALTH));
+			mapCopy.remove(TankNode.HEALTH);
 		}
 		if((boolean) node.containsKey(TankNode.SKIN)) {
 			indentPrintln(pw, "Skin 1");
@@ -650,15 +663,18 @@ public class TreeParse { //it is time to parse
 		mapCopy.remove(TankNode.SKIN);
 		
 		if(node.containsKey(TankNode.STARTINGPATHTRACKNODE)) {
-			indentPrintln(pw, "StatingPathTrackNode \"" + mapCopy.remove(TankNode.STARTINGPATHTRACKNODE)[0] + "\"");
+			indentPrintln(pw, "StatingPathTrackNode \"" + node.getValue(TankNode.STARTINGPATHTRACKNODE) + "\"");
+			mapCopy.remove(TankNode.STARTINGPATHTRACKNODE);
 		}
 		
 		if(node.containsKey(TankNode.ONKILLEDOUTPUT)) {
-			printRelay(pw, "OnKilledOutput", (RelayNode) mapCopy.remove(TankNode.ONKILLEDOUTPUT)[0]);
+			printRelay(pw, "OnKilledOutput", (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT));
+			mapCopy.remove(TankNode.ONKILLEDOUTPUT);
 		}
 		
 		if(node.containsKey(TankNode.ONBOMBDROPPEDOUTPUT)) {
-			printRelay(pw, "OnBombOutput", (RelayNode) mapCopy.remove(TankNode.ONBOMBDROPPEDOUTPUT)[0]);
+			printRelay(pw, "OnBombOutput", (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT));
+			mapCopy.remove(TankNode.ONBOMBDROPPEDOUTPUT);
 		}
 		
 		printGenericMap(pw, mapCopy);
@@ -673,7 +689,7 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
-		Map<String, Object[]> mapCopy = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		mapCopy.putAll(node.getMap());
 		
 		for(Node n : node.getChildren()) {
@@ -689,7 +705,7 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
-		Map<String, Object[]> mapCopy = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		mapCopy.putAll(node.getMap());
 		
 		for(Node n : node.getChildren()) {

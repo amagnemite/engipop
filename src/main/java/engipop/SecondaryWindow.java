@@ -220,13 +220,13 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	}
 	
 	public void updatePopPanel() {
-		currSpinner.setValue(popNode.getValueSingular(PopNode.STARTINGCURRENCY));
-		respawnWaveSpinner.setValue(popNode.getValueSingular(PopNode.RESPAWNWAVETIME));
-		waveTimeBox.setSelected((boolean) popNode.getValueSingular(PopNode.FIXEDRESPAWNWAVETIME));
-		eventBox.setSelected((boolean) popNode.getValueSingular(PopNode.EVENTPOPFILE));
-		busterDmgSpinner.setValue(popNode.getValueSingular(PopNode.BUSTERDAMAGE));
-		busterKillSpinner.setValue(popNode.getValueSingular(PopNode.BUSTERKILLS));
-		atkSpawnBox.setSelected((boolean) popNode.getValueSingular(PopNode.BOTSATKINSPAWN));
+		currSpinner.setValue(popNode.getValue(PopNode.STARTINGCURRENCY));
+		respawnWaveSpinner.setValue(popNode.getValue(PopNode.RESPAWNWAVETIME));
+		waveTimeBox.setSelected((boolean) popNode.getValue(PopNode.FIXEDRESPAWNWAVETIME));
+		eventBox.setSelected((boolean) popNode.getValue(PopNode.EVENTPOPFILE));
+		busterDmgSpinner.setValue(popNode.getValue(PopNode.BUSTERDAMAGE));
+		busterKillSpinner.setValue(popNode.getValue(PopNode.BUSTERKILLS));
+		atkSpawnBox.setSelected((boolean) popNode.getValue(PopNode.BOTSATKINSPAWN));
 		//advancedBox.setSelected((boolean) popNode.getValueSingular(PopNode.ADVANCED));
 	}
 	

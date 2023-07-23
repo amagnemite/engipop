@@ -102,14 +102,14 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	}
 	
 	public void updatePanel(TankNode node) {
-		health.setValue(node.getValueSingular(TankNode.HEALTH));
-		finalTank.setSelected((boolean) node.getValueSingular(TankNode.SKIN));
-		startingNode.setSelectedItem(node.getValueSingular(TankNode.STARTINGPATHTRACKNODE));
-		if(node.getValueSingular(TankNode.ONKILLEDOUTPUT) != null) {
-			onKilledBox.setSelectedItem(((RelayNode) node.getValueSingular(TankNode.ONKILLEDOUTPUT)).getValueSingular(RelayNode.TARGET));
+		health.setValue(node.getValue(TankNode.HEALTH));
+		finalTank.setSelected((boolean) node.getValue(TankNode.SKIN));
+		startingNode.setSelectedItem(node.getValue(TankNode.STARTINGPATHTRACKNODE));
+		if(node.getValue(TankNode.ONKILLEDOUTPUT) != null) {
+			onKilledBox.setSelectedItem(((RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT)).getValue(RelayNode.TARGET));
 		}
-		if(node.getValueSingular(TankNode.ONBOMBDROPPEDOUTPUT) != null) {
-			onBombBox.setSelectedItem(((RelayNode) node.getValueSingular(TankNode.ONBOMBDROPPEDOUTPUT)).getValueSingular(RelayNode.TARGET));
+		if(node.getValue(TankNode.ONBOMBDROPPEDOUTPUT) != null) {
+			onBombBox.setSelectedItem(((RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT)).getValue(RelayNode.TARGET));
 		}
 	}
 	
@@ -118,19 +118,19 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		node.putKey(TankNode.SKIN, finalTank.isSelected());
 		node.putKey(TankNode.STARTINGPATHTRACKNODE, startingNode.getSelectedItem());
 		if(onKilledCheck.isSelected()) {
-			if(node.getValueSingular(TankNode.ONKILLEDOUTPUT) == null) { //make relay if data is entered and no relay exists
+			if(node.getValue(TankNode.ONKILLEDOUTPUT) == null) { //make relay if data is entered and no relay exists
 				node.putKey(TankNode.ONKILLEDOUTPUT, new RelayNode());
 			}
-			((RelayNode) node.getValueSingular(TankNode.ONKILLEDOUTPUT)).putKey(RelayNode.TARGET, onBombBox.getSelectedItem());
+			((RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT)).putKey(RelayNode.TARGET, onBombBox.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
 			node.removeKey(TankNode.ONKILLEDOUTPUT);
 		}
 		if(onBombCheck.isSelected()) {
-			if(node.getValueSingular(TankNode.ONBOMBDROPPEDOUTPUT) == null) { //make relay if data is entered and no relay exists
+			if(node.getValue(TankNode.ONBOMBDROPPEDOUTPUT) == null) { //make relay if data is entered and no relay exists
 				node.putKey(TankNode.ONBOMBDROPPEDOUTPUT, new RelayNode());
 			}
-			((RelayNode) node.getValueSingular(TankNode.ONBOMBDROPPEDOUTPUT)).putKey(RelayNode.TARGET, onKilledBox.getSelectedItem());
+			((RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT)).putKey(RelayNode.TARGET, onKilledBox.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
 			node.removeKey(TankNode.ONBOMBDROPPEDOUTPUT);

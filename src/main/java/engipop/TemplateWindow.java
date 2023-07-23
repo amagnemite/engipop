@@ -214,7 +214,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 			WaveSpawnNode wsNode = (WaveSpawnNode) node; //redundant but code clarity
 			
 			if(wsNode.getMap().containsKey(WaveSpawnNode.NAME)) { //this currently doesn't get used
-				body = (String) wsNode.getValueSingular(WaveSpawnNode.NAME);
+				body = (String) wsNode.getValue(WaveSpawnNode.NAME);
 			}
 			
 			if(wsNode.hasChildren()) { //same here
@@ -226,10 +226,10 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 			type = "TFBot_";
 			TFBotNode botNode = (TFBotNode) node;
 			
-			body = botNode.getValueSingular(TFBotNode.CLASSNAME).toString();
+			body = botNode.getValue(TFBotNode.CLASSNAME).toString();
 			
-			if((String) botNode.getValueSingular(TFBotNode.NAME) != null) {
-				body = body + "_" + (String) botNode.getValueSingular(TFBotNode.NAME) + "_";
+			if((String) botNode.getValue(TFBotNode.NAME) != null) {
+				body = body + "_" + (String) botNode.getValue(TFBotNode.NAME) + "_";
 			}
 			keyset = popNode.getBotTemplateMap().keySet();
 		}
@@ -353,8 +353,8 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 				templateComboModel.addElement(name);
 				templateComboBox.setSelectedItem(name);
 				if(type.equals(MainWindow.TFBOT)) {
-					String newValue = currentNode.getValueSingular(TFBotNode.NAME) != null ? 
-							currentNode.getValueSingular(TFBotNode.NAME) + " (" + name + ")" : "(" + name + ")";
+					String newValue = currentNode.getValue(TFBotNode.NAME) != null ? 
+							currentNode.getValue(TFBotNode.NAME) + " (" + name + ")" : "(" + name + ")";
 					
 					w2.fireTemplateChange(type, null, newValue);
 				}
@@ -386,7 +386,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 				map = popNode.getBotTemplateMap();
 			}
 			
-			oldNodeName = (String) map.get(oldName).getValueSingular(TFBotNode.NAME);
+			oldNodeName = (String) map.get(oldName).getValue(TFBotNode.NAME);
 			
 			if(!newName.isEmpty()) {
 				if(!newName.equals(oldName)) { //if user updated template name
@@ -424,11 +424,11 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 					templateComboModel.setSelectedItem(newName);
 					feedback.setText("Template successfully updated");
 					
-					if(oldNodeName != currentNode.getValueSingular(TFBotNode.NAME) || !oldName.equals(newName)) {
+					if(oldNodeName != currentNode.getValue(TFBotNode.NAME) || !oldName.equals(newName)) {
 						//bot/ws's actual name or templatename was updated
 						String oldValue = oldNodeName != null ? oldNodeName + " (" + oldName + ")" : "(" + oldName + ")";
-						String newValue = currentNode.getValueSingular(TFBotNode.NAME) != null ? 
-								currentNode.getValueSingular(TFBotNode.NAME) + " (" + newName + ")" : "(" + newName + ")";
+						String newValue = currentNode.getValue(TFBotNode.NAME) != null ? 
+								currentNode.getValue(TFBotNode.NAME) + " (" + newName + ")" : "(" + newName + ")";
 						w2.fireTemplateChange(type, oldValue, newValue);
 					}					
 				}
@@ -447,12 +447,12 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 			if(wsModeButton.isSelected()) {
 				map = popNode.getWSTemplateMap();
 				type = MainWindow.WAVESPAWN;
-				nodeName = (String) currentWSNode.getValueSingular(TFBotNode.NAME);
+				nodeName = (String) currentWSNode.getValue(TFBotNode.NAME);
 			}
 			else {
 				map = popNode.getBotTemplateMap();
 				type = MainWindow.TFBOT;
-				nodeName = (String) currentBotNode.getValueSingular(TFBotNode.NAME);
+				nodeName = (String) currentBotNode.getValue(TFBotNode.NAME);
 			}
 			
 			String oldValue = nodeName != null ? nodeName + " (" + removed + ")" : "(" + removed + ")";

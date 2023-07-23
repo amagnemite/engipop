@@ -218,10 +218,10 @@ public class NodePanelManager {
 			
 			//similar logic to setsquadrandomlistelement but uses set instead of addelement to update
 			if(currentBotNode.containsKey(TFBotNode.NAME)) {
-				squadRandomListModel.set(squadRandomList.getSelectedIndex(), (String) currentBotNode.getValueSingular(TFBotNode.NAME));
+				squadRandomListModel.set(squadRandomList.getSelectedIndex(), (String) currentBotNode.getValue(TFBotNode.NAME));
 			}
 			else {
-				squadRandomListModel.set(squadRandomList.getSelectedIndex(), currentBotNode.getValueSingular(TFBotNode.CLASSNAME).toString());
+				squadRandomListModel.set(squadRandomList.getSelectedIndex(), currentBotNode.getValue(TFBotNode.CLASSNAME).toString());
 			}
 		});
 			
@@ -553,13 +553,13 @@ public class NodePanelManager {
 	//refresh singular element on squadrandom list
 	protected void setSquadRandomListElement(TFBotNode node) {
 		if(node.containsKey(TFBotNode.NAME)) {
-			squadRandomListModel.addElement((String) node.getValueSingular(TFBotNode.NAME)); //this sucks
+			squadRandomListModel.addElement((String) node.getValue(TFBotNode.NAME)); //this sucks
 		}
 		else if(node.containsKey(TFBotNode.CLASSNAME)) {
-			squadRandomListModel.addElement(node.getValueSingular(TFBotNode.CLASSNAME).toString());
+			squadRandomListModel.addElement(node.getValue(TFBotNode.CLASSNAME).toString());
 		}
 		else if(node.containsKey(TFBotNode.TEMPLATE)) {
-			squadRandomListModel.addElement((String) node.getValueSingular(TFBotNode.TEMPLATE));
+			squadRandomListModel.addElement((String) node.getValue(TFBotNode.TEMPLATE));
 		}
 		else {
 			squadRandomListModel.addElement("Non TFBot spawner");

@@ -1,4 +1,5 @@
 package engipop;
+import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
@@ -8,11 +9,10 @@ import net.platinumdigitalgroup.jvdf.VDFNode;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
 @SuppressWarnings("unchecked")
-public class Node {
-	private Node parent;
+public class Node implements Serializable {
+	private transient Node parent;
 	private List<Node> children = new ArrayList<Node>();
-	//protected Map<String, Object[]> keyVals = new HashMap<String, Object[]>(8);
-	protected Map<String, Object[]> keyVals = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+	protected Map<String, List<Object>> keyVals = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 	//children refers to waveschedule - wave - wavespawn - spawner connections
 	//side connections like relays are connected elsewhere
 	
@@ -57,7 +57,7 @@ public class Node {
 			keyVals.remove(key);
 			return;
 		}
-		else if(value == Collections.emptyList()) {
+		else if(value == Collections.emptyList()) { //may need to remove this
 			keyVals.remove(key);
 			return;
 		}
@@ -66,20 +66,16 @@ public class Node {
 			//if it is a string that is not empty or it is not a string
 			
 		//}
-		keyVals.put(key, new Object[] {value});
-	}
-	
-	//array value ver of above
-	public void putKey(String key, Object[] value) {
-		if(!Arrays.asList(value).isEmpty()) {
-			keyVals.put(key, value);
+		if(value instanceof List) {
+			keyVals.put(key, new ArrayList<Object>((List<Object>) value));
 		}
 		else {
-			keyVals.remove(key);
+			keyVals.put(key, new ArrayList<Object>(Arrays.asList(value)));
 		}
 	}
 	
-	public Object getValueSingular(String key) {
+	//gets values in the list object
+	public Object getValue(String key, int pos) {
 		//if(keyVals.get(key).length == 1) {
 		//	return keyVals.get(key);
 		//}
@@ -87,11 +83,16 @@ public class Node {
 			return null;
 		}
 		else {
-			return keyVals.get(key)[0];
+			return keyVals.get(key).get(pos);
 		}
 	}
 	
-	public Object[] getValueArray(String key) {
+	public Object getValue(String key) {
+		return getValue(key, 0);
+	}
+	
+	//gets the actual list object that contains all the sub objects
+	public List<Object> getListValue(String key) {
 		return keyVals.get(key);
 	}
 	
@@ -104,10 +105,10 @@ public class Node {
 	}
 	
 	public void printKeyVals() {
-		for(Entry<String, Object[]> entry : keyVals.entrySet()) {
+		for(Entry<String, List<Object>> entry : keyVals.entrySet()) {
 			System.out.print(entry.getKey());
-			if(entry.getValue().length == 1) {
-				System.out.println(" " + entry.getValue()[0]);
+			if(entry.getValue().size() == 1) {
+				System.out.println(" " + entry.getValue().get(0));
 			}
 			else {
 				System.out.println(" " + entry.getValue());
@@ -116,12 +117,12 @@ public class Node {
 	}
 	
 	//reconsider this
-	public Map<String, Object[]> getMap() {
+	public Map<String, List<Object>> getMap() {
 		return this.keyVals;
 	}
 	
-	//converts child vdfnodes into <String, Object> maps
-	public void copyVDFNode(Map<String, Object[]> map) {
+	//converts vdfnodes (<string, object[]>) into treemaps <string, list<object>>
+	public Map<String, List<Object>> copyVDFNode(Map<String, Object[]> map) {
 		Set<String> stringSet = new HashSet<String>(
 				Arrays.asList(WaveSpawnNode.NAME, WaveSpawnNode.WAITFORALLDEAD, WaveSpawnNode.WAITFORALLSPAWNED));
 		final String Digits = "(\\p{Digit}+)"; //decimal digit one or more times
@@ -129,59 +130,37 @@ public class Node {
 				("-?(" + //- 0 or 1 times
 				"("+Digits+"(\\.)?("+Digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
 				"(\\.("+Digits+")))"); //. , digits
-		/*
-		Map<String, Object> newMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
 		
+		Map<String, List<Object>> newMap = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		for(Entry<String, Object[]> entry : map.entrySet()) {
-			List<Object> nodeArray = new ArrayList<Object>();
-			
-			for(int i = 0; i < entry.getValue().length; i++) {
-				if(entry.getValue()[i] instanceof Map) {
-					nodeArray.add(copyVDFNode((VDFNode) entry.getValue()[i]));
-				}
-				else if(!stringSet.contains(entry.getKey())) { //convert string numbers into ints/doubles
-					String str = (String) entry.getValue()[i];
-					if(str.contains(".") && Pattern.matches(fpRegex, str)) {
-						nodeArray.add(Double.valueOf(str));
-					}	
-					else if(Pattern.matches(Digits, str)) {
-						nodeArray.add(Integer.valueOf(str)); //this may also catch certain booleans/flags
-					}
-				}
-			}
-			if(entry.getValue().length == 1) {
-				newMap.put(entry.getKey(), entry.getValue()[0]);
-			}
-			else {
-				newMap.put(entry.getKey(), nodeArray);
-			}
-		} */
-		for(Entry<String, Object[]> entry : map.entrySet()) {
-            Object[] nodeArray = new Object[entry.getValue().length];
+            List<Object> array = new ArrayList<Object>(entry.getValue().length);
             
-            for(int i = 0; i < entry.getValue().length; i++) {
-                if(entry.getValue()[i].getClass() == VDFNode.class) {
-                   // Map<String, Object[]> subMap = new TreeMap<String, Object[]>(String.CASE_INSENSITIVE_ORDER);
+            //for(int i = 0; i < entry.getValue().length; i++) {
+            for(Object arrayEntry : entry.getValue()) {
+                if(arrayEntry instanceof Map) {
+                	//Map<String, List<Object>> subMap = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
                     //subMap.putAll((VDFNode) entry.getValue()[i]);
-                    copyVDFNode((VDFNode) entry.getValue()[i]);
-                    nodeArray[i] = (entry.getValue()[i]);
+                    array.add(copyVDFNode((VDFNode) arrayEntry));
                 }
                 else if(!stringSet.contains(entry.getKey())) { //convert string numbers into ints/doubles
-                    String str = (String) entry.getValue()[i];
+                    String str = (String) arrayEntry;
                     if(str.contains(".") && Pattern.matches(fpRegex, str)) {
-                        nodeArray[i] = Double.valueOf(str);
+                        array.add(Double.valueOf(str));
                     }    
                     else if(Pattern.matches(Digits, str)) {
-                        nodeArray[i] = (Integer.valueOf(str)); //this may also catch certain booleans/flags
+                        array.add(Integer.valueOf(str)); //this may also catch certain booleans/flags
+                    }
+                    else {
+                    	array.add(arrayEntry);
                     }
                 }
+                else {
+                	array.add(arrayEntry);
+                }
             }
-            if(nodeArray[0] != null) { //may need to double check this
-                entry.setValue(nodeArray);
-            }
+            newMap.put(entry.getKey(), array);
         }   
-		
-		//return newMap; 
+		return newMap; 
 	}
     
     public static class PopNode extends Node {
@@ -196,73 +175,73 @@ public class Node {
     	public static final String MISSION = "Mission";
     	public static final String TEMPLATE = "Template";
     	
-    	private int mapIndex = -1;
+    	private transient int mapIndex = -1;
     	private Map<String, Node> wsTemplateMap = new HashMap<String, Node>();
     	private Map<String, Node> botTemplateMap = new HashMap<String, Node>();
 
         public PopNode() {
-        	this.putKey(STARTINGCURRENCY, 400);
-        	this.putKey(RESPAWNWAVETIME, 6);
-        	this.putKey(BUSTERDAMAGE, EngiPanel.BUSTERDEFAULTDMG);
-        	this.putKey(BUSTERKILLS, EngiPanel.BUSTERDEFAULTKILLS);
-        	this.putKey(BOTSATKINSPAWN, false);
-        	this.putKey(FIXEDRESPAWNWAVETIME, false);
-        	this.putKey(EVENTPOPFILE, false);
-        	this.putKey(MISSION, new ArrayList<Node>());
-        	//this.putKey(ADVANCED, false);
+        	putKey(STARTINGCURRENCY, 400);
+        	putKey(RESPAWNWAVETIME, 6);
+        	putKey(BUSTERDAMAGE, EngiPanel.BUSTERDEFAULTDMG);
+        	putKey(BUSTERKILLS, EngiPanel.BUSTERDEFAULTKILLS);
+        	putKey(BOTSATKINSPAWN, false);
+        	putKey(FIXEDRESPAWNWAVETIME, false);
+        	putKey(EVENTPOPFILE, false);
+        	putKey(MISSION, new ArrayList<Node>());
+        	//putKey(ADVANCED, false);
         }
         
+        //only constructor to use Object[] as opposed to List<Object>> since hasn't been processed yet
 		public PopNode(Map<String, Object[]> map) { //constructor for read in nodes  	
-			this.copyVDFNode(map);
-			keyVals.putAll(map);
+			keyVals = this.copyVDFNode(map);
         	
-        	if(keyVals.containsKey("Wave")) {
+        	if(this.containsKey("Wave")) {
         		for(Object wave : keyVals.get("Wave")) {
-        			WaveNode waveNode = new WaveNode((Map<String, Object[]>) wave);
+        			WaveNode waveNode = new WaveNode((Map<String, List<Object>>) wave);
 					waveNode.connectNodes(this);
         		}
-        		keyVals.remove("Wave");
+        		this.removeKey("Wave");
         	}
         	
         	//may need to make sure this isn't a not string
-        	if(keyVals.containsKey(EVENTPOPFILE) && 
-        			((String) keyVals.get(EVENTPOPFILE)[0]).equals("Halloween")) {
-        		keyVals.put(EVENTPOPFILE, new Object[] {true});
+        	if(this.containsKey(EVENTPOPFILE) && 
+        			((String) this.getValue(EVENTPOPFILE)).equals("Halloween")) {
+        		putKey(EVENTPOPFILE, true);
         	}
         	else {
-        		keyVals.put(EVENTPOPFILE, new Object[] {false});
+        		putKey(EVENTPOPFILE, false);
         	}
         	
-        	if(keyVals.containsKey(BOTSATKINSPAWN)) {
-        		String atk = (String) keyVals.get(BOTSATKINSPAWN)[0];
+        	if(this.containsKey(BOTSATKINSPAWN)) {
+        		String atk = (String) this.getValue(BOTSATKINSPAWN);
         		if((atk.equalsIgnoreCase("no") || atk.equalsIgnoreCase("false"))) {
-        			keyVals.put(BOTSATKINSPAWN, new Object[] {false});
+        			putKey(BOTSATKINSPAWN, false);
         		}
         	}
         	else {
-        		keyVals.put(BOTSATKINSPAWN, new Object[] {true});
+        		putKey(BOTSATKINSPAWN, true);
         	}
         	
-        	if(keyVals.containsKey(FIXEDRESPAWNWAVETIME)) { //presence of flag is true
-        		keyVals.put(FIXEDRESPAWNWAVETIME, new Object[] {true});
+        	if(this.containsKey(FIXEDRESPAWNWAVETIME)) { //presence of flag is true
+        		putKey(FIXEDRESPAWNWAVETIME, true);
         	}
         	else {
-        		keyVals.put(FIXEDRESPAWNWAVETIME, new Object[] {false});
+        		putKey(FIXEDRESPAWNWAVETIME, false);
         	}
         	
         	if(!keyVals.containsKey(BUSTERDAMAGE)) {
-        		keyVals.put(BUSTERDAMAGE, new Object[] {EngiPanel.BUSTERDEFAULTDMG});
+        		putKey(BUSTERDAMAGE, EngiPanel.BUSTERDEFAULTDMG);
         	}
         	if(!keyVals.containsKey(BUSTERKILLS)) {
-        		keyVals.put(BUSTERKILLS, new Object[] {EngiPanel.BUSTERDEFAULTKILLS});
+        		putKey(BUSTERKILLS, EngiPanel.BUSTERDEFAULTKILLS);
         	}
         	
         	if(keyVals.containsKey(MISSION)) {
         		List<Node> array = new ArrayList<Node>();
         		for(Object mission : keyVals.get(MISSION)) {
-        			array.add(new MissionNode((Map<String, Object[]>) mission));
+        			array.add(new MissionNode((Map<String, List<Object>>) mission));
         		}
-        		keyVals.put(MISSION, new Object[] {array});
+        		putKey(MISSION, array);
         	}
         }
         
@@ -321,15 +300,15 @@ public class Node {
     	//spawner
     	
     	public MissionNode() {
-    		this.putKey(OBJECTIVE, DESTROYSENTRIES);
-    		this.putKey(INITIALCOOLDOWN, 0);
-    		this.putKey(COOLDOWNTIME, 0);
-    		this.putKey(BEGINATWAVE, 1);
-    		this.putKey(RUNFORTHISMANYWAVES, 1);
-    		this.putKey(DESIREDCOUNT, 1);
+    		putKey(OBJECTIVE, DESTROYSENTRIES);
+    		putKey(INITIALCOOLDOWN, 0);
+    		putKey(COOLDOWNTIME, 0);
+    		putKey(BEGINATWAVE, 1);
+    		putKey(RUNFORTHISMANYWAVES, 1);
+    		putKey(DESIREDCOUNT, 1);
     	}
     	
-    	public MissionNode(Map<String, Object[]> map) {
+    	public MissionNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     	}
     }
@@ -343,34 +322,34 @@ public class Node {
     	public static final String INITWAVEOUTPUT = "InitWaveOutput";
     	
     	public WaveNode() {
-    		this.putKey(STARTWAVEOUTPUT, new RelayNode());
-    		this.putKey(DONEOUTPUT, new RelayNode());
+    		putKey(STARTWAVEOUTPUT, new RelayNode());
+    		putKey(DONEOUTPUT, new RelayNode());
     	}
     	
-        public WaveNode(Map<String, Object[]> map) { //readin node, key case should already be converted
+        public WaveNode(Map<String, List<Object>> map) { //readin node, key case should already be converted
         	keyVals.putAll(map);
         	
-        	if(keyVals.containsKey("WaveSpawn")) {
+        	if(this.containsKey("WaveSpawn")) {
         		for(Object wavespawn : keyVals.get("WaveSpawn")) {
-        			WaveSpawnNode waveSpawnNode = new WaveSpawnNode((Map<String, Object[]>) wavespawn);
+        			WaveSpawnNode waveSpawnNode = new WaveSpawnNode((Map<String, List<Object>>) wavespawn);
 					waveSpawnNode.connectNodes(this);
         		}
         		keyVals.remove("WaveSpawn");
         	}
         	
-        	if(keyVals.containsKey(STARTWAVEOUTPUT)) {
-        		RelayNode start = new RelayNode((Map<String, Object[]>) keyVals.get(STARTWAVEOUTPUT)[0]);
-        		keyVals.put(STARTWAVEOUTPUT, new Object[] {start});
+        	if(this.containsKey(STARTWAVEOUTPUT)) {
+        		RelayNode start = new RelayNode((Map<String, List<Object>>) this.getValue(STARTWAVEOUTPUT));
+        		putKey(STARTWAVEOUTPUT, start);
         	}
         	
         	if(keyVals.containsKey(DONEOUTPUT)) {
-        		RelayNode done = new RelayNode((Map<String, Object[]>) keyVals.get(DONEOUTPUT)[0]);
-        		keyVals.put(DONEOUTPUT, new Object[] {done});
+        		RelayNode done = new RelayNode((Map<String, List<Object>>) this.getValue(DONEOUTPUT));
+        		putKey(DONEOUTPUT, done);
         	}
         	
         	if(keyVals.containsKey(INITWAVEOUTPUT)) {
-        		RelayNode init = new RelayNode((Map<String, Object[]>) keyVals.get(INITWAVEOUTPUT)[0]);
-        		keyVals.put(INITWAVEOUTPUT, new Object[] {init});
+        		RelayNode init = new RelayNode((Map<String, List<Object>>) this.getValue(INITWAVEOUTPUT));
+        		putKey(INITWAVEOUTPUT, init);
         	}
         }
     }
@@ -382,23 +361,23 @@ public class Node {
     	public static final String DELAY = "Delay";
     	
     	public RelayNode() { //for now, assume all actions are trigger
-    		//this.putKey(TARGET, null);
-			this.putKey(ACTION, "trigger");
+    		//putKey(TARGET, null);
+			putKey(ACTION, "trigger");
 		}
     	
-    	public RelayNode(Map<String, Object[]> map) {
-    		for(Entry<String, Object[]> entry : map.entrySet()) {
+    	public RelayNode(Map<String, List<Object>> map) {
+    		for(Entry<String, List<Object>> entry : map.entrySet()) {
     			if(entry.getKey().equals(TARGET)) {
-    				this.putKey(TARGET, entry.getValue());
+    				putKey(TARGET, entry.getValue());
     			}
     			else if(entry.getKey().equals(ACTION)) {
-    				this.putKey(ACTION, entry.getValue());
+    				putKey(ACTION, entry.getValue());
     			}
     			else if(entry.getKey().equals(PARAM)) { 
-    				this.putKey(PARAM, entry.getValue());
+    				putKey(PARAM, entry.getValue());
     			}
     			else { //delay
-    				this.putKey(DELAY, entry.getValue());
+    				putKey(DELAY, entry.getValue());
     			}
     		}
     	}
@@ -445,21 +424,21 @@ public class Node {
     	public static final String RANDOMCHOICE = "RandomChoice";
     	//TODO: fix support
     	
-    	private boolean waitBetweenDeaths; //betweenspawns and betweenspawnsafterdeath are mutually exclusive
-    	private boolean supportLimited;
+    	private transient boolean waitBetweenDeaths; //betweenspawns and betweenspawnsafterdeath are mutually exclusive
+    	private transient boolean supportLimited;
     	
     	public WaveSpawnNode() {
-    		this.putKey(WHERE, "spawnbot");
-    		this.putKey(TOTALCOUNT, 1);
-    		this.putKey(MAXACTIVE, 1);
-    		this.putKey(SPAWNCOUNT, 1);
-    		this.putKey(WAITBEFORESTARTING, 0.0);
-    		this.putKey(WAITBETWEENSPAWNS, 0.0);
-    		this.putKey(TOTALCURRENCY, 0);
-    		this.putKey(SUPPORT, false);
+    		putKey(WHERE, "spawnbot");
+    		putKey(TOTALCOUNT, 1);
+    		putKey(MAXACTIVE, 1);
+    		putKey(SPAWNCOUNT, 1);
+    		putKey(WAITBEFORESTARTING, 0.0);
+    		putKey(WAITBETWEENSPAWNS, 0.0);
+    		putKey(TOTALCURRENCY, 0);
+    		putKey(SUPPORT, false);
     	}
     	
-    	public WaveSpawnNode(Map<String, Object[]> map) {
+    	public WaveSpawnNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     		
     		if(keyVals.containsKey(WAITBETWEENSPAWNSAFTERDEATH)) {
@@ -467,68 +446,68 @@ public class Node {
     		}
     		
     		if(!keyVals.containsKey(TOTALCOUNT)) {
-    			this.putKey(TOTALCOUNT, 0);
+    			putKey(TOTALCOUNT, 0);
     		}
     		if(!keyVals.containsKey(MAXACTIVE)) {
-    			this.putKey(MAXACTIVE, 0);
+    			putKey(MAXACTIVE, 0);
     		}
     		if(!keyVals.containsKey(SPAWNCOUNT)) {
-    			this.putKey(SPAWNCOUNT, 0);
+    			putKey(SPAWNCOUNT, 0);
     		}
     		if(!keyVals.containsKey(WAITBEFORESTARTING)) {
-    			this.putKey(WAITBEFORESTARTING, 0.0);
+    			putKey(WAITBEFORESTARTING, 0.0);
     		}
     		if(!keyVals.containsKey(WAITBETWEENSPAWNS)) {
-    			this.putKey(WAITBETWEENSPAWNS, 0.0);
+    			putKey(WAITBETWEENSPAWNS, 0.0);
     		}
     		if(!keyVals.containsKey(TOTALCURRENCY)) {
-    			this.putKey(TOTALCURRENCY, 0);
+    			putKey(TOTALCURRENCY, 0);
     		}
     		
     		//need to check this 
     		if(keyVals.containsKey(SUPPORT)) {
-    			Object supportVal = keyVals.get(SUPPORT)[0];
+    			Object supportVal = getValue(SUPPORT);
     			if(supportVal.getClass() == String.class) {
     				if(((String) supportVal).equalsIgnoreCase("LIMITED")) {
     					supportLimited = true;
     				}
     			}
-    			keyVals.put(SUPPORT, new Object[] {true});
+    			putKey(SUPPORT, true);
     		}
     		else {
-    			keyVals.put(SUPPORT, new Object[] {false});
+    			putKey(SUPPORT, false);
     		}
     		
     		if(keyVals.containsKey(STARTWAVEOUTPUT)) {
-    			this.putKey(STARTWAVEOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(STARTWAVEOUTPUT)));
+    			putKey(STARTWAVEOUTPUT, new RelayNode((Map<String, List<Object>>) getValue(STARTWAVEOUTPUT)));
     		}
     		if(keyVals.containsKey(FIRSTSPAWNOUTPUT)) {
-    			this.putKey(FIRSTSPAWNOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(FIRSTSPAWNOUTPUT)));
+    			putKey(FIRSTSPAWNOUTPUT, new RelayNode((Map<String, List<Object>>) getValue(FIRSTSPAWNOUTPUT)));
     		}
     		if(keyVals.containsKey(LASTSPAWNOUTPUT)) {
-    			this.putKey(LASTSPAWNOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(LASTSPAWNOUTPUT)));
+    			putKey(LASTSPAWNOUTPUT, new RelayNode((Map<String, List<Object>>) getValue(LASTSPAWNOUTPUT)));
     		}
     		if(keyVals.containsKey(DONEOUTPUT)) {
-    			this.putKey(DONEOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(DONEOUTPUT)));
+    			putKey(DONEOUTPUT, new RelayNode((Map<String, List<Object>>) getValue(DONEOUTPUT)));
     		}
     		
     		if(keyVals.containsKey(TFBOT)) {
-    			TFBotNode node = new TFBotNode((Map<String, Object[]>) keyVals.get(TFBOT)[0]);
+    			TFBotNode node = new TFBotNode((Map<String, List<Object>>) getValue(TFBOT));
     			node.connectNodes(this);
     			keyVals.remove(TFBOT);
     		}
     		else if(keyVals.containsKey(TANK)) {
-    			TankNode node = new TankNode((Map<String, Object[]>) keyVals.get(TANK)[0]);
+    			TankNode node = new TankNode((Map<String, List<Object>>) getValue(TANK));
     			node.connectNodes(this);
     			keyVals.remove(TANK);
     		}
     		else if(keyVals.containsKey(SQUAD)) {
-    			SquadNode node = new SquadNode((Map<String, Object[]>) keyVals.get(SQUAD)[0]);
+    			SquadNode node = new SquadNode((Map<String, List<Object>>) getValue(SQUAD));
     			node.connectNodes(this);
     			keyVals.remove(SQUAD);
     		}
     		else if(keyVals.containsKey(RANDOMCHOICE)) {
-    			RandomChoiceNode node = new RandomChoiceNode((Map<String, Object[]>) keyVals.get(RANDOMCHOICE)[0]);
+    			RandomChoiceNode node = new RandomChoiceNode((Map<String, List<Object>>) getValue(RANDOMCHOICE));
     			node.connectNodes(this);
     			keyVals.remove(RANDOMCHOICE);
     		}
@@ -593,29 +572,29 @@ public class Node {
     	public static final String ONBOMBDROPPEDOUTPUT = "OnBombDroppedOutput";
     	
     	public TankNode() {
-    		this.putKey(HEALTH, EngiPanel.TANKDEFAULTHEALTH);
-    		this.putKey(NAME, "tankboss");
-    		this.putKey(SKIN, false);
+    		putKey(HEALTH, EngiPanel.TANKDEFAULTHEALTH);
+    		putKey(NAME, "tankboss");
+    		putKey(SKIN, false);
     	}
     	
-    	public TankNode(Map<String, Object[]> map) {
+    	public TankNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     		
     		//may need to check this
     		if(keyVals.containsKey(SKIN)) {
-    			this.putKey(SKIN, true);
+    			putKey(SKIN, true);
     		}
     		else {	
-    			this.putKey(SKIN, false);
+    			putKey(SKIN, false);
     		}
     		
     		if(keyVals.containsKey(ONKILLEDOUTPUT)) {
-    			this.putKey(ONKILLEDOUTPUT, new RelayNode((Map<String, Object[]>) this.getValueSingular(ONKILLEDOUTPUT)));
+    			putKey(ONKILLEDOUTPUT, new RelayNode((Map<String, List<Object>>) getValue(ONKILLEDOUTPUT)));
     		}
     		
     		if(keyVals.containsKey(ONBOMBDROPPEDOUTPUT)) {
-    			this.putKey(ONBOMBDROPPEDOUTPUT, 
-    				new RelayNode((Map<String, Object[]>) this.getValueSingular(ONBOMBDROPPEDOUTPUT)));
+    			putKey(ONBOMBDROPPEDOUTPUT, 
+    				new RelayNode((Map<String, List<Object>>) getValue(ONBOMBDROPPEDOUTPUT)));
     		}
     	}
     }
@@ -655,60 +634,56 @@ public class Node {
     	public static final String SECONDARYONLY = "SecondaryOnly";
     	public static final String MELEEONLY = "MeleeOnly";
     	
-    	//private List<String> tags;
-    	//private List<String> attributes;
-    	//private String[] items;
     	private boolean isItemsSorted;
-    	//private Map<ItemSlot, HashMap<String, String>> itemAttributeList;
     	
     	//consider allowing template only 
     	public TFBotNode() { //defaults
-    		this.putKey(CLASSNAME, Classes.Scout);
-    		this.putKey(CLASSICON, "scout");
-    		this.putKey(SKILL, EASY);
-    		this.putKey(WEAPONRESTRICT, ANY);
+    		putKey(CLASSNAME, Classes.Scout);
+    		putKey(CLASSICON, "scout");
+    		putKey(SKILL, EASY);
+    		putKey(WEAPONRESTRICT, ANY);
     		isItemsSorted = true;
     	}
     	 
     	//alternate constructor for read in tfbots
-    	public TFBotNode(Map<String, Object[]> map) {
+    	public TFBotNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     		
     		if(keyVals.containsKey(CLASSNAME)) {
-    			this.putKey(CLASSNAME, Classes.toClass((String) this.getValueSingular(CLASSNAME)));
+    			putKey(CLASSNAME, Classes.toClass((String) getValue(CLASSNAME)));
     		}
     		else {
-    			this.putKey(CLASSNAME, Classes.None);
+    			putKey(CLASSNAME, Classes.None);
     		}
     		
     		if(keyVals.containsKey(TAGS)) {
-    			List<Object> list = new ArrayList<Object>(Arrays.asList(keyVals.get(TAGS)));
-    			this.putKey(TAGS, list);
+    			List<Object> list = new ArrayList<Object>(keyVals.get(TAGS));
+    			putKey(TAGS, list);
     		}
     		
     		if(keyVals.containsKey(ATTRIBUTES)) {
-    			List<Object> list = new ArrayList<Object>(Arrays.asList(keyVals.get(ATTRIBUTES)));
-    			this.putKey(ATTRIBUTES, list);
+    			List<Object> list = new ArrayList<Object>(keyVals.get(ATTRIBUTES));
+    			putKey(ATTRIBUTES, list);
     		}
     		
     		if(keyVals.containsKey(ITEM)) {
     			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
-    			list.addAll(Arrays.asList(keyVals.get(ITEM)));
-    			this.putKey(ITEM, list);
+    			list.addAll(keyVals.get(ITEM));
+    			putKey(ITEM, list);
     		}
     		
     		if(keyVals.containsKey(ITEMATTRIBUTES)) {
     			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
-    			list.addAll(Arrays.asList(keyVals.get(ITEMATTRIBUTES))); //list of map<string, object[]>
-    			this.putKey(ITEMATTRIBUTES, list);
+    			list.addAll(keyVals.get(ITEMATTRIBUTES)); 
+    			putKey(ITEMATTRIBUTES, list);
     		}
     		
     		if(!keyVals.containsKey(SKILL)) {
-    			this.putKey(SKILL, NOSKILL);
+    			putKey(SKILL, NOSKILL);
     		}
     		
     		if(!keyVals.containsKey(WEAPONRESTRICT)) {
-    			this.putKey(WEAPONRESTRICT, ANY);
+    			putKey(WEAPONRESTRICT, ANY);
     		}
     	}
     	
@@ -719,42 +694,6 @@ public class Node {
     	public void setItemsSorted(boolean isItemsSorted) {
     		this.isItemsSorted = isItemsSorted;
     	}
-    	
-    	/*
-    	public void setTags(List<String> list) {
-    		this.tags = list;
-    	}
-    	
-    	public List<String> getTags() {
-    		return this.tags;
-    	}
-    	
-    	public void setAttributes(List<String> list) {
-    		this.attributes = list;
-    	}
-    	
-    	public List<String> getAttributes() {
-    		return this.attributes;
-    	}
-    	
-    	//updates the entire itemattribute map
-    	public void setItemAttributeList(HashMap<EngiPanel.ItemSlot, HashMap<String, String>> list) {
-    		this.itemAttributeList = list;
-    	}
-    	
-    	//gets the entire itemattribute map
-    	public Map<EngiPanel.ItemSlot, HashMap<String, String>> getItemAttributeList() {
-    		return this.itemAttributeList;
-    	}
-    	
-    	public void setItemArray(String[] items) {
-    		this.items = items;
-    	}
-    	
-    	public String[] getItemArray() {
-    		return this.items;
-    	}
-    	*/
     }
     
     //these two are mostly convenience 
@@ -763,13 +702,13 @@ public class Node {
     		
     	}
     	
-    	public SquadNode(Map<String, Object[]> map) {
+    	public SquadNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     		
     		//may want to use generic spawners here
     		if(map.containsKey(WaveSpawnNode.TFBOT)) {
 	    		for(Object key : map.get(WaveSpawnNode.TFBOT)) {
-	    			TFBotNode node = new TFBotNode((Map<String, Object[]>) key);
+	    			TFBotNode node = new TFBotNode((Map<String, List<Object>>) key);
 	    			node.connectNodes(this);
 	    		}
 	    		keyVals.remove(WaveSpawnNode.TFBOT);
@@ -782,13 +721,13 @@ public class Node {
     		
     	}
     	
-    	public RandomChoiceNode(Map<String, Object[]> map) { 
+    	public RandomChoiceNode(Map<String, List<Object>> map) { 
     		keyVals.putAll(map);
     		
     		//may want to use generic spawners here
     		if(map.containsKey(WaveSpawnNode.TFBOT)) {
     			for(Object key : map.get(WaveSpawnNode.TFBOT)) {
-        			TFBotNode node = new TFBotNode((Map<String, Object[]>) key);
+        			TFBotNode node = new TFBotNode((Map<String, List<Object>>) key);
         			node.connectNodes(this);
         		}
         		keyVals.remove(WaveSpawnNode.TFBOT);

@@ -268,8 +268,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				containingWindow.feedback.setText(" ");
 				wsPanel.updateNode(currentWSNode);
 				
-				if(currentWSNode.getValueSingular(WaveSpawnNode.NAME) != null) {
-					waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentWSNode.getValueSingular(WaveSpawnNode.NAME));
+				if(currentWSNode.getValue(WaveSpawnNode.NAME) != null) {
+					waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentWSNode.getValue(WaveSpawnNode.NAME));
 				}
 				else { //fallback if name was added but then removed
 					waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), "Wavespawn");
@@ -300,7 +300,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			WaveSpawnNode t = (WaveSpawnNode) currentWaveNode.getChildren().get(i);
 			//if(t.containsKey(WaveSpawnNode.NAME) && !((String) t.getValueSingular(WaveSpawnNode.NAME)).isEmpty()) {
 			if(t.containsKey(WaveSpawnNode.NAME)) {
-				waveSpawnListModel.addElement((String) t.getValueSingular(WaveSpawnNode.NAME));
+				waveSpawnListModel.addElement((String) t.getValue(WaveSpawnNode.NAME));
 			}
 			else {
 				waveSpawnListModel.addElement(Integer.toString(i));

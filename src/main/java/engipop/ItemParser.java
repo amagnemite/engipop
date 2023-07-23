@@ -382,7 +382,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 	}
 	
 	//returns set containing only items that are in the slot list
-	public List<String> checkIfItemInSlot(List<String> items, EngiPanel.Classes selected, int slot) throws IndexOutOfBoundsException {
+	public List<String> checkIfItemInSlot(List<Object> items, EngiPanel.Classes selected, int slot) throws IndexOutOfBoundsException {
 		List<String> list = getClassList(selected).get(slot);
 		//Set<String> subset = new HashSet<String>(list);
 		//Set<String> itemSet = new HashSet<String>(items);
