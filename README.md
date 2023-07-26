@@ -1,4 +1,4 @@
-A Java based population file generator for Team Fortress 2's Mann vs Machine gamemode.
+A Java 17 based population file generator for Team Fortress 2's Mann vs Machine gamemode.
 
 
 ### Todo:
