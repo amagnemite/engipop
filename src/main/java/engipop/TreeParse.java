@@ -131,17 +131,6 @@ public class TreeParse { //it is time to parse
 			itemList.remove(botClass.secondary());
 			itemList.remove(botClass.melee());
 		}
-		/*
-		if(itemList.get(ItemSlot.PRIMARY.getSlot()).equals(botClass.primary())) {
-			itemList.add(ItemSlot.PRIMARY.getSlot(), null);
-		}
-		if(itemList.get(ItemSlot.SECONDARY.getSlot()).equals(botClass.secondary())) {
-			itemList.add(ItemSlot.SECONDARY.getSlot(), null);
-		}
-		if(itemList.get(ItemSlot.MELEE.getSlot()).equals(botClass.melee())) {
-			itemList.add(ItemSlot.MELEE.getSlot(), null);
-		}
-		*/
 		//might need to strip building here
 	} 
 	
@@ -192,6 +181,7 @@ public class TreeParse { //it is time to parse
 			
 			//indentCount++;
 			printPopulation(pw, root);
+			indentPrintln(pw, "");
 			
 			//pain
 			for(int i = 0; i < waveCount; i++) {
@@ -226,11 +216,63 @@ public class TreeParse { //it is time to parse
 					indentPrintln(pw, "}");
 				}
 				else {
-					indentPrintln(pw, entry.getKey() + " " + subentry);
+					if(subentry instanceof String) {
+						String string = "";
+						
+						if(entry.getKey().contains(" ")) {
+							string = "\"" + entry.getKey() + "\" ";
+						}
+						else {
+							string = entry.getKey() + " ";
+						}
+						
+						if(((String) subentry).contains(" ") || ((String) subentry).contains(",") || 
+							((String) subentry).contains("/")) {
+							string = string + "\"" + subentry + "\"";
+						}
+						else {
+							string = string + subentry;
+						}
+						
+						indentPrintln(pw, string);
+					}
+					else {
+						indentPrintln(pw, entry.getKey() + " " + subentry);
+					}
 				}
 			}
 		}
 	}
+	
+	/*
+	private void printNode(PrintWriter pw, Node node) {
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
+		mapCopy.putAll(node.getMap()); //do this to prevent case issues
+		
+		for(String key : node.printNode()) {
+			if(root.containsKey(key)) {
+				/*if(root.getValue(key).getClass() == Boolean.class) {
+					
+				} 
+				if(root.getValue(key).equals(true)) {
+					if(key.equals(WaveSpawnNode.SUPPORT)) {
+						
+					}
+				}
+				
+			}
+			mapCopy.remove(key);
+		}
+		
+		printGenericMap(pw, mapCopy);
+		
+		if(node.hasChildren()) {
+			for(Node child : node.getChildren()) {
+				printNode(pw, child);
+			}
+		}
+		
+	}*/
 
 	private void printPopulation(PrintWriter pw, PopNode root) { //population settings
 		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
@@ -278,8 +320,29 @@ public class TreeParse { //it is time to parse
 		mapCopy.remove(PopNode.BOTSATKINSPAWN);
 		
 		if(root.containsKey(PopNode.MISSION)) {
-			
+			for(Object obj : root.getListValue(PopNode.MISSION)) {
+				MissionNode mission = (MissionNode) obj;
+				Map<String, List<Object>> mapCopyM = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
+				mapCopyM.putAll(mission.getMap());
+				
+				indentPrintln(pw, "Mission");
+				indentPrintln(pw, "{");
+				indentCount++;
+				
+				for(String key : mission.printNode()) {
+					if(mission.containsKey(key)) {
+						indentPrintln(pw, key + " " + mission.getValue(key));
+						mapCopyM.remove(key);
+					}
+				}
+				printGenericMap(pw, mapCopyM);
+				printTFBot(pw, (TFBotNode) mission.getChildren().get(0));
+				
+				indentCount--;
+				indentPrintln(pw, "}");
+			}
 		}
+		mapCopy.remove(PopNode.MISSION);
 		
 		if(root.containsKey(PopNode.TEMPLATE)) {
 			
@@ -497,11 +560,12 @@ public class TreeParse { //it is time to parse
 		
 		if(node.containsKey(TFBotNode.SKILL)) {
 			String skill = (String) node.getValue(TFBotNode.SKILL);
-			if(!skill.equals(TFBotNode.NOSKILL) && !skill.equals(TFBotNode.EASY)) {
+			//if(!skill.equals(TFBotNode.NOSKILL) && !skill.equals(TFBotNode.EASY)) {
+			if(!skill.equals(TFBotNode.NOSKILL)) {
 				indentPrintln(pw, "Skill " + skill);
 			}
 			mapCopy.remove(TFBotNode.SKILL);
-		}	
+		}
 		
 		if(node.containsKey(TFBotNode.WEAPONRESTRICT)) {
 			if(!node.getValue(TFBotNode.WEAPONRESTRICT).equals(TFBotNode.ANY)) {

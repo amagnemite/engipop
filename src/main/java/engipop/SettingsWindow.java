@@ -70,7 +70,7 @@ public class SettingsWindow extends EngiWindow {
 			writeToConfig();
 			
 			if(modifiedConfig.get(scriptsPath) != null) {
-				window.parseItems(new File(modifiedConfig.get(scriptsPath) + itemsTxtPath));
+				parseItems(new File(modifiedConfig.get(scriptsPath) + itemsTxtPath));
 			}
 			
 			oldConfig.clear();
@@ -100,7 +100,7 @@ public class SettingsWindow extends EngiWindow {
 						case JOptionPane.YES_OPTION: 
 							writeToConfig();
 							if(modifiedConfig.get(scriptsPath) != null) {
-								window.parseItems(new File(modifiedConfig.get(scriptsPath) + itemsTxtPath));
+								parseItems(new File(modifiedConfig.get(scriptsPath) + itemsTxtPath));
 							}
 							oldConfig.clear();
 							oldConfig.putAll(modifiedConfig); //copies modified into old without making them point the same place
@@ -216,12 +216,12 @@ public class SettingsWindow extends EngiWindow {
 						setScriptPathString(itemsTxt);
 						writeToConfig();
 						//sw.updateWindow();
-						window.parseItems(new File(getScriptPathString() + itemsTxtPath));
+						parseItems(new File(getScriptPathString() + itemsTxtPath));
 					}
 				}
 			}
 			else {	
-				window.parseItems(new File(getScriptPathString() + itemsTxtPath));
+				parseItems(new File(getScriptPathString() + itemsTxtPath));
 			}
 		}
 		catch (IOException io) {
@@ -261,5 +261,11 @@ public class SettingsWindow extends EngiWindow {
 			} */
 		//}
 		return file;
+	}
+	
+	private void parseItems(File itemsTxt) { //take items file and parse into lists
+		ItemParser itemParser = new ItemParser();
+		itemParser.parse(itemsTxt, this);
+		BotPanel.setItemParser(itemParser);
 	}
 }

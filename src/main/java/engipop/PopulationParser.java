@@ -4,15 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import engipop.EngiPanel.Classes;
 import engipop.Node.*;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParser;
@@ -27,7 +30,7 @@ public class PopulationParser { //parse .pop
 	}
 	
 	//parses entire population
-	public PopNode parsePopulation(File file, Map<String, String> botTemplateStringMap, Map<String, String> wsTemplateStringMap) {
+	public PopNode parsePopulation(File file, Map<String, List<TemplateData>> templateMap) {
 		VDFNode root = null;
 		Object[] includes;
 		Set<String> defaultTemplates = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -36,10 +39,10 @@ public class PopulationParser { //parse .pop
 		
 		try {
 			root = new VDFParser().parse(ItemParser.readFile(file.toPath(), StandardCharsets.US_ASCII));
-			if(root == null) {
-				window.updateFeedback(file.getName() + " is not a population file");
-				return null;
-			}
+			//if(root == null) {
+			//	window.updateFeedback(file.getName() + " is not a population file");
+			//	return null;
+			//}
 			
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
@@ -59,11 +62,11 @@ public class PopulationParser { //parse .pop
 			for(Object includedPop : includes) {
 				if(defaultTemplates.contains(includedPop)) {
 					URL popURL = MainWindow.class.getResource("/" + (String) includedPop);
-					parseTemplates(new File(popURL.getFile()), botTemplateStringMap, wsTemplateStringMap);
+					parseTemplates(new File(popURL.getFile()), templateMap);
 				}
 				else {
 					parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + (String) includedPop), 
-						botTemplateStringMap, wsTemplateStringMap);
+						templateMap);
 				}
 			}
 		}
@@ -73,10 +76,12 @@ public class PopulationParser { //parse .pop
 	}
 	
 	//parses one template pop at a time
-	public void parseTemplates(File file, Map<String, String> botTemplateStringMap, Map<String, String> wsTemplateStringMap) {
+	public void parseTemplates(File file, Map<String, List<TemplateData>> templateMap) {
 		String filename = file.getName().substring(0, file.getName().length() - 4);
 		VDFNode root = null;
 		VDFNode templates = null;
+		
+		List<TemplateData> templateList = new ArrayList<TemplateData>();
 	
 		//this is kinda awful, probably should do something better
 		//excludes name and template
@@ -114,38 +119,87 @@ public class PopulationParser { //parse .pop
 				Set<String> subset = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER); //copies
 				subset.addAll(node.keySet());
 				String name = null;
+				String cclass = null;
+				
+				if(node.containsKey("Name")) {
+					name = node.getString("Name");
+				}
+				if(node.containsKey("Class")) {
+					cclass = node.getString("Class");
+				}
 				
 				if(subset.retainAll(botKeys)) { //keep all keys that are also in botkeys
-					if(node.containsKey("Name")) {
-						name = node.getString("Name");
-					}
-					else {
-						name = node.getString("Class");
-					}
-					name = name != null ? name + " (" + entry.getKey() + ")" : "(" + entry.getKey() + ")";
-					
-					botTemplateStringMap.put(name, filename);
+					templateList.add(new TemplateData(entry.getKey(), cclass, name, WaveSpawnNode.TFBOT));
 				}
 				else if(subset.retainAll(wsKeys)) {
-					if(node.containsKey("Name")) {
-						name = node.getString("Name");
-					}
-					name = name != null ? name + " (" + entry.getKey() + ")" : "(" + entry.getKey() + ")";
-					
-					wsTemplateStringMap.put(name, filename);
+					templateList.add(new TemplateData(entry.getKey(), name, WaveNode.WAVESPAWN));
 				}
 				else if(subset.retainAll(overlappingKeys)) { //contains template, name or both, handle later
 					templateQueue.add(entry);
 				}
 				else { //consists either of uncommon keys or rafmod keys, deal with later
-					
-					//wsTemplateParent.putTemplate(filename, wsTemplateParent);
-					//need conversion here
+					//note also rafmod allows tank templates
 				}
 			}
 		}
 		else {
 			window.updateFeedback("No templates to process");
+		}
+		
+		templateMap.put(filename, templateList);
+	}
+	
+	public static class TemplateData {
+		private int classSlot = -1;
+		private String templateName;
+		private String blockName = null; //refers to botname, ws name or tank name
+		private String type = null; //this should probably be an enum of some sort
+		
+		public TemplateData(String templateName, Classes cclass, String botName, String type) {
+			this.templateName = templateName;
+			classSlot = cclass.getSlot();
+			this.blockName = botName;
+			this.type = type;
+		}
+		
+		public TemplateData(String templateName, String classString, String botName, String type) {
+			this.templateName = templateName;
+			classSlot = Classes.toClass(classString).getSlot();
+			this.blockName = botName;
+			this.type = type;
+		}
+		
+		public TemplateData(String templateName, String blockName, String type) {
+			this.templateName = templateName;
+			this.blockName = blockName;
+			this.type = type;
+		}
+
+		public int getClassSlot() {
+			return this.classSlot;
+		}
+		
+		public String getTemplateName() {
+			return this.templateName;
+		}
+		
+		public String getBlockName() {
+			return this.blockName;
+		}
+		
+		public String getType() {
+			return this.type;
+		}
+		
+		public String toString() {
+			String name = "";
+			
+			if(blockName != null) {
+				name = blockName + " ";
+			}
+			name = name + "(" + templateName + ")";
+			
+			return name;
 		}
 	}
 }

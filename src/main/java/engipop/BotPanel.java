@@ -17,6 +17,7 @@ import javax.swing.text.Position;
 
 import engipop.ButtonListManager.States;
 import engipop.Node.TFBotNode;
+import engipop.Node.WaveSpawnNode;
 
 //todo: add some sort of sanity checking for itemattributes
 @SuppressWarnings("serial")
@@ -33,7 +34,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	//DefaultListModel<String> tagModel = new DefaultListModel<String>();
 	DefaultTableModel tagModel = new DefaultTableModel(0, 1);
 	DefaultComboBoxModel<String> templateModel = new DefaultComboBoxModel<String>();
-	//ComboBoxModel<String> templateModel; //double check if access to model is actually needed
 	
 	JTextField nameField = new JTextField(30); //max bot name is ~32
 	JTextField tagField = new JTextField(5);
@@ -62,6 +62,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	ButtonGroup wepGroup = new ButtonGroup();
 	ButtonGroup skillGroup = new ButtonGroup();
 	
+	JRadioButton noneBut = new JRadioButton(TFBotNode.NOSKILL);
 	JRadioButton easyBut = new JRadioButton(TFBotNode.EASY);
 	JRadioButton normalBut = new JRadioButton(TFBotNode.NORMAL);
 	JRadioButton hardBut = new JRadioButton(TFBotNode.HARD);
@@ -93,6 +94,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	public BotPanel(EngiWindow containingWindow, MainWindow mainWindow, SecondaryWindow secondaryWindow) {
 		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
 		JTextField cellEditor = new JTextField();
+		JButton addTagRow = new JButton("+");
+		JButton removeTagRow = new JButton("-");
 		
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
@@ -103,6 +106,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		itemAttributeBox = new JComboBox<String>(new ItemAttributes().getItemAttributes());
 		attrPanel.setVisible(false);
+		removeTagRow.setEnabled(false);
 		
 		initItemLists();
 		initAttributeRadio();
@@ -117,7 +121,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		//setIconBox(iconBox, iconModel, "Scout");
 		
-		tagModel.addRow(new String[] {"+"});
+		tagModel.addRow(new String[] {""});
 		tagList.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cellEditor));
 		
 		classBox.addActionListener(new ActionListener() {
@@ -149,7 +153,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				}
 			}
 		});
-		
+		/*
 		cellEditor.addKeyListener(new KeyListener() { //todo: cell editor
 			public void keyTyped(KeyEvent k) {
 			}
@@ -173,6 +177,20 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 					}
 				}
 			}
+		}); */
+		tagList.getSelectionModel().addListSelectionListener(event -> {
+			if(tagList.getSelectedRowCount() == 1) {
+				removeTagRow.setEnabled(true);
+			}
+			else {
+				removeTagRow.setEnabled(false);
+			}
+		});
+		addTagRow.addActionListener(event -> {
+			tagModel.addRow(new String[] {""});
+		});
+		removeTagRow.addActionListener(event -> {
+			tagModel.removeRow(tagList.getSelectedRow());
 		});
 		
 		classBox.setSelectedIndex(0);
@@ -193,6 +211,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		//skill level radio buttons
 		JPanel skillPanel = new JPanel();
 		
+		skillPanel.add(noneBut);
+		noneBut.setActionCommand(TFBotNode.NOSKILL);
 		skillPanel.add(easyBut);
 		easyBut.setActionCommand(TFBotNode.EASY);
 		skillGroup.add(easyBut);
@@ -239,6 +259,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 		JScrollPane tagListPane = new JScrollPane(tagList);
 		JScrollPane attributesListPane = new JScrollPane(botAttributeList);
+		JPanel tagButtonPanel = new JPanel();
 		
 		//prevents dumb resizing stuff with the attr panel
 		//may fix later
@@ -248,6 +269,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		//tagListPane.setMinimumSize(tagList.getPreferredScrollableViewportSize());
 		tagListPane.setMinimumSize(new Dimension(200, 100));
 		attributesListPane.setMinimumSize(botAttributeList.getPreferredScrollableViewportSize());
+		
+		addTagRow.setToolTipText("Add a row to the tag list");
+		removeTagRow.setToolTipText("Remove the currently selected tag");
+		tagButtonPanel.add(addTagRow);
+		tagButtonPanel.add(removeTagRow);
 		
 		addGB(botClass, 0, 0);
 		addGB(classBox, 1, 0);
@@ -263,6 +289,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		addGB(skillPanel, 1, 3);
 		addGB(botRestrict, 2, 3);
 		addGB(wepPanel, 3, 3);
+		//addGB(addTagRow, 1, 4);
+		//addGB(removeTagRow, 2, 4);
+		addGB(tagButtonPanel, 1, 4);
 		addGB(botTags, 0, 5);
 		addGB(tagListPane, 1, 5);
 		
@@ -714,12 +743,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				updateTagList((List<String>) evt.getNewValue()); //this should always be a list<string>, may want to sanity check though
 				//tagList.setFixedCellWidth(-1);
 				break;
-			case MainWindow.ITEMPARSE:			
-				BotPanel.parser = (ItemParser) evt.getNewValue();
-				//may want to make this update once total instead of every botpanel
-				//setClassItems(Classes.Scout); //since force updating, just default to first class
-				break;
-			case MainWindow.TFBOT:
+			case WaveSpawnNode.TFBOT:
 				if(evt.getOldValue() == null) {
 					templateModel.addElement((String) evt.getNewValue());
 				}
@@ -739,6 +763,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			default:
 				break;
 		}
+	}
+	
+	public static void setItemParser(ItemParser parser) {
+		BotPanel.parser = parser;
 	}
 	
 	//add radio button to proper panels and the group, then init the listeners

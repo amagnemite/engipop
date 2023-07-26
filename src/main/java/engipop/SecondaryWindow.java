@@ -8,11 +8,13 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.*;
 
 import engipop.Node.PopNode;
+import engipop.PopulationParser.TemplateData;
 
 @SuppressWarnings("serial")
 public class SecondaryWindow extends EngiWindow { //window for less important/one off deals
@@ -24,9 +26,8 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	public static final String TANKSPAWNS = "tankspawn";
 	public static final String TANKRELAY = "tankrelay";
 	
-	private Map<String, String> botTemplateStringMap = new HashMap<String, String>();
-	private Map<String, String> wsTemplateStringMap = new HashMap<String, String>();
-	//key: bot/ws name + template name, value: file name
+	public static final String INCLUDED = "included";
+	public static final String IMPORTED = "imported";
 	
 	EngiPanel popPanel = new EngiPanel();
 	DefaultComboBoxModel<String> mapsModel = new DefaultComboBoxModel<String>();
@@ -161,24 +162,27 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		});
 		
 		loadPop.addActionListener(event -> {
-			JFileChooser fileChooser;
-			if(setWin.getScriptPathString() != null) {
-				fileChooser = new JFileChooser(setWin.getScriptPathString());
-			}
-			else {
-				fileChooser = new JFileChooser();
-			}			
-			File file = null;
-			fileChooser.setFileFilter(new PopFileFilter());
+			File file = getPopFile();
+			Map<String, List<TemplateData>> templateMap = new HashMap<String, List<TemplateData>>();
 			
-			fileChooser.showOpenDialog(this);
-			file = fileChooser.getSelectedFile();
 			if(file != null) {
-				popNode = popParser.parsePopulation(file, botTemplateStringMap, wsTemplateStringMap);
+				popNode = popParser.parsePopulation(file, templateMap);
+				updatePanel();
 				propertySupport.firePropertyChange("POPNODE", null, popNode);
-				propertySupport.firePropertyChange(MainWindow.BOTTEMPLATEMAP, null, botTemplateStringMap);
+				propertySupport.firePropertyChange(INCLUDED, null, templateMap);
 			}
 		});
+		
+		loadTemplate.addActionListener(event -> {
+			File file = getPopFile();
+			Map<String, List<TemplateData>> templateMap = new HashMap<String, List<TemplateData>>();
+			
+			if(file != null) {
+				popParser.parseTemplates(file, templateMap);
+				propertySupport.firePropertyChange(IMPORTED, null, templateMap);
+			}
+		});
+		
 		popPanel.addGB(maps, 1, 1);
 		
 		popPanel.addGB(loadPop, 2, 1);
@@ -219,7 +223,7 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		//popNode.putKey(PopNode.ADVANCED, advancedBox.isSelected());
 	}
 	
-	public void updatePopPanel() {
+	public void updatePanel() {
 		currSpinner.setValue(popNode.getValue(PopNode.STARTINGCURRENCY));
 		respawnWaveSpinner.setValue(popNode.getValue(PopNode.RESPAWNWAVETIME));
 		waveTimeBox.setSelected((boolean) popNode.getValue(PopNode.FIXEDRESPAWNWAVETIME));
@@ -231,7 +235,21 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	}
 	
 	//wrapper
-	public void fireTemplateChange(String type, String oldName, String newName) {
-		propertySupport.firePropertyChange(type, oldName, newName);
+	public void fireTemplateChange(String type, TemplateData oldData, TemplateData newData) {
+		propertySupport.firePropertyChange(type, oldData, newData);
+	}
+	
+	private File getPopFile() {
+		JFileChooser fileChooser;
+		if(setWin.getScriptPathString() != null) {
+			fileChooser = new JFileChooser(setWin.getScriptPathString());
+		}
+		else {
+			fileChooser = new JFileChooser();
+		}	
+		fileChooser.setFileFilter(new PopFileFilter());
+		fileChooser.showOpenDialog(this);
+		
+		return fileChooser.getSelectedFile();
 	}
 }

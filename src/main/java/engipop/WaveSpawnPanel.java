@@ -11,6 +11,7 @@ import java.util.List;
 import javax.swing.*;
 
 import engipop.Node.RelayNode;
+import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
 
 @SuppressWarnings("serial")
@@ -56,7 +57,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		int initial = 1, totalMax = 999, activeMax = 22, incr = 1, currMax = 30000, currIncr = 50;
 		double initWait = 0.0, minWait = 0.0, maxWait = 1000.0, incrWait = 1.0;
 		
-		secondaryWindow.addPropertyChangeListener(MainWindow.WAVESPAWN, this);
+		secondaryWindow.addPropertyChangeListener(WaveNode.WAVESPAWN, this);
 		
 		JLabel label = new JLabel("WaveSpawn editor");
 		

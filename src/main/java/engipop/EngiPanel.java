@@ -8,35 +8,40 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import engipop.EngiPanel.Classes;
+
 //convenience class for reused methods / static variables
 public class EngiPanel extends JPanel {
 	protected GridBagLayout gbLayout = new GridBagLayout();
 	protected GridBagConstraints gbConstraints = new GridBagConstraints();
 	
 	public enum Classes { //class names + their default weps
-		None ("n/a", "n/a", "n/a"),
-		Scout ("TF_WEAPON_SCATTERGUN", "TF_WEAPON_PISTOL_SCOUT", "TF_WEAPON_BAT"), 
-		Soldier ("TF_WEAPON_ROCKETLAUNCHER", "TF_WEAPON_SHOTGUN_SOLDIER", "TF_WEAPON_SHOVEL"),
-		Pyro ("TF_WEAPON_FLAMETHROWER", "TF_WEAPON_SHOTGUN_PYRO", "TF_WEAPON_FIREAXE"),
-		Demoman ("TF_WEAPON_GRENADELAUNCHER", "TF_WEAPON_PIPEBOMBLAUNCHER", "TF_WEAPON_BOTTLE"),
-		Heavyweapons ("TF_WEAPON_MINIGUN", "TF_WEAPON_SHOTGUN_HWG", "TF_WEAPON_FISTS"),
-		Engineer ("TF_WEAPON_SHOTGUN_PRIMARY", "TF_WEAPON_PISTOL", "TF_WEAPON_WRENCH"),
-		Medic ("TF_WEAPON_SYRINGEGUN_MEDIC", "TF_WEAPON_MEDIGUN", "TF_WEAPON_BONESAW"),
-		Sniper ("TF_WEAPON_SNIPERRIFLE", "TF_WEAPON_SMG", "TF_WEAPON_CLUB"),
-		Spy ("TF_WEAPON_INVIS", "TF_WEAPON_REVOLVER", "TF_WEAPON_KNIFE");
+		None ("n/a", "n/a", "n/a", 0),
+		Scout ("TF_WEAPON_SCATTERGUN", "TF_WEAPON_PISTOL_SCOUT", "TF_WEAPON_BAT", 1), 
+		Soldier ("TF_WEAPON_ROCKETLAUNCHER", "TF_WEAPON_SHOTGUN_SOLDIER", "TF_WEAPON_SHOVEL", 2),
+		Pyro ("TF_WEAPON_FLAMETHROWER", "TF_WEAPON_SHOTGUN_PYRO", "TF_WEAPON_FIREAXE", 3),
+		Demoman ("TF_WEAPON_GRENADELAUNCHER", "TF_WEAPON_PIPEBOMBLAUNCHER", "TF_WEAPON_BOTTLE", 4),
+		Heavyweapons ("TF_WEAPON_MINIGUN", "TF_WEAPON_SHOTGUN_HWG", "TF_WEAPON_FISTS", 5),
+		Engineer ("TF_WEAPON_SHOTGUN_PRIMARY", "TF_WEAPON_PISTOL", "TF_WEAPON_WRENCH", 6),
+		Medic ("TF_WEAPON_SYRINGEGUN_MEDIC", "TF_WEAPON_MEDIGUN", "TF_WEAPON_BONESAW", 7),
+		Sniper ("TF_WEAPON_SNIPERRIFLE", "TF_WEAPON_SMG", "TF_WEAPON_CLUB", 8),
+		Spy ("TF_WEAPON_INVIS", "TF_WEAPON_REVOLVER", "TF_WEAPON_KNIFE", 9);
 		
 		private final String primary;
 		private final String secondary;
 		private final String melee;
-		Classes(String primary, String secondary, String melee) {
+		private final int slot;
+		Classes(String primary, String secondary, String melee, int slot) {
 			this.primary = primary;
 			this.secondary = secondary;
 			this.melee = melee;
+			this.slot = slot;
 		}
 		public String primary() { return primary; }
 		public String secondary() { return secondary; }
 		public String melee() { return melee; }
 		public String building() { return "TF_WEAPON_BUILDER_SPY"; } //dumb spy hardcode
+		public int getSlot() { return slot; }
 		
 		public static Classes toClass(String str) { //dumb
 			Classes c;
@@ -74,6 +79,12 @@ public class EngiPanel extends JPanel {
 					c = Classes.None;
 					break;
 			}
+			
+			//dumb check since heavy is also valid
+			if(str.toLowerCase().contains("heavy")) {
+				return Classes.Heavyweapons;
+			}
+			
 			return c;
 		}
 	}

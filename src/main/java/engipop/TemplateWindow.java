@@ -19,13 +19,16 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import engipop.ButtonListManager.States;
+import engipop.EngiPanel.Classes;
 import engipop.Node.PopNode;
 import engipop.Node.RandomChoiceNode;
 import engipop.Node.SpawnerType;
 import engipop.Node.SquadNode;
 import engipop.Node.TFBotNode;
 import engipop.Node.TankNode;
+import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
+import engipop.PopulationParser.TemplateData;
 
 //window to edit bot and ws templates
 //similar structure to main window
@@ -77,6 +80,8 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 	JTextField templateNameField = new JTextField("", 10);
 	
 	int generated = 1; //attempt to make sure names are unique
+	
+	//TODO: needs to be cleaned up due to template handling changes
 	
 	public TemplateWindow(MainWindow mainWindow, SecondaryWindow w2) {
 		super("Template editor");
@@ -184,7 +189,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 		
 		Set<String> keyset;
 		
-		if(type == MainWindow.TFBOT) {
+		if(type == WaveSpawnNode.TFBOT) {
 			keyset = popNode.getBotTemplateMap().keySet();
 		}
 		else { //ws
@@ -301,9 +306,10 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 			Map<String, Node> map;
 			Node currentNode;
 			String name;
+			TemplateData data;
 			
 			if(wsModeButton.isSelected()) {		
-				type = MainWindow.WAVESPAWN;
+				type = WaveNode.WAVESPAWN;
 				
 				if(popNode.getWSTemplateMap() == null) {
 					popNode.setWSTemplateMap(new TreeMap<String, Node>()); //forces no nulls and sorts
@@ -315,7 +321,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 				spawnerListManager.setWSNode((WaveSpawnNode) currentNode);
 			}
 			else {
-				type = MainWindow.TFBOT;
+				type = WaveSpawnNode.TFBOT;
 				
 				if(popNode.getBotTemplateMap() == null) {
 					popNode.setBotTemplateMap(new TreeMap<String, Node>()); //forces no nulls and sorts
@@ -352,15 +358,17 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 				map.put(name, currentNode);
 				templateComboModel.addElement(name);
 				templateComboBox.setSelectedItem(name);
-				if(type.equals(MainWindow.TFBOT)) {
-					String newValue = currentNode.getValue(TFBotNode.NAME) != null ? 
-							currentNode.getValue(TFBotNode.NAME) + " (" + name + ")" : "(" + name + ")";
+				
+				if(type.equals(WaveSpawnNode.TFBOT)) {
+					data = new TemplateData(name, (Classes) currentNode.getValue(TFBotNode.CLASSNAME), 
+							(String) currentNode.getValue(TFBotNode.NAME), WaveSpawnNode.TFBOT);
 					
-					w2.fireTemplateChange(type, null, newValue);
 				}
 				else {
-					
+					data = new TemplateData(name, (String) currentNode.getValue(TFBotNode.NAME), WaveNode.WAVESPAWN);
 				}
+				
+				w2.fireTemplateChange(type, null, data);
 			}	
 		});
 		
@@ -378,11 +386,11 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 			//need to update and be able to remove nodes
 			//might need fresh nodes here
 			if(wsModeButton.isSelected()) {
-				type = MainWindow.WAVESPAWN;
+				type = WaveNode.WAVESPAWN;
 				map = popNode.getWSTemplateMap();
 			}
 			else {
-				type = MainWindow.TFBOT;
+				type = WaveSpawnNode.TFBOT;
 				map = popNode.getBotTemplateMap();
 			}
 			
@@ -403,17 +411,31 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 					sameName = true;
 				}
 				
-				if(sameName || overwrite) {				
+				if(sameName || overwrite) {
+					TemplateData oldData;
+					TemplateData newData;
+					
+					
 					if(overwrite) {
 						map.remove(oldName); //make sure old name isn't floating around
 					}
-					if(type.equals(MainWindow.TFBOT)) {
+					if(type.equals(WaveSpawnNode.TFBOT)) {
+						oldData = new TemplateData(oldName, (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME), 
+								(String) currentBotNode.getValue(TFBotNode.NAME), WaveSpawnNode.TFBOT);
+						
 						botPanel.updateNode(currentBotNode);
 						currentNode = currentBotNode;
+						
+						newData = new TemplateData(newName, (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME), 
+								(String) currentBotNode.getValue(TFBotNode.NAME), WaveSpawnNode.TFBOT);
 					}
 					else {
+						oldData = new TemplateData(oldName, (String) currentWSNode.getValue(TFBotNode.NAME), WaveNode.WAVESPAWN);
+						
 						wsPanel.updateNode(currentWSNode);
 						currentNode = currentWSNode;
+						
+						newData = new TemplateData(newName, (String) currentWSNode.getValue(TFBotNode.NAME), WaveNode.WAVESPAWN);
 					}
 					
 					map.put(newName, currentNode);
@@ -426,10 +448,11 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 					
 					if(oldNodeName != currentNode.getValue(TFBotNode.NAME) || !oldName.equals(newName)) {
 						//bot/ws's actual name or templatename was updated
-						String oldValue = oldNodeName != null ? oldNodeName + " (" + oldName + ")" : "(" + oldName + ")";
-						String newValue = currentNode.getValue(TFBotNode.NAME) != null ? 
-								currentNode.getValue(TFBotNode.NAME) + " (" + newName + ")" : "(" + newName + ")";
-						w2.fireTemplateChange(type, oldValue, newValue);
+						//String oldValue = oldNodeName != null ? oldNodeName + " (" + oldName + ")" : "(" + oldName + ")";
+						//String newValue = currentNode.getValue(TFBotNode.NAME) != null ? 
+						//		currentNode.getValue(TFBotNode.NAME) + " (" + newName + ")" : "(" + newName + ")";
+						
+						w2.fireTemplateChange(type, oldData, newData);
 					}					
 				}
 			}
@@ -443,23 +466,30 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 			Map<String, Node> map;
 			String type;
 			String nodeName;
+			TemplateData data;
 			
 			if(wsModeButton.isSelected()) {
 				map = popNode.getWSTemplateMap();
-				type = MainWindow.WAVESPAWN;
+				type = WaveNode.WAVESPAWN;
 				nodeName = (String) currentWSNode.getValue(TFBotNode.NAME);
+				
+				data = new TemplateData(removed, (String) currentBotNode.getValue(TFBotNode.NAME), WaveNode.WAVESPAWN);
 			}
 			else {
 				map = popNode.getBotTemplateMap();
-				type = MainWindow.TFBOT;
+				type = WaveSpawnNode.TFBOT;
 				nodeName = (String) currentBotNode.getValue(TFBotNode.NAME);
+				
+				data = new TemplateData(removed, (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME), 
+						(String) currentBotNode.getValue(TFBotNode.NAME), WaveSpawnNode.TFBOT);
 			}
 			
-			String oldValue = nodeName != null ? nodeName + " (" + removed + ")" : "(" + removed + ")";
+			//String oldValue = nodeName != null ? nodeName + " (" + removed + ")" : "(" + removed + ")";
 			
 			templateComboModel.removeElement(removed);
 			map.remove(removed);
-			w2.fireTemplateChange(type, oldValue, null);
+			
+			w2.fireTemplateChange(type, data, null);
 		});
 	}
 	

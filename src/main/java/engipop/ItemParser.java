@@ -73,7 +73,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 	public ItemParser() {
 	}
     
-	public void parse(File file, MainWindow window) {
+	public void parse(File file, EngiWindow window) {
 		String schema = "";
 		VDFNode item;
 		VDFNode allPrefabs;

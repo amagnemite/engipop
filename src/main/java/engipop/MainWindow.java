@@ -14,9 +14,6 @@ import engipop.Node.*;
 //main class
 @SuppressWarnings("serial")
 public class MainWindow extends EngiWindow implements PropertyChangeListener {
-	public static final String ITEMPARSE = "itemparse";
-	public static final String TFBOT = "TFBOT";
-	public static final String WAVESPAWN = "WAVESPAWN";
 	public static final String BOTTEMPLATEMAP = "BOTTEMPLATEMAP";
 	
 	JMenuBar menuBar = new JMenuBar();
@@ -36,6 +33,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	BotPanel botPanel;
 	TankPanel tankPanel;
 	WaveNodePanelManager waveNodeManager;
+	TemplateTree templateTree;
 	//JPanel listPanel;
 	//JPanel spawnerPanel;
 	
@@ -43,15 +41,13 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	
 	PopNode popNode = new PopNode();
 	
-	ItemParser itemParser = new ItemParser();
-	
 	private PropertyChangeSupport support = new PropertyChangeSupport(this);
 	
 	//todo: add a vertical scrollbar
 	public MainWindow() {
 		super("Engipop main");
 	
-		setSize(1400, 1000);
+		setSize(1500, 1000);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
 		feedback = new JLabel(" ");
@@ -66,7 +62,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		secondaryWindow.addPropertyChangeListener("POPNODE", this);
 		
 		popSet.addActionListener(event -> {
-			secondaryWindow.updatePopPanel();
+			secondaryWindow.updatePanel();
 			secondaryWindow.setVisible(true);
 		});
 		templateSet.addActionListener(event -> {
@@ -115,9 +111,13 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		tankPanel = new TankPanel(secondaryWindow);
 		
 		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, botPanel, tankPanel, secondaryWindow);
+		templateTree = new TemplateTree(secondaryWindow);
 		JPanel listPanel = waveNodeManager.getListPanel();
 		JPanel spawnerPanel = waveNodeManager.getSpawnerPanel();
+		JScrollPane templateTreePane = templateTree.getTreePane();
 		
+		templateTreePane.setMinimumSize(new Dimension(225, templateTreePane.getPreferredSize().height));
+		//botPanel.setMinimumSize(botPanel.getPreferredSize());
 		tankPanel.setVisible(false);
 		//tankPanel.setPreferredSize(botPanel.getPreferredSize());
 		
@@ -132,14 +132,11 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		});
 		
 		addGB(feedback, 0, 1);
-		addGB(createPop, 2, 6);
+		addGB(createPop, 3, 6);
 		
 		gbConstraints.gridwidth = 2;
 		addGB(wavePanel, 0, 2);
-		
-		//gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		addGB(wsPanel, 0, 3);
-		
 		addGB(spawnerPanel, 0, 4);
 				
 		gbConstraints.gridheight = 2;
@@ -151,7 +148,10 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		gbConstraints.weighty = 0;
 		gbConstraints.gridheight = 3;
 		gbConstraints.gridwidth = 1;
-		addGB(listPanel, 2, 3);
+		addGB(listPanel, 3, 3);
+		
+		gbConstraints.gridheight = 4;
+		addGB(templateTreePane, 2, 3);
 		
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -183,25 +183,11 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
     }
 	
     public void updatePropertyListeners() {
-    	support.firePropertyChange(ITEMPARSE, null, itemParser);
     	//support.firePropertyChange(BOTTEMPLATELISTFIXED, null, popParse.getBotTemplateList());
     }
 	
 	public PopNode getPopNode() {
 		return this.popNode;
-	}
-	
-	//take file, parse it, let botpanels know
-	public void parseItems(File itemsTxt) { 
-		//itemparser = 
-		itemParser.parse(itemsTxt, this);
-		updatePropertyListeners();
-		
-		//try {
-			//new PopulationParser(this, setW).parseTemplates(Paths.get((this.getClass().getResource("/robot_standard.pop")).toURI()).toFile());
-		//} catch (URISyntaxException e) {
-		//}
-		//popParse.parseTemplates(itemParser, new File());
 	}
 	
 	private void generateFile() { //get filename/place to save pop at
