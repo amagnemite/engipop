@@ -205,6 +205,10 @@ public class Node implements Serializable {
         		this.removeKey("Wave");
         	}
         	
+        	if(!this.containsKey(STARTINGCURRENCY)) {
+        		putKey(STARTINGCURRENCY, 0);
+        	}
+        	
         	//may need to make sure this isn't a not string
         	if(this.containsKey(EVENTPOPFILE) && 
         			((String) this.getValue(EVENTPOPFILE)).equals("Halloween")) {
@@ -668,6 +672,7 @@ public class Node implements Serializable {
     		putKey(CLASSICON, "scout");
     		putKey(SKILL, EASY);
     		putKey(WEAPONRESTRICT, ANY);
+    		//putKey(ITEMATTRIBUTES, new ArrayList<Map<String, String>>(Arrays.asList(null, null, null, null, null, null, null)));
     		isItemsSorted = true;
     	}
     	 
@@ -698,9 +703,21 @@ public class Node implements Serializable {
     			putKey(ITEM, list);
     		}
     		
+    		//this is sorted in botpanel, maybe shouldn't be
+    		//post copyvdfnode = arraylist of map<string, arraylist<object>>s
+    		//so need to copy into an arraylist of map<string, string>
     		if(keyVals.containsKey(ITEMATTRIBUTES)) {
     			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
-    			list.addAll(keyVals.get(ITEMATTRIBUTES)); 
+    			for(Object value : keyVals.get(ITEMATTRIBUTES)) {
+    				Map<String, List<Object>> attrMap = (Map<String, List<Object>>) value;
+    				Map<String, String> newMap = new TreeMap<String, String> (String.CASE_INSENSITIVE_ORDER);
+    				
+    				for(Entry<String, List<Object>> entry : attrMap.entrySet()) {
+    					//also post int/double conversion so need to reconvert
+    					newMap.put(entry.getKey(), entry.getValue().get(0).toString());	
+    				}
+    				list.add(newMap);
+    			}
     			putKey(ITEMATTRIBUTES, list);
     		}
     		

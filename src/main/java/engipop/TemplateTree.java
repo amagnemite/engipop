@@ -26,7 +26,7 @@ public class TemplateTree implements PropertyChangeListener {
 	
 	private DefaultMutableTreeNode botNode = new DefaultMutableTreeNode("TFBot templates");
 	private DefaultMutableTreeNode wsNode = new DefaultMutableTreeNode("WaveSpawn templates");
-	//private DefaultMutableTreeNode otherRoot = new DefaultMutableTreeNode();
+	private DefaultMutableTreeNode otherNode = new DefaultMutableTreeNode("Non bot/WS templates");
 	
 	private DefaultMutableTreeNode internalBotNode = new DefaultMutableTreeNode("Created TFBot templates");
 	private DefaultMutableTreeNode includedBotNode = new DefaultMutableTreeNode("Included TFBot templates");
@@ -46,12 +46,16 @@ public class TemplateTree implements PropertyChangeListener {
 	private DefaultMutableTreeNode internalWSNode = new DefaultMutableTreeNode("Created WaveSpawn templates");
 	private DefaultMutableTreeNode includedWSNode = new DefaultMutableTreeNode("Included WaveSpawn templates");
 	private DefaultMutableTreeNode importedWSNode = new DefaultMutableTreeNode("Imported WaveSpawn templates");
+	
+	private DefaultMutableTreeNode includedOtherNode = new DefaultMutableTreeNode("Included non bot/WS templates");
+	private DefaultMutableTreeNode importedOtherNode = new DefaultMutableTreeNode("Imported non bot/WS templates");
 		
 	public TemplateTree(SecondaryWindow secWin) {
 		secWin.addPropertyChangeListener(this);
 		
 		templateRoot.add(botNode);
 		templateRoot.add(wsNode);
+		templateRoot.add(otherNode);
 		
 		botNode.add(internalBotNode);
 		botNode.add(includedBotNode);
@@ -71,6 +75,9 @@ public class TemplateTree implements PropertyChangeListener {
 		wsNode.add(internalWSNode);
 		wsNode.add(includedWSNode);
 		wsNode.add(importedWSNode);
+		
+		otherNode.add(includedOtherNode);
+		otherNode.add(importedOtherNode);
 	}
 	
 	public JScrollPane getTreePane() {
@@ -121,22 +128,28 @@ public class TemplateTree implements PropertyChangeListener {
 	private void addNonInternalTemplates(Map<String, List<TemplateData>> map, String category) {
 		DefaultMutableTreeNode parentBotNode;
 		DefaultMutableTreeNode parentWSNode;
+		DefaultMutableTreeNode parentOtherNode;
 		
 		if(category.equals(SecondaryWindow.INCLUDED)) {
 			parentBotNode = includedBotNode;
 			parentWSNode = includedWSNode;
+			parentOtherNode = includedOtherNode;
 		}
 		else {
 			parentBotNode = importedBotNode;
 			parentWSNode = importedWSNode;
+			parentOtherNode = importedOtherNode;
 		}
 		
 		for(Entry<String, List<TemplateData>> entry : map.entrySet()) {
 			DefaultMutableTreeNode newBotNode = new DefaultMutableTreeNode(entry.getKey());
 			DefaultMutableTreeNode newWSNode = new DefaultMutableTreeNode(entry.getKey());
+			DefaultMutableTreeNode newOtherNode = new DefaultMutableTreeNode(entry.getKey());
+			int botsAdded = 0;
 			
 			parentBotNode.add(newBotNode);
 			parentWSNode.add(newWSNode);
+			parentOtherNode.add(newOtherNode);
 			
 			DefaultMutableTreeNode newNoClassNode = new DefaultMutableTreeNode("No class");
 			DefaultMutableTreeNode newScoutNode = new DefaultMutableTreeNode("Scout");
@@ -163,52 +176,24 @@ public class TemplateTree implements PropertyChangeListener {
 			for(TemplateData data : entry.getValue()) {
 				if(data.getType().equals(WaveSpawnNode.TFBOT)) {
 					((DefaultMutableTreeNode) newBotNode.getChildAt(data.getClassSlot())).add(new DefaultMutableTreeNode(data));
-					
-					/*
-					switch(data.getTFClass()) {
-						case Scout:
-							newScoutNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case Soldier:
-							newSoldierNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case Pyro:
-							newPyroNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case Demoman:
-							newDemoNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case Heavyweapons:
-							newHeavyNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case Engineer:
-							newEngieNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case Medic:
-							newMedicNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case Sniper:
-							newSniperNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case Spy:
-							newSpyNode.add(new DefaultMutableTreeNode(name));
-							break;
-						case None:
-						default:
-							newNoClassNode.add(new DefaultMutableTreeNode(name));
-							break;
-					}*/
+					botsAdded++;
 				}
 				else if(data.getType().equals(WaveNode.WAVESPAWN)) {
 					newWSNode.add(new DefaultMutableTreeNode(data));
 				}
-			} //end of inner for
+				else {
+					newOtherNode.add(new DefaultMutableTreeNode(data));
+				}
+			}
 			//clean up empty nodes
-			//if(newBotNode.getChildCount() == 0) {
-				//includedBotNode.remove(newBotNode);
-			//}
+			if(botsAdded == 0) {
+				parentBotNode.remove(newBotNode);
+			}
 			if(newWSNode.getChildCount() == 0) {
 				parentWSNode.remove(newWSNode);
+			}
+			if(newOtherNode.getChildCount() == 0) {
+				parentOtherNode.remove(newOtherNode);
 			}
 		}
 	}

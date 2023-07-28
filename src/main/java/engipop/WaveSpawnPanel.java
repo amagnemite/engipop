@@ -6,11 +6,14 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 import engipop.Node.RelayNode;
+import engipop.Node.TFBotNode;
 import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
 
@@ -24,13 +27,15 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	JTextField wsSpawnField = new JTextField(20);
 	JTextField templateField = new JTextField(20);
 	
-	DefaultComboBoxModel<String> whereModel = new DefaultComboBoxModel<String>();
+	//DefaultComboBoxModel<String> whereModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> startModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> firstModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> lastModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> doneModel = new DefaultComboBoxModel<String>();
+	DefaultTableModel whereModel = new DefaultTableModel(0, 1);
 	
-	JComboBox<String> wsWhereBox = new JComboBox<String>(whereModel);
+	//JComboBox<String> wsWhereBox = new JComboBox<String>(whereModel);
+	JTable whereTable = new JTable(whereModel);
 	JComboBox<String> startRelay = new JComboBox<String>(startModel);
 	JComboBox<String> firstRelay = new JComboBox<String>(firstModel);
 	JComboBox<String> lastRelay = new JComboBox<String>(lastModel);
@@ -59,7 +64,24 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		
 		secondaryWindow.addPropertyChangeListener(WaveNode.WAVESPAWN, this);
 		
+		JButton addWhereRow = new JButton("+");
+		JButton removeWhereRow = new JButton("-");
+		
 		JLabel label = new JLabel("WaveSpawn editor");
+		JLabel wsName = new JLabel("Name: ");
+		JLabel wsWhere = new JLabel("Where: ");
+		JLabel wsTotalCount = new JLabel("TotalCount: ");
+		JLabel wsMaxActive = new JLabel("MaxActive: ");
+		JLabel wsSpawnCount = new JLabel("SpawnCount: ");
+		JLabel wsBeforeStart = new JLabel("WaitBeforeStarting: ");
+		JLabel wsCurrency = new JLabel("TotalCurrency: ");
+		JLabel wsAllDead = new JLabel("WaitForAllDead: ");
+		JLabel wsAllSpawned = new JLabel("WaitForAllSpawned: ");
+		JLabel startWaveLabel = new JLabel("StartWaveOutput: ");
+		JLabel firstLabel = new JLabel("FirstSpawnOutput: ");
+		JLabel lastLabel = new JLabel("LastSpawnOutput: ");
+		JLabel doneLabel = new JLabel("DoneOutput: ");
+		JLabel templateLabel = new JLabel("Template: ");
 		
 		SpinnerNumberModel totalModel = new SpinnerNumberModel(initial, MIN, totalMax, incr); //totalcount bots
 		SpinnerNumberModel spawnModel = new SpinnerNumberModel(initial, MIN, activeMax, incr); //spawncount
@@ -83,22 +105,14 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		firstRelay.setEditable(true);
 		lastRelay.setEditable(true);
 		doneRelay.setEditable(true);
-		wsWhereBox.setEditable(true);
+		removeWhereRow.setEnabled(false);
 		
-		JLabel wsName = new JLabel("Name: ");
-		JLabel wsWhere = new JLabel("Where: ");
-		JLabel wsTotalCount = new JLabel("TotalCount: ");
-		JLabel wsMaxActive = new JLabel("MaxActive: ");
-		JLabel wsSpawnCount = new JLabel("SpawnCount: ");
-		JLabel wsBeforeStart = new JLabel("WaitBeforeStarting: ");
-		JLabel wsCurrency = new JLabel("TotalCurrency: ");
-		JLabel wsAllDead = new JLabel("WaitForAllDead: ");
-		JLabel wsAllSpawned = new JLabel("WaitForAllSpawned: ");
-		JLabel startWaveLabel = new JLabel("StartWaveOutput: ");
-		JLabel firstLabel = new JLabel("FirstSpawnOutput: ");
-		JLabel lastLabel = new JLabel("LastSpawnOutput: ");
-		JLabel doneLabel = new JLabel("DoneOutput: ");
-		JLabel templateLabel = new JLabel("Template: ");
+		wsNameField.setMinimumSize(wsNameField.getPreferredSize());
+		whereTable.setMinimumSize(whereTable.getPreferredSize());
+		wsDeadField.setMinimumSize(wsDeadField.getPreferredSize());
+		wsSpawnField.setMinimumSize(wsSpawnField.getPreferredSize());
+		
+		whereModel.addRow(new String[] {""});
 		
 		wsDeaths.addItemListener(event -> { //update betweenspawns as appropriate
 			updateBetweenSpawns();
@@ -163,17 +177,27 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 		});
 		
-		wsNameField.setMinimumSize(wsNameField.getPreferredSize());
-		wsWhereBox.setMinimumSize(wsWhereBox.getPreferredSize());
-		wsDeadField.setMinimumSize(wsDeadField.getPreferredSize());
-		wsSpawnField.setMinimumSize(wsSpawnField.getPreferredSize());
+		whereTable.getSelectionModel().addListSelectionListener(event -> {
+			if(whereTable.getSelectedRowCount() == 1) {
+				removeWhereRow.setEnabled(true);
+			}
+			else {
+				removeWhereRow.setEnabled(false);
+			}
+		});
+		addWhereRow.addActionListener(event -> {
+			whereModel.addRow(new String[] {""});
+		});
+		removeWhereRow.addActionListener(event -> {
+			whereModel.removeRow(whereTable.getSelectedRow());
+		});
 		
 		addGB(label, 0, 0);
 		
 		addGB(wsName, 0, 1);
 		addGB(wsWhere, 2, 1);
 		addGB(wsNameField, 1, 1);
-		addGB(wsWhereBox, 3, 1);	
+		addGB(whereTable, 3, 1);	
 		
 		addGB(wsTotalCount, 0, 3);
 		addGB(wsTotalSpin, 1, 3);
@@ -218,7 +242,27 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	public void updatePanel(WaveSpawnNode wsn) { //sets panel components to reflect the node
 		//wsn.printKeyVals();
 		wsNameField.setText((String) wsn.getValue(WaveSpawnNode.NAME));
-		wsWhereBox.setSelectedItem(wsn.getValue(WaveSpawnNode.WHERE));
+		
+		whereTable.clearSelection();
+		if(wsn.containsKey(WaveSpawnNode.WHERE)) {
+			List<Object> wheres = new ArrayList<Object>();
+			wheres.addAll(wsn.getListValue(WaveSpawnNode.WHERE));
+			
+			//select all the wheres already in model
+			for(int i = 0; i < whereModel.getRowCount(); i++) {
+				if(wheres.contains(whereModel.getValueAt(i, 0))) {
+					whereTable.changeSelection(i, 1, true, false);
+					wheres.remove(whereModel.getValueAt(i, 0));
+				}
+			}
+			
+			//then add new tags that weren't added
+			for(Object newWhere : wheres) {
+				whereModel.addRow(new String[] {(String) newWhere});
+				whereTable.changeSelection(whereModel.getRowCount() - 1, 0, true, false);
+			}
+		}
+		
 		wsTotalSpin.setValue(wsn.getValue(WaveSpawnNode.TOTALCOUNT));
 		wsMaxSpin.setValue(wsn.getValue(WaveSpawnNode.MAXACTIVE));
 		wsSpawnSpin.setValue(wsn.getValue(WaveSpawnNode.SPAWNCOUNT));
@@ -265,7 +309,13 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	
 	public void updateNode(WaveSpawnNode wsn) { //update node to reflect panel
 		wsn.putKey(WaveSpawnNode.NAME, wsNameField.getText());
-		wsn.putKey(WaveSpawnNode.WHERE, wsWhereBox.getSelectedItem());
+		
+		List<String> wheres = new ArrayList<String>(4);
+		for(int row : whereTable.getSelectedRows()) {
+			wheres.add((String) whereTable.getValueAt(row, 0));
+		}
+		wsn.putKey(WaveSpawnNode.WHERE, wheres);
+		
 		wsn.putKey(WaveSpawnNode.TOTALCOUNT, wsTotalSpin.getValue());
 		wsn.putKey(WaveSpawnNode.MAXACTIVE, wsMaxSpin.getValue());
 		wsn.putKey(WaveSpawnNode.SPAWNCOUNT, wsSpawnSpin.getValue());
@@ -344,10 +394,12 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	}
 	
 	public void setWhere(List<String> spawns) {
-		whereModel.removeAllElements();
+		for(int i = 0; i < whereModel.getRowCount(); i++) {
+			whereModel.removeRow(0);
+		}
 		
 		for(String s : spawns) {
-			whereModel.addElement(s);
+			whereModel.addRow(new String[] {s});
 		}
 	}
 	

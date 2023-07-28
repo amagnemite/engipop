@@ -128,17 +128,18 @@ public class PopulationParser { //parse .pop
 					cclass = node.getString("Class");
 				}
 				
-				if(subset.retainAll(botKeys)) { //keep all keys that are also in botkeys
+				if(subset.removeAll(botKeys)) { //keep all keys that are also in botkeys
 					templateList.add(new TemplateData(entry.getKey(), cclass, name, WaveSpawnNode.TFBOT));
 				}
-				else if(subset.retainAll(wsKeys)) {
+				else if(subset.removeAll(wsKeys)) {
 					templateList.add(new TemplateData(entry.getKey(), name, WaveNode.WAVESPAWN));
 				}
-				else if(subset.retainAll(overlappingKeys)) { //contains template, name or both, handle later
+				else if(subset.removeAll(overlappingKeys)) { //contains template, name or both, handle later
 					templateQueue.add(entry);
 				}
 				else { //consists either of uncommon keys or rafmod keys, deal with later
 					//note also rafmod allows tank templates
+					templateList.add(new TemplateData(entry.getKey(), name, "OTHER"));
 				}
 			}
 		}

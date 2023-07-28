@@ -219,6 +219,10 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		PopNode popNode = (PopNode) evt.getNewValue();
+		if(!popNode.containsKey(PopNode.MISSION)) {
+			return;
+		}
+		
 		for(Object node : popNode.getListValue(PopNode.MISSION)) {
 			missionArray.add((MissionNode) node);
 		}

@@ -46,6 +46,10 @@ public class EngiPanel extends JPanel {
 		public static Classes toClass(String str) { //dumb
 			Classes c;
 			
+			if(str == null) {
+				return Classes.None;
+			}
+			
 			switch(str.toLowerCase()) {
 				case "scout":
 					c = Classes.Scout;
