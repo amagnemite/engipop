@@ -49,6 +49,7 @@ public class TemplateTree implements PropertyChangeListener {
 	
 	private DefaultMutableTreeNode includedOtherNode = new DefaultMutableTreeNode("Included non bot/WS templates");
 	private DefaultMutableTreeNode importedOtherNode = new DefaultMutableTreeNode("Imported non bot/WS templates");
+	private DefaultMutableTreeNode internalOtherNode = new DefaultMutableTreeNode("Created non bot/WS templates");
 		
 	public TemplateTree(SecondaryWindow secWin) {
 		secWin.addPropertyChangeListener(this);
@@ -90,11 +91,16 @@ public class TemplateTree implements PropertyChangeListener {
 			case SecondaryWindow.INCLUDED:
 				addNonInternalTemplates((Map<String, List<TemplateData>>) evt.getNewValue(), SecondaryWindow.INCLUDED);
 				break;
+			/*
 			case WaveSpawnNode.TFBOT:
 				updateInternalTemplate((TemplateData) evt.getOldValue(), (TemplateData) evt.getNewValue());
 				break;
 			case WaveNode.WAVESPAWN:
 				
+				break;
+			*/
+			case SecondaryWindow.INTERNAL:	
+				addInternalTemplates((List<TemplateData>) evt.getNewValue());
 				break;
 			case SecondaryWindow.IMPORTED:
 				addNonInternalTemplates((Map<String, List<TemplateData>>) evt.getNewValue(), SecondaryWindow.IMPORTED);
@@ -122,6 +128,20 @@ public class TemplateTree implements PropertyChangeListener {
 		}
 		else {
 			
+		}
+	}
+	
+	private void addInternalTemplates(List<TemplateData> list) {
+		for(TemplateData data : list) {
+			if(data.getType().equals(WaveSpawnNode.TFBOT)) {
+				((DefaultMutableTreeNode) internalBotNode.getChildAt(data.getClassSlot())).add(new DefaultMutableTreeNode(data));
+			}
+			else if(data.getType().equals(WaveNode.WAVESPAWN)) {
+				internalWSNode.add(new DefaultMutableTreeNode(data));
+			}
+			else {
+				internalOtherNode.add(new DefaultMutableTreeNode(data));
+			}
 		}
 	}
 	

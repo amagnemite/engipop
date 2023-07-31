@@ -50,9 +50,10 @@ public class TreeParse { //it is time to parse
 		String stopCheck = "";
 
 		//all waves need to have a start
-		
-		stopCheck = ((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "StartWaveOutput";
-		if(stopCheck.isEmpty() && !lastWave) { //all waves need done except last wave
+		if(wave.containsKey(WaveNode.STARTWAVEOUTPUT)) {
+			stopCheck = ((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "StartWaveOutput";
+		}	
+		if(stopCheck.isEmpty() && !lastWave && wave.containsKey(WaveNode.DONEOUTPUT)) { //all waves need done except last wave
 			stopCheck = ((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "DoneOutput";
 			
 		}
@@ -243,36 +244,6 @@ public class TreeParse { //it is time to parse
 			}
 		}
 	}
-	
-	/*
-	private void printNode(PrintWriter pw, Node node) {
-		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
-		mapCopy.putAll(node.getMap()); //do this to prevent case issues
-		
-		for(String key : node.printNode()) {
-			if(root.containsKey(key)) {
-				/*if(root.getValue(key).getClass() == Boolean.class) {
-					
-				} 
-				if(root.getValue(key).equals(true)) {
-					if(key.equals(WaveSpawnNode.SUPPORT)) {
-						
-					}
-				}
-				
-			}
-			mapCopy.remove(key);
-		}
-		
-		printGenericMap(pw, mapCopy);
-		
-		if(node.hasChildren()) {
-			for(Node child : node.getChildren()) {
-				printNode(pw, child);
-			}
-		}
-		
-	}*/
 
 	private void printPopulation(PrintWriter pw, PopNode root) { //population settings
 		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
@@ -284,7 +255,7 @@ public class TreeParse { //it is time to parse
 		}
 		
 		if(root.containsKey(PopNode.RESPAWNWAVETIME)) {
-			if((int) root.getValue(PopNode.RESPAWNWAVETIME) != 10) {
+			if((int) root.getValue(PopNode.RESPAWNWAVETIME) != 10 && (int) root.getValue(PopNode.RESPAWNWAVETIME) != 0) {
 				indentPrintln(pw, "RespawnWaveTime " + root.getValue(PopNode.RESPAWNWAVETIME));
 			}
 			mapCopy.remove(PopNode.RESPAWNWAVETIME);
@@ -344,8 +315,32 @@ public class TreeParse { //it is time to parse
 		}
 		mapCopy.remove(PopNode.MISSION);
 		
-		if(root.containsKey(PopNode.TEMPLATE)) {
+		if(root.getBotTemplateMap().size() > 0 || root.getWSTemplateMap().size() > 0) {
+			indentPrintln(pw, PopNode.TEMPLATE);
+			indentPrintln(pw, "{");
+			indentCount++;
 			
+			for(Entry<String, Node> entry : root.getBotTemplateMap().entrySet()) {
+				indentPrintln(pw, entry.getKey());
+				indentPrintln(pw, "{");
+				indentCount++;
+				
+				printTFBot(pw, (TFBotNode) entry.getValue());
+				
+				indentCount--;
+				indentPrintln(pw, "}");
+			}
+			
+			for(Entry<String, Node> entry : root.getWSTemplateMap().entrySet()) {
+				indentPrintln(pw, entry.getKey());
+				indentPrintln(pw, "{");
+				indentCount++;
+				
+				printWaveSpawn(pw, (WaveSpawnNode) entry);
+				
+				indentCount--;
+				indentPrintln(pw, "}");
+			}
 		}
 		
 		printGenericMap(pw, mapCopy);
@@ -586,13 +581,22 @@ public class TreeParse { //it is time to parse
 			}
 		}
 		
+		if(node.containsKey(TFBotNode.CHARACTERATTRIBUTES)) {
+			List<Object> mapList = mapCopy.remove(TFBotNode.CHARACTERATTRIBUTES);
+			
+			for(Object submap : mapList ) {
+				printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), 
+						mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
+			}
+		}
+		
 		//this trainwreck needs rewritten
 		if(node.containsKey(TFBotNode.ITEMATTRIBUTES)) {
 			List<Object> mapList = mapCopy.remove(TFBotNode.ITEMATTRIBUTES);
 			
 			for(Object submap : mapList ) {
 				printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), 
-						mapList.indexOf((Map<String, List<Object>>) submap), node, (Map<String, List<Object>>) submap);
+						mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
 			}
 		}
 		
@@ -644,7 +648,7 @@ public class TreeParse { //it is time to parse
 		System.out.println("printed tfbot");
 	}
 	
-	private void printAttr(PrintWriter pw, EngiPanel.Classes tfClass, int slot, TFBotNode botNode, Map<String, List<Object>> attrNode) {
+	private void printAttr(PrintWriter pw, EngiPanel.Classes tfClass, int slot, TFBotNode botNode, Map<String, String> attrNode) {
 		Object itemName = null;
 		
 		if(slot == ItemSlot.CHARACTER.getSlot()) { //different subtree name
@@ -652,7 +656,7 @@ public class TreeParse { //it is time to parse
 		}
 		else {
 			indentPrintln(pw, "ItemAttributes");
-			itemName = attrNode.get(TFBotNode.ITEMNAME).get(0);
+			itemName = attrNode.get(TFBotNode.ITEMNAME);
 		}
 		indentPrintln(pw, "{");
 		indentCount++;
@@ -689,11 +693,11 @@ public class TreeParse { //it is time to parse
 		//fix this
 		attrNode.forEach((k, v) -> {
 			if(!k.equals(PETALTNAME) && 
-					!(((String) k).equalsIgnoreCase((String) attrNode.get(TFBotNode.ITEMNAME).get(0))) ) {
-				indentPrintln(pw, "\"" + k + "\"" + " " + v.get(0));
+					!(((String) v).equalsIgnoreCase((String) attrNode.get(TFBotNode.ITEMNAME))) ) {
+				indentPrintln(pw, "\"" + k + "\"" + " " + v);
 			}
-			else { //super super long 
-				indentPrintln(pw, "\"counts as assister is some kind of pet this update is going to be awesome\" " + v.get(0));
+			else if(k.equals(PETALTNAME)) { //super super long 
+				indentPrintln(pw, "\"counts as assister is some kind of pet this update is going to be awesome\" " + v);
 			}
 		}
 			

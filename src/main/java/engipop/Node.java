@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import engipop.EngiPanel.Classes;
+import engipop.PopulationParser.TemplateData;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
@@ -175,7 +176,7 @@ public class Node implements Serializable {
     	public static final String BOTSATKINSPAWN = "CanBotsAttackWhileInSpawnRoom"; //boolean / string
     	public static final String ADVANCED = "Advanced"; //boolean
     	public static final String MISSION = "Mission";
-    	public static final String TEMPLATE = "Template";
+    	public static final String TEMPLATE = "Templates";
     	
     	private transient int mapIndex = -1;
     	private Map<String, Node> wsTemplateMap = new HashMap<String, Node>();
@@ -228,6 +229,10 @@ public class Node implements Serializable {
         		putKey(BOTSATKINSPAWN, true);
         	}
         	
+        	if(!this.containsKey(RESPAWNWAVETIME)) {
+        		putKey(RESPAWNWAVETIME, 0);
+        	}
+        	
         	if(this.containsKey(FIXEDRESPAWNWAVETIME)) { //presence of flag is true
         		putKey(FIXEDRESPAWNWAVETIME, true);
         	}
@@ -248,6 +253,28 @@ public class Node implements Serializable {
         			array.add(new MissionNode((Map<String, List<Object>>) mission));
         		}
         		putKey(MISSION, array);
+        	}
+        	
+        	if(keyVals.containsKey(TEMPLATE)) {
+        		List<Object> list = keyVals.get(TEMPLATE);
+        		
+        		for(Entry<String, Object> node : ((Map<String, Object>) list.get(0)).entrySet()) {
+        			//i love casting i love casting
+        			List<Object> sublist = (List<Object>) node.getValue();
+        			Map<String, List<Object>> keyvals = (Map<String, List<Object>>) sublist.get(0);
+        			Set<String> subset = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        			subset.addAll(TFBotNode.getNodeKeyList());
+        			subset.remove(TFBotNode.NAME);
+        			subset.remove(TFBotNode.TEMPLATE);
+        			
+        			if(subset.removeAll(keyvals.keySet())) {
+        				botTemplateMap.put(node.getKey(), new TFBotNode(keyvals));
+        			}
+        			else {
+        				wsTemplateMap.put(node.getKey(), new WaveSpawnNode(keyvals));
+        			}
+        		}
+        		keyVals.remove(TEMPLATE);
         	}
         }
         
@@ -274,7 +301,7 @@ public class Node implements Serializable {
         public Map<String, Node> getBotTemplateMap() {
         	return this.botTemplateMap;
         }
-        
+    
         public List<String> printNode() {
         	List<String> list = new ArrayList<String>(Arrays.asList(STARTINGCURRENCY, RESPAWNWAVETIME, FIXEDRESPAWNWAVETIME,
         			BUSTERDAMAGE, BUSTERKILLS, BOTSATKINSPAWN, EVENTPOPFILE, TEMPLATE, MISSION));
@@ -588,6 +615,12 @@ public class Node implements Serializable {
     		}
     		return type;
     	}
+    	
+    	public static List<String> getNodeKeyList() {
+    		return new ArrayList<String>(Arrays.asList(NAME, WHERE, TOTALCOUNT, MAXACTIVE, SPAWNCOUNT, TOTALCURRENCY, WAITBEFORESTARTING,
+    				WAITBETWEENSPAWNS, WAITBETWEENSPAWNSAFTERDEATH, WAITFORALLSPAWNED, WAITFORALLDEAD, SUPPORT, STARTWAVEOUTPUT,
+    					FIRSTSPAWNOUTPUT, LASTSPAWNOUTPUT, DONEOUTPUT, TFBOT, TANK, SQUAD, RANDOMCHOICE));
+    	}
     }
     
     public static class TankNode extends Node {
@@ -636,7 +669,7 @@ public class Node implements Serializable {
     	public static final String SKILL = "Skill"; //skill
     	public static final String WEAPONRESTRICT = "WeaponRestriction"; //weaponrestriction
     	public static final String TAGS = "Tag"; //List<String>
-    	public static final String ATTRIBUTES = "Attribute";  //List<String>
+    	public static final String ATTRIBUTES = "Attributes";  //List<String>
     	public static final String ITEM = "Item"; //List<Object>
     	public static final String ITEMATTRIBUTES = "ItemAttributes"; //List<Map<String, String>>
     	public static final String CHARACTERATTRIBUTES = "CharacterAttributes";
@@ -710,7 +743,7 @@ public class Node implements Serializable {
     			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
     			for(Object value : keyVals.get(ITEMATTRIBUTES)) {
     				Map<String, List<Object>> attrMap = (Map<String, List<Object>>) value;
-    				Map<String, String> newMap = new TreeMap<String, String> (String.CASE_INSENSITIVE_ORDER);
+    				Map<String, String> newMap = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     				
     				for(Entry<String, List<Object>> entry : attrMap.entrySet()) {
     					//also post int/double conversion so need to reconvert
@@ -719,6 +752,18 @@ public class Node implements Serializable {
     				list.add(newMap);
     			}
     			putKey(ITEMATTRIBUTES, list);
+    		}
+    		
+    		if(keyVals.containsKey(CHARACTERATTRIBUTES)) {
+    			List<Object> list = new ArrayList<Object>(1);
+				Map<String, String> newMap = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+				
+				for(Entry<String, List<Object>> entry : ((Map <String, List<Object>>) this.getValue(CHARACTERATTRIBUTES)).entrySet()) {
+					//also post int/double conversion so need to reconvert
+					newMap.put(entry.getKey(), entry.getValue().get(0).toString());	
+				}
+				list.add(newMap);
+    			putKey(CHARACTERATTRIBUTES, list);
     		}
     		
     		if(!keyVals.containsKey(SKILL)) {
@@ -736,6 +781,12 @@ public class Node implements Serializable {
     	
     	public void setItemsSorted(boolean isItemsSorted) {
     		this.isItemsSorted = isItemsSorted;
+    	}
+    	
+    	public static List<String> getNodeKeyList() {
+    		return new ArrayList<String>(Arrays.asList(NAME, CLASSNAME, CLASSICON, TEMPLATE, SKILL, WEAPONRESTRICT, HEALTH, SCALE, ATTRIBUTES, TAGS,
+    				CHARACTERATTRIBUTES, ITEM, ITEMATTRIBUTES, AUTOJUMPMIN, AUTOJUMPMAX, BEHAVIORMODIFIERS, MAXVISIONRANGE, TELEPORTWHERE,
+    					EVENTCHANGEATTRIBUTES));
     	}
     }
     

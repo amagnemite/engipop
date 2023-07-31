@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,20 +63,26 @@ public class PopulationParser { //parse .pop
 			for(Object includedPop : includes) {
 				if(defaultTemplates.contains(includedPop)) {
 					URL popURL = MainWindow.class.getResource("/" + (String) includedPop);
+					//Entry<String, List<TemplateData>> entry = parseTemplates(new File(popURL.getFile()));
 					parseTemplates(new File(popURL.getFile()), templateMap);
+					
+					//templateMap.put(entry.getKey(), entry.getValue());
 				}
 				else {
-					parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + (String) includedPop), 
-						templateMap);
+					//Entry<String, List<TemplateData>> entry = parseTemplates(
+					parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + (String) includedPop), templateMap);
+					
+					//templateMap.put(entry.getKey(), entry.getValue());
 				}
 			}
 		}
 		
-		root = root.getSubNode(root.lastKey()); //waveschedule is standard name, but can be named whatever user wants
+		root = root.getSubNode(root.lastKey()); //waveschedule is standard name, but can be named whatever user wants		
 		return new PopNode(root);
 	}
 	
 	//parses one template pop at a time
+	//public Entry<String, List<TemplateData>> parseTemplates(File file, Map<String, List<TemplateData>>) {
 	public void parseTemplates(File file, Map<String, List<TemplateData>> templateMap) {
 		String filename = file.getName().substring(0, file.getName().length() - 4);
 		VDFNode root = null;
@@ -148,6 +155,7 @@ public class PopulationParser { //parse .pop
 		}
 		
 		templateMap.put(filename, templateList);
+		//return new AbstractMap.SimpleEntry<String, List<TemplateData>>(filename, templateList);
 	}
 	
 	public static class TemplateData {

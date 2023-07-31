@@ -136,6 +136,7 @@ public class NodePanelManager {
 			containingWindow.feedback.setText(" ");
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			botPanel.setVisible(true);
+			spawnerPanel.setVisible(true);
 			
 			switch (addSpawner.getText()) {
 				//TODO: get the current wsnode from whatever parent window
@@ -191,6 +192,7 @@ public class NodePanelManager {
 			spawnerInfo.setText(noSpawner);
 			spawnerBLManager.changeButtonState(States.EMPTY);
 			botPanel.setVisible(false);
+			spawnerPanel.setVisible(false);
 		});
 		
 		addSquadRandomBot.addActionListener(event -> { //squad/rc specific button for adding bots to them
@@ -480,6 +482,7 @@ public class NodePanelManager {
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			if(currentSquadNode.hasChildren()) {
 				if(currentSquadNode.getChildren().get(0).getClass() == TFBotNode.class) {
+					//indexoutbounds?
 					loadBot(false, currentSquadNode.getChildren().get(0));
 					getSquadRandomList();
 				}

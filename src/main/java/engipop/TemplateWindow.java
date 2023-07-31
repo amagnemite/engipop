@@ -508,6 +508,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		this.popNode = (PopNode) evt.getNewValue();
+		updateTemplateComboBox(popNode.getBotTemplateMap());
 		//force a reload
 	}
 }

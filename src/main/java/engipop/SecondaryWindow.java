@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.*;
 
@@ -28,6 +29,7 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	
 	public static final String INCLUDED = "included";
 	public static final String IMPORTED = "imported";
+	public static final String INTERNAL = "internal";
 	
 	EngiPanel popPanel = new EngiPanel();
 	DefaultComboBoxModel<String> mapsModel = new DefaultComboBoxModel<String>();
@@ -178,7 +180,10 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 			Map<String, List<TemplateData>> templateMap = new HashMap<String, List<TemplateData>>();
 			
 			if(file != null) {
+				//Entry<String, List<TemplateData>> entry = popParser.parseTemplates(file, templateMap);
 				popParser.parseTemplates(file, templateMap);
+				//templateMap.put(entry.getKey(), entry.getValue());
+				
 				propertySupport.firePropertyChange(IMPORTED, null, templateMap);
 			}
 		});

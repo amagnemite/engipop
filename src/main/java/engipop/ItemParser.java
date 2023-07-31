@@ -9,12 +9,24 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import engipop.EngiPanel.Classes;
 import engipop.EngiPanel.ItemSlot;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParser;
 
 //todo: possibly add more filtering options
 public class ItemParser { //parse item schema, get weapons and hats
+	List<ItemData> scoutItems = new ArrayList<ItemData>(550);
+	List<ItemData> soldierItems = new ArrayList<ItemData>(530);
+	List<ItemData> pyroItems = new ArrayList<ItemData>(560);
+	List<ItemData> demomanItems = new ArrayList<ItemData>(510);
+	List<ItemData> heavyItems = new ArrayList<ItemData>(530);
+	List<ItemData> engineerItems = new ArrayList<ItemData>(535);
+	List<ItemData> medicItems = new ArrayList<ItemData>(490);
+	List<ItemData> sniperItems = new ArrayList<ItemData>(500);
+	List<ItemData> spyItems = new ArrayList<ItemData>(470);
+	
+	/*
 	List<String> scoutPrimary = new ArrayList<String>();
 	List<String> scoutSecondary = new ArrayList<String>();
 	List<String> scoutMelee = new ArrayList<String>();
@@ -69,6 +81,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 	List<String> spyBuilding = new ArrayList<String>();
 	List<String> spyCosmetics = new ArrayList<String>();
 	List<List<String>> spyItems = new ArrayList<List<String>>();
+	*/
 	
 	public ItemParser() {
 	}
@@ -80,7 +93,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 		//Path path = FileSystems.getDefault().getPath("C:\\", "Program Files (x86)", "Steam", "steamapps", "common", "Team Fortress 2", "tf", "scripts", "items", "items_game.txt");
 		Path path = file.toPath();
 		
-		initLists();
+		//initLists();
 		
 		try {
 			schema = readFile(path, StandardCharsets.US_ASCII);
@@ -100,6 +113,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 		}
 	}
 	
+	/*
 	private void initLists() { //mostly to declutter constructor
 		scoutItems.add(scoutPrimary);
 		scoutItems.add(scoutSecondary);
@@ -147,31 +161,27 @@ public class ItemParser { //parse item schema, get weapons and hats
 		spyItems.add(spyCosmetics);
 		spyItems.add(spyBuilding);
 	}
+	*/
 	
-	public static String readFile(Path path, Charset encoding) throws IOException {
-		//if(!path.endsWith(".pop")) { //if not a popfile
-		//	return null;
-		//}
-		
+	public static String readFile(Path path, Charset encoding) throws IOException {		
 		byte[] encoded = Files.readAllBytes(path);
 		return new String(encoded, encoding);
 	}
 	
-	void parsePrefab(VDFNode item, VDFNode allPrefabs) { //time to suffer
-		VDFNode node;
+	public void parsePrefab(VDFNode item, VDFNode allPrefabs) { //time to suffer
 		for(String key : item.keySet()) {
-			node = item.getSubNode(key);
+			VDFNode node = item.getSubNode(key);
 			//System.out.println(key);
 			
 			try { //hats and miscs are weird
 				if(node.getString("prefab").contains("misc") || node.getString("prefab").contains("hat")) {			
 					try {
 						if(!node.getString("equip_region").equals("medal")) { //for now filter out all medals
-							getClasses("cosmetic", node.getString("name"), node.getSubNode("used_by_classes"));
+							getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
 						}
 					}
 					catch (Exception e) {
-						getClasses("cosmetic", node.getString("name"), node.getSubNode("used_by_classes"));
+						getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
 						
 						//if it ends up here it's either
 						//a: item that relies on prefab for its equip_region or
@@ -185,6 +195,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 						String equip = "";
 						VDFNode wepPrefab = new VDFNode(String.CASE_INSENSITIVE_ORDER);
 						VDFNode classNode = null;
+						ItemSlot slot = null;
 						
 						if((prefabString.contains("weapon_") && !prefabString.contains("case")) || 
 								(prefabString.contains("valve") && node.getString("craft_class").equals("weapon"))) { 
@@ -217,7 +228,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 										//prevent shotguns in wrong primary slots
 										equip = "shotgun";
 										//if(node.get("name") != null) {
-											addShotguns(node.getString("name"));
+											addShotguns(node.getString("name"), key);
 									}
 									else { //normal rules
 										equip = wepPrefab.getString("item_slot");
@@ -226,25 +237,31 @@ public class ItemParser { //parse item schema, get weapons and hats
 								}
 							}
 							
-							switch (equip) {
+							switch(equip) {
 								case "primary":
+									slot = ItemSlot.PRIMARY;
+									break;
 								case "secondary":
+									slot = ItemSlot.SECONDARY;
+									break;
 								case "melee":
-									if(node.get("name") != null) { //if item is non base item, so real name is defined
-										getClasses(equip, node.getString("name"), classNode);
-									}
-									else { //otherwise just get its prefab name
-										getClasses(equip, wepPrefab.getString("item_name"), classNode);
-									}
+									slot = ItemSlot.MELEE;
 									break;
 								case "building":
-									spyBuilding.add(node.getString("name")); //all sappers are buildings
+									getClasses(new ItemData(node.getString("name"), ItemSlot.BUILDING, key), "spy");
 									break;
 								case "pda2":
-									spyPDA.add(node.getString("name")); //pda2
+									getClasses(new ItemData(node.getString("name"), ItemSlot.PRIMARY, key), "spy");
 									break;
-								default:
-									break; //only thing that falls down here is engie pda and the shotguns
+							}
+							
+							if(slot != null) {
+								if(node.get("name") != null) { //if item is non base item, so real name is defined
+									getClasses(new ItemData(node.getString("name"), slot, key), classNode);
+								}
+								else { //otherwise just get its prefab name
+									getClasses(new ItemData(wepPrefab.getString("item_name"), slot, key), classNode);
+								}
 							}
 						}
 					}
@@ -258,8 +275,8 @@ public class ItemParser { //parse item schema, get weapons and hats
 			}
 		}
 		//for some dumb reason these two are the only cosmetics not defined as a hat or cosmetic
-		pyroCosmetics.add("The Burning Bongos");
-		demomanCosmetics.add("Six Pack Abs");
+		getClasses(new ItemData("The Burning Bongos", ItemSlot.COSMETIC1, "746"), "pyro");
+		getClasses(new ItemData("Six Pack Abs", ItemSlot.COSMETIC1, "30431"), "demoman");
 		//dumb mistake here
 		//soldierPrimary.add("Upgradeable TF_WEAPON_ROCKETLAUNCHER");
 	}
@@ -287,64 +304,55 @@ public class ItemParser { //parse item schema, get weapons and hats
 	}
 	
 	//manually adding shotguns 
-	private void addShotguns(String name) {
-		soldierSecondary.add(name);
-		pyroSecondary.add(name);
-		heavySecondary.add(name);
-		engineerPrimary.add(name);
+	private void addShotguns(String name, String key) {
+		getClasses(new ItemData(name, ItemSlot.SECONDARY, key), "soldier");
+		getClasses(new ItemData(name, ItemSlot.SECONDARY, key), "pyro");
+		getClasses(new ItemData(name, ItemSlot.SECONDARY, key), "heavy");
+		getClasses(new ItemData(name, ItemSlot.PRIMARY, key), "engineer");
 	}
 	
-	//add the item to appropriate class + slot
-	private void getClasses(String slot, String name, VDFNode classes) {
-		int type = 0;
+	private void getClasses(ItemData data, String aclass) {
+		VDFNode node = new VDFNode(String.CASE_INSENSITIVE_ORDER);
+		node.put(aclass, 1);
 		
-		switch (slot) {
-			case "primary":
-				type = ItemSlot.PRIMARY.getSlot();
-				break;
-			case "secondary":
-				type = ItemSlot.SECONDARY.getSlot();
-				break;
-			case "melee":
-				type = ItemSlot.MELEE.getSlot();
-				break;
-			case "cosmetic":
-				type = ItemSlot.COSMETIC1.getSlot() - 1;
-				break;
-		}
+		getClasses(data, node);
+	}
+	
+	//add the item to appropriate class
+	private void getClasses(ItemData data, VDFNode classes) {
 		
 		if(classes.containsKey("scout")) {
-			scoutItems.get(type).add(name);
+			scoutItems.add(data);
 		}
 		if(classes.containsKey("soldier")) {
-			soldierItems.get(type).add(name);
+			soldierItems.add(data);
 		}
 		if(classes.containsKey("pyro")) {
-			pyroItems.get(type).add(name);
+			pyroItems.add(data);
 		}
 		if(classes.containsKey("demoman")) {
-			demomanItems.get(type).add(name);
+			demomanItems.add(data);
 		}
 		if(classes.containsKey("heavy")) {
-			heavyItems.get(type).add(name);
+			heavyItems.add(data);
 		}
 		if(classes.containsKey("engineer")) {		
-			engineerItems.get(type).add(name);
+			engineerItems.add(data);
 		}
 		if(classes.containsKey("medic")) {
-			medicItems.get(type).add(name);
+			medicItems.add(data);
 		}
 		if(classes.containsKey("sniper")) {
-			sniperItems.get(type).add(name);
+			sniperItems.add(data);
 		}
 		if(classes.containsKey("spy")) {
-			spyItems.get(type).add(name);
+			spyItems.add(data);
 		}
 	}
 	
 	//get class items based on input class
-	public List<List<String>> getClassList(EngiPanel.Classes selected) {
-		List<List<String>> classList = new ArrayList<List<String>>();
+	public List<ItemData> getClassList(Classes selected) {
+		List<ItemData> classList = new ArrayList<ItemData>();
 		
 		switch (selected) {
 			case Scout:
@@ -382,8 +390,8 @@ public class ItemParser { //parse item schema, get weapons and hats
 	}
 	
 	//returns set containing only items that are in the slot list
-	public List<String> checkIfItemInSlot(List<Object> items, EngiPanel.Classes selected, int slot) throws IndexOutOfBoundsException {
-		List<String> list = getClassList(selected).get(slot);
+	public List<ItemData> checkIfItemInSlot(List<Object> items, EngiPanel.Classes selected, int slot) throws IndexOutOfBoundsException {
+		List<ItemData> list = new ArrayList<ItemData>(getClassList(selected));
 		//Set<String> subset = new HashSet<String>(list);
 		//Set<String> itemSet = new HashSet<String>(items);
 		
@@ -392,5 +400,24 @@ public class ItemParser { //parse item schema, get weapons and hats
 		//subset.retainAll(itemSet);
 		
 		return list;
+	}
+	
+	public static class ItemData {
+		private String name;
+		private ItemSlot slot;
+		private int index;
+		
+		public ItemData(String name, ItemSlot slot, String indexString) {
+			this.name = name;
+			this.slot = slot;
+			index = Integer.parseInt(indexString);
+		}
+		
+		public ItemSlot getSlot() {
+			return this.slot;
+		}
+		public String toString() {
+			return this.name;
+		}
 	}
 }
