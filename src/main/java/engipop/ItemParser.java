@@ -168,139 +168,167 @@ public class ItemParser { //parse item schema, get weapons and hats
 		return new String(encoded, encoding);
 	}
 	
-	public void parsePrefab(VDFNode item, VDFNode allPrefabs) { //time to suffer
+	public void parsePrefab(VDFNode item, VDFNode allPrefabs) { //time to suffer		
 		for(String key : item.keySet()) {
 			VDFNode node = item.getSubNode(key);
-			//System.out.println(key);
+			String prefabString = node.containsKey("prefab") ? prefabString = node.getString("prefab") : null;
 			
-			try { //hats and miscs are weird
-				if(node.getString("prefab").contains("misc") || node.getString("prefab").contains("hat")) {			
-					try {
-						if(!node.getString("equip_region").equals("medal")) { //for now filter out all medals
-							getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
+			if(key.equals("default")) {
+				continue;
+			}
+			
+			if(prefabString == null) {
+				if(node.containsKey("item_slot")) {
+					if(node.getString("name").equals("The B.A.S.E. Jumper")) {
+						getClasses(new ItemData("The B.A.S.E. Jumper", ItemSlot.PRIMARY, key), "demoman");
+						getClasses(new ItemData("The B.A.S.E. Jumper", ItemSlot.SECONDARY, key), "soldier");
+					}
+					else {
+						switch(node.getString("item_slot")) {
+							case "primary":
+							case "secondary":
+							case "melee":
+							case "building":
+								if(!node.containsKey("craft_class") || !node.getString("craft_class").equals("craft_token")) {
+									getClasses(new ItemData(node.getString("name"), ItemSlot.valueOf(node.getString("item_slot").toUpperCase()), key), 
+											node.getSubNode("used_by_classes"));
+								}
+								break;
+							case "pda2":
+								getClasses(new ItemData(node.getString("name"), ItemSlot.PRIMARY, key), "spy");
+								break;
+							default:
+								break;
 						}
 					}
-					catch (Exception e) {
+				}
+				continue; //whether wep or not, skip after
+			}
+			
+			if(prefabString.contains("misc") || prefabString.contains("hat") || prefabString.contains("grenades")) {			
+				try {
+					if(!node.getString("equip_region").equals("medal")) { //for now filter out all medals
 						getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
-						
-						//if it ends up here it's either
-						//a: item that relies on prefab for its equip_region or
-						//b: item with multiple equip_regions
-						//so not a medal either way
-					}	
+					}
+				}
+				catch(NullPointerException n) {
+					//System.out.println("nullptr in hats: " + key + " " + node.getString("name"));
+					if(node.containsKey("used_by_classes")) {
+						getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
+					}
+					else {
+						//"score_reward_hat"
+						//System.out.println("no usedby: " +  node.getString("name"));
+					}
+					
+					//if it ends up here it's either
+					//a: item that relies on prefab for its equip_region or
+					//so not a medal either way
+				}
+				catch(ClassCastException c) {
+					//getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
+					//b: item with multiple equip_regions
+					
+					System.out.println("classcast in hats: " + key + " " + node.getString("name"));
+				}
+			}
+			else {
+				String equip = "";
+				VDFNode wepPrefab = new VDFNode(String.CASE_INSENSITIVE_ORDER);
+				VDFNode classNode = null;
+				boolean isWep = prefabString.contains("weapon_") && !prefabString.contains("case") ? true : false;
+				//this should probably be rewritten
+				if(!isWep) {
+					isWep = prefabString.contains("valve") && node.containsKey("craft_class")
+							&& node.getString("craft_class").equals("weapon") ? true : false;
+				}	
+				if(!isWep) {
+					continue;
+				}
+				
+				//if prefab contains weapon and is not a case or has a prefab of valve + is a weapon
+				if(node.containsKey("item_slot") && !key.equals("205")) { //items that define equip/class in itself and not in a prefab
+					equip = node.getString("item_slot");
+					classNode = node.getSubNode("used_by_classes");
 				}
 				else {
-					try {
-						String prefabString = node.getString("prefab"); //null ptrs here if no prefab
-						String equip = "";
-						VDFNode wepPrefab = new VDFNode(String.CASE_INSENSITIVE_ORDER);
-						VDFNode classNode = null;
-						ItemSlot slot = null;
-						
-						if((prefabString.contains("weapon_") && !prefabString.contains("case")) || 
-								(prefabString.contains("valve") && node.getString("craft_class").equals("weapon"))) { 
-							//if prefab contains weapon and is not a case or has a prefab of valve + is a weapon
-							
-							if(node.containsKey("item_slot")) { //items that define equip/class in itself and not in a prefab
-								equip = node.getString("item_slot");
-								classNode = node.getSubNode("used_by_classes");
-							}
-							else {
-								prefabString = getPrefabString(allPrefabs, prefabString);
-								wepPrefab = allPrefabs.getSubNode(prefabString);
-								
-								if(node.getString("prefab").equals("weapon_sword") || node.getString("prefab").equals("weapon_lunchbox")) {
-									classNode = node.getSubNode("used_by_classes");
-								} //swords and lunchboxes have their classes defined in outer prefab but equip in inner
-								
-								else if(!wepPrefab.containsKey("item_slot")) { //if its prefab doesn't have an item slot named
-									if(wepPrefab.containsKey("prefab")) { //prefab of a prefab
-										if(wepPrefab.getString("prefab").equals("weapon_sword") || 
-												wepPrefab.getString("prefab").equals("weapon_lunchbox")) {
-											classNode = wepPrefab.getSubNode("used_by_classes");
-										} //swords and lunchboxes have their classes defined in outer prefab but equip in inner
-										wepPrefab = allPrefabs.getSubNode(wepPrefab.getString("prefab"));
-									}
-								}
-								else { //single prefab
-									if(prefabString.equals("weapon_shotgun_multiclass") || 
-											prefabString.equals("weapon_trenchgun")) {
-										//prevent shotguns in wrong primary slots
-										equip = "shotgun";
-										//if(node.get("name") != null) {
-											addShotguns(node.getString("name"), key);
-									}
-									else { //normal rules
-										equip = wepPrefab.getString("item_slot");
-										classNode = wepPrefab.getSubNode("used_by_classes");
-									}
-								}
-							}
-							
-							switch(equip) {
-								case "primary":
-									slot = ItemSlot.PRIMARY;
-									break;
-								case "secondary":
-									slot = ItemSlot.SECONDARY;
-									break;
-								case "melee":
-									slot = ItemSlot.MELEE;
-									break;
-								case "building":
-									getClasses(new ItemData(node.getString("name"), ItemSlot.BUILDING, key), "spy");
-									break;
-								case "pda2":
-									getClasses(new ItemData(node.getString("name"), ItemSlot.PRIMARY, key), "spy");
-									break;
-							}
-							
-							if(slot != null) {
-								if(node.get("name") != null) { //if item is non base item, so real name is defined
-									getClasses(new ItemData(node.getString("name"), slot, key), classNode);
-								}
-								else { //otherwise just get its prefab name
-									getClasses(new ItemData(wepPrefab.getString("item_name"), slot, key), classNode);
-								}
-							}
+					prefabString = getPrefabString(allPrefabs, prefabString);
+					wepPrefab = allPrefabs.getSubNode(prefabString);
+					
+					if(node.getString("prefab").equals("weapon_sword") || node.getString("prefab").equals("weapon_lunchbox")) {
+						classNode = node.getSubNode("used_by_classes");
+					} //swords and lunchboxes have their classes defined in outer prefab but equip in inner
+					
+					else if(!wepPrefab.containsKey("item_slot")) { //if its prefab doesn't have an item slot named
+						if(wepPrefab.containsKey("prefab")) { //prefab of a prefab
+							if(wepPrefab.getString("prefab").equals("weapon_sword") || 
+									wepPrefab.getString("prefab").equals("weapon_lunchbox")) {
+								classNode = wepPrefab.getSubNode("used_by_classes");
+							} //swords and lunchboxes have their classes defined in outer prefab but equip in inner
+							wepPrefab = allPrefabs.getSubNode(wepPrefab.getString("prefab"));
 						}
 					}
-					catch (NullPointerException f) {
-						//System.out.println("no prefab " + node.getString("name"));
+					else { //single prefab
+						if(prefabString.equals("weapon_shotgun_multiclass") || 
+								prefabString.equals("weapon_trenchgun")) {
+							//prevent shotguns in wrong primary slots
+							equip = "shotgun";
+							//if(node.get("name") != null) {
+								addShotguns(node.getString("name"), key);
+						}
+						else { //normal rules
+							equip = wepPrefab.getString("item_slot");
+							classNode = wepPrefab.getSubNode("used_by_classes");
+						}
 					}
 				}
-			}
-			catch (NullPointerException e) {
 				
+				switch(equip) {
+					case "primary":
+					case "secondary":
+					case "melee":
+						if(node.get("name") != null) { //if item is non base item, so real name is defined
+							getClasses(new ItemData(node.getString("name"), ItemSlot.valueOf(equip.toUpperCase()), key), classNode);
+						}
+						else { //otherwise just get its prefab name
+							getClasses(new ItemData(wepPrefab.getString("item_name"), ItemSlot.valueOf(equip.toUpperCase()), key), classNode);
+						}
+						break;
+					case "building":
+						getClasses(new ItemData(node.getString("name"), ItemSlot.BUILDING, key), "spy");
+						break;
+					case "pda2":
+						getClasses(new ItemData(node.getString("name"), ItemSlot.PRIMARY, key), "spy");
+						break;
+					default:
+						break;
+				}
 			}
 		}
-		//for some dumb reason these two are the only cosmetics not defined as a hat or cosmetic
-		getClasses(new ItemData("The Burning Bongos", ItemSlot.COSMETIC1, "746"), "pyro");
-		getClasses(new ItemData("Six Pack Abs", ItemSlot.COSMETIC1, "30431"), "demoman");
-		//dumb mistake here
-		//soldierPrimary.add("Upgradeable TF_WEAPON_ROCKETLAUNCHER");
+		//dumb thing here
+		getClasses(new ItemData("Upgradeable TF_WEAPON_ROCKETLAUNCHER", ItemSlot.PRIMARY, "205"), "soldier");
 	}
 	
-	private String getPrefabString(VDFNode allPrefabs, String fabs) { //get the weapon prefab
+	private String getPrefabString(VDFNode allPrefabs, String prefabString) { //get the weapon prefab
 		int first = 0;
 		int last = 0;
 		
-		first = fabs.indexOf("weapon_");
+		first = prefabString.indexOf("weapon_");
 		last = first;
 		
-		while(last < fabs.length() && fabs.charAt(last) != ' ') {
+		while(last < prefabString.length() && prefabString.charAt(last) != ' ') {
 			last++;
 		}
-		if(first != 0 && fabs.charAt(first - 1) == '_') { //if it's a paintkit with a prefix
-			while(first > 0 && fabs.charAt(first) != ' ') {
+		if(first != 0 && prefabString.charAt(first - 1) == '_') { //if it's a paintkit with a prefix
+			while(first > 0 && prefabString.charAt(first) != ' ') {
 				first--;
 			} //recursively grab its usuable prefab
-			fabs = getPrefabString(allPrefabs, allPrefabs.getSubNode(fabs.substring(first, last)).getString("prefab"));
+			prefabString = getPrefabString(allPrefabs, allPrefabs.getSubNode(prefabString.substring(first, last)).getString("prefab"));
 		}
 		else {
-			fabs = fabs.substring(first, last);
+			prefabString = prefabString.substring(first, last);
 		}
-		return fabs;
+		return prefabString;
 	}
 	
 	//manually adding shotguns 

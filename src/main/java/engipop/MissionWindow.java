@@ -1,5 +1,6 @@
 package engipop;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.beans.PropertyChangeEvent;
@@ -55,6 +56,7 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		setSize(1100, 600);
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
+		this.setBackground(new Color(208, 169, 107));
 		
 		int iMin = 0, botMax = 22;
 		double dMin = 0.0;
@@ -94,13 +96,18 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		
 		missionList.setSelectionModel(new NoDeselectionModel());
 		missionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		missionList.setPrototypeCellValue("DestroySentries");
+		objectiveBox.setPrototypeDisplayValue("DestroySentries");
 		tankPanel.setVisible(false);
 		whereBox.setEditable(true);
-		missionScroll.setMinimumSize(missionScroll.getPreferredSize());
+		missionScroll.setMinimumSize(missionList.getPreferredScrollableViewportSize());
 		
 		missionPanel.setLayout(missionPanel.gbLayout);
+		missionPanel.setBackground(new Color(208, 169, 107));
 		EngiPanel buttonPanel = new EngiPanel();
 		buttonPanel.setLayout(buttonPanel.gbLayout);
+		buttonPanel.setBackground(listPanel.getBackground());
+		buttonPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
 		missionPanel.addGB(objectiveLabel, 0, 0);
 		missionPanel.addGB(objectiveBox, 1, 0);

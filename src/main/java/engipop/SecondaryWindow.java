@@ -1,5 +1,6 @@
 package engipop;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.MouseEvent;
@@ -59,6 +60,9 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		setSize(800, 200);
+		this.setBackground(new Color(.86f, .22f, .22f, 1.0f));
+		//189.0, 59.0, 59.0,
+		popPanel.setOpaque(false);
 		
 		this.popNode = popNode;
 		this.setWin = setWin;

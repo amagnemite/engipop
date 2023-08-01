@@ -1,5 +1,6 @@
 package engipop;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.beans.PropertyChangeEvent;
@@ -87,6 +88,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 		super("Template editor");
 		setSize(1300, 800);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
+		this.setBackground(new Color(11, 97, 163));
 		
 		this.w2 = w2;
 		w2.addPropertyChangeListener("POPNODE", this);

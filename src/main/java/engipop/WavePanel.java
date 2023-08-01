@@ -1,5 +1,6 @@
 package engipop;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -36,6 +37,7 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.insets = new Insets(0, 0, 0, 5);
+		this.setBackground(new Color(208, 169, 107));
 		
 		secondaryWindow.addPropertyChangeListener(SecondaryWindow.WAVERELAY, this);
 		

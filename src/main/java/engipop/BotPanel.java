@@ -112,6 +112,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
+		this.setBackground(new Color(192, 192, 192));
+		attrPanel.setOpaque(false);
 		
 		this.containingWindow = containingWindow;
 		secondaryWindow.addPropertyChangeListener(this);
@@ -186,6 +188,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 		//skill level radio buttons
 		JPanel skillPanel = new JPanel();
+		JPanel wepPanel = new JPanel();
+		skillPanel.setOpaque(false);
+		wepPanel.setOpaque(false);
 		
 		skillPanel.add(noneBut);
 		noneBut.setActionCommand(TFBotNode.NOSKILL);
@@ -205,7 +210,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		skillGroup.setSelected(easyBut.getModel(), true);
 		
 		//wep restrict radio buttons
-		JPanel wepPanel = new JPanel();
 		wepPanel.add(anyBut);
 		anyBut.setActionCommand(TFBotNode.ANY);
 		wepGroup.add(anyBut);

@@ -1,5 +1,6 @@
 package engipop;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -89,6 +90,8 @@ public class NodePanelManager {
 		this.containingWindow = containingWindow;
 		this.botPanel = botPanel;
 		this.tankPanel = tankPanel;
+		spawnerPanel.setBackground(botPanel.getBackground());
+		listPanel.setBackground(new Color(240, 129, 73));
 		
 		squadRandomList.setSelectionModel(new NoDeselectionModel());
 		squadRandomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

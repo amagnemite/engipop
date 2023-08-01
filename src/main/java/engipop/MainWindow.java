@@ -46,6 +46,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	//todo: add a vertical scrollbar
 	public MainWindow() {
 		super("Engipop main");
+		this.setBackground(new Color(193, 161, 138));
 	
 		setSize(1500, 1000);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
@@ -132,7 +133,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		});
 		
 		addGB(feedback, 0, 1);
-		addGB(createPop, 3, 6);
+		addGB(createPop, 2, 6);
 		
 		gbConstraints.gridwidth = 2;
 		addGB(wavePanel, 0, 2);
@@ -148,10 +149,10 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		gbConstraints.weighty = 0;
 		gbConstraints.gridheight = 3;
 		gbConstraints.gridwidth = 1;
-		addGB(listPanel, 3, 3);
+		addGB(listPanel, 2, 3);
 		
 		gbConstraints.gridheight = 4;
-		addGB(templateTreePane, 2, 3);
+		addGB(templateTreePane, 3, 3);
 		
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

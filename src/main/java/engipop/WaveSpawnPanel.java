@@ -1,5 +1,6 @@
 package engipop;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -60,6 +61,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	public WaveSpawnPanel(SecondaryWindow secondaryWindow) {
 		int initial = 1, totalMax = 999, activeMax = 22, incr = 1, currMax = 30000, currIncr = 50;
 		double initWait = 0.0, minWait = 0.0, maxWait = 1000.0, incrWait = 1.0;
+		this.setBackground(new Color(130, 130, 130));
 		
 		secondaryWindow.addPropertyChangeListener(WaveNode.WAVESPAWN, this);
 		
