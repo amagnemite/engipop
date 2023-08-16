@@ -49,8 +49,8 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 	EngiPanel templateButtonPanel = new EngiPanel();
 	TankPanel tankPanel;
 	NodePanelManager spawnerListManager;
-	JPanel listPanel = new JPanel();
-	JPanel spawnerPanel = new JPanel();
+	JPanel listPanel;
+	JPanel spawnerPanel;
 
 	PopNode popNode;
 	WaveSpawnNode currentWSNode = new WaveSpawnNode();
@@ -100,6 +100,8 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 		botPanel = new BotPanel(this, mainWindow, w2);
 		tankPanel = new TankPanel(w2);
 		spawnerListManager = new NodePanelManager(this, botPanel, tankPanel);
+		spawnerPanel = spawnerListManager.getSpawnerPanel();
+		listPanel = spawnerListManager.getListPanel();
 		
 		tankPanel.setVisible(false);
 		
@@ -111,6 +113,8 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 		modeGroup.add(wsModeButton);
 		
 		spawnerListManager.setButtonState(States.DISABLE);
+		
+		templateComboBox.setMinimumSize(templateNameField.getPreferredSize());
 		
 		wsModeButton.addItemListener(event -> {
 			if(wsModeButton.isSelected()) {

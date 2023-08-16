@@ -26,63 +26,6 @@ public class ItemParser { //parse item schema, get weapons and hats
 	List<ItemData> sniperItems = new ArrayList<ItemData>(500);
 	List<ItemData> spyItems = new ArrayList<ItemData>(470);
 	
-	/*
-	List<String> scoutPrimary = new ArrayList<String>();
-	List<String> scoutSecondary = new ArrayList<String>();
-	List<String> scoutMelee = new ArrayList<String>();
-	List<String> scoutCosmetics = new ArrayList<String>();
-	List<List<String>> scoutItems = new ArrayList<List<String>>();
-	
-	List<String> soldierPrimary = new ArrayList<String>();
-	List<String> soldierSecondary = new ArrayList<String>();
-	List<String> soldierMelee = new ArrayList<String>();
-	List<String> soldierCosmetics = new ArrayList<String>();
-	List<List<String>> soldierItems = new ArrayList<List<String>>();
-	
-	List<String> pyroPrimary = new ArrayList<String>();
-	List<String> pyroSecondary = new ArrayList<String>();
-	List<String> pyroMelee = new ArrayList<String>();
-	List<String> pyroCosmetics = new ArrayList<String>();
-	List<List<String>> pyroItems = new ArrayList<List<String>>();
-	
-	List<String> demomanPrimary = new ArrayList<String>();
-	List<String> demomanSecondary = new ArrayList<String>();
-	List<String> demomanMelee = new ArrayList<String>();
-	List<String> demomanCosmetics = new ArrayList<String>();
-	List<List<String>> demomanItems = new ArrayList<List<String>>();
-	
-	List<String> heavyPrimary = new ArrayList<String>();
-	List<String> heavySecondary = new ArrayList<String>();
-	List<String> heavyMelee = new ArrayList<String>();
-	List<String> heavyCosmetics = new ArrayList<String>();
-	List<List<String>> heavyItems = new ArrayList<List<String>>();
-	
-	List<String> engineerPrimary = new ArrayList<String>();
-	List<String> engineerSecondary = new ArrayList<String>();
-	List<String> engineerMelee = new ArrayList<String>();
-	List<String> engineerCosmetics = new ArrayList<String>();
-	List<List<String>> engineerItems = new ArrayList<List<String>>();
-	
-	List<String> medicPrimary = new ArrayList<String>();
-	List<String> medicSecondary = new ArrayList<String>();
-	List<String> medicMelee = new ArrayList<String>();
-	List<String> medicCosmetics = new ArrayList<String>();
-	List<List<String>> medicItems = new ArrayList<List<String>>();
-	
-	List<String> sniperPrimary = new ArrayList<String>();
-	List<String> sniperSecondary = new ArrayList<String>();
-	List<String> sniperMelee = new ArrayList<String>();
-	List<String> sniperCosmetics = new ArrayList<String>();
-	List<List<String>> sniperItems = new ArrayList<List<String>>();
-
-	List<String> spyPDA = new ArrayList<String>();
-	List<String> spySecondary = new ArrayList<String>();
-	List<String> spyMelee = new ArrayList<String>();
-	List<String> spyBuilding = new ArrayList<String>();
-	List<String> spyCosmetics = new ArrayList<String>();
-	List<List<String>> spyItems = new ArrayList<List<String>>();
-	*/
-	
 	public ItemParser() {
 	}
     
@@ -112,56 +55,6 @@ public class ItemParser { //parse item schema, get weapons and hats
 			parsePrefab(item, allPrefabs);
 		}
 	}
-	
-	/*
-	private void initLists() { //mostly to declutter constructor
-		scoutItems.add(scoutPrimary);
-		scoutItems.add(scoutSecondary);
-		scoutItems.add(scoutMelee);
-		scoutItems.add(scoutCosmetics);
-		
-		soldierItems.add(soldierPrimary);
-		soldierItems.add(soldierSecondary);
-		soldierItems.add(soldierMelee);
-		soldierItems.add(soldierCosmetics);
-		
-		pyroItems.add(pyroPrimary);
-		pyroItems.add(pyroSecondary);
-		pyroItems.add(pyroMelee);
-		pyroItems.add(pyroCosmetics);
-		
-		demomanItems.add(demomanPrimary);
-		demomanItems.add(demomanSecondary);
-		demomanItems.add(demomanMelee);
-		demomanItems.add(demomanCosmetics);
-		
-		heavyItems.add(heavyPrimary);
-		heavyItems.add(heavySecondary);
-		heavyItems.add(heavyMelee);
-		heavyItems.add(heavyCosmetics);
-		
-		engineerItems.add(engineerPrimary);
-		engineerItems.add(engineerSecondary);
-		engineerItems.add(engineerMelee);
-		engineerItems.add(engineerCosmetics);
-		
-		medicItems.add(medicPrimary);
-		medicItems.add(medicSecondary);
-		medicItems.add(medicMelee);
-		medicItems.add(medicCosmetics);
-		
-		sniperItems.add(sniperPrimary);
-		sniperItems.add(sniperSecondary);
-		sniperItems.add(sniperMelee);
-		sniperItems.add(sniperCosmetics);
-		
-		spyItems.add(spyPDA);
-		spyItems.add(spySecondary);
-		spyItems.add(spyMelee);
-		spyItems.add(spyCosmetics);
-		spyItems.add(spyBuilding);
-	}
-	*/
 	
 	public static String readFile(Path path, Charset encoding) throws IOException {		
 		byte[] encoded = Files.readAllBytes(path);
@@ -206,13 +99,8 @@ public class ItemParser { //parse item schema, get weapons and hats
 			}
 			
 			if(prefabString.contains("misc") || prefabString.contains("hat") || prefabString.contains("grenades")) {			
-				try {
-					if(!node.getString("equip_region").equals("medal")) { //for now filter out all medals
-						getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
-					}
-				}
-				catch(NullPointerException n) {
-					//System.out.println("nullptr in hats: " + key + " " + node.getString("name"));
+				if(!node.containsKey("equip_region")) {
+					//hat with no specific equip region
 					if(node.containsKey("used_by_classes")) {
 						getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
 					}
@@ -220,16 +108,13 @@ public class ItemParser { //parse item schema, get weapons and hats
 						//"score_reward_hat"
 						//System.out.println("no usedby: " +  node.getString("name"));
 					}
-					
-					//if it ends up here it's either
-					//a: item that relies on prefab for its equip_region or
-					//so not a medal either way
 				}
-				catch(ClassCastException c) {
-					//getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
-					//b: item with multiple equip_regions
-					
-					System.out.println("classcast in hats: " + key + " " + node.getString("name"));
+				else if(node.get("equip_region")[0] instanceof VDFNode) {
+					//hat with multiple equip regions
+					getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
+				}
+				else if(!node.getString("equip_region").equals("medal")) { //for now filter out all medals
+					getClasses(new ItemData(node.getString("name"), ItemSlot.COSMETIC1, key), node.getSubNode("used_by_classes"));
 				}
 			}
 			else {

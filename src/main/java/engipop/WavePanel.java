@@ -14,6 +14,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 import engipop.Node.RelayNode;
 import engipop.Node.WaveNode;
@@ -25,9 +26,13 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	private DefaultComboBoxModel<String> doneModel = new DefaultComboBoxModel<String>();
 	private DefaultComboBoxModel<String> initModel = new DefaultComboBoxModel<String>();
 	
-	private JComboBox<String> startRelay = new JComboBox<String>(startModel);
-	private JComboBox<String> doneRelay = new JComboBox<String>(doneModel);
-	private JComboBox<String> initRelay = new JComboBox<String>(initModel);
+	private JComboBox<String> startNameBox = new JComboBox<String>(startModel);
+	private JComboBox<String> doneNameBox = new JComboBox<String>(doneModel);
+	private JComboBox<String> initNameBox = new JComboBox<String>(initModel);
+	
+	private JTextField startAction = new JTextField(13);
+	private JTextField doneAction = new JTextField(13);
+	private JTextField initAction = new JTextField(13);
 	
 	private JCheckBox doInit = new JCheckBox("InitWaveOutput?");
 	
@@ -42,25 +47,42 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		secondaryWindow.addPropertyChangeListener(SecondaryWindow.WAVERELAY, this);
 		
 		JLabel waveLabel = new JLabel("Wave editor");
-		JLabel startLabel = new JLabel("StartWaveOutput: ");
-		JLabel doneLabel = new JLabel("DoneOutput: ");
-		JLabel initLabel = new JLabel("InitWaveOutput: ");
+		JLabel startLabel = new JLabel("StartWaveOutput");
+		JLabel doneLabel = new JLabel("DoneOutput");
+		JLabel initLabel = new JLabel("InitWaveOutput");
+		JLabel initTargetLabel = new JLabel("Target: ");
+		JLabel initActionLabel = new JLabel("Action: ");
 		
-		startRelay.setEditable(true);
-		doneRelay.setEditable(true);
-		initRelay.setEditable(true);
+		startNameBox.setEditable(true);
+		doneNameBox.setEditable(true);
+		initNameBox.setEditable(true);
+		
+		startAction.setMinimumSize(startAction.getPreferredSize());
+		doneAction.setMinimumSize(doneAction.getPreferredSize());
+		initAction.setMinimumSize(initAction.getPreferredSize());
 		
 		initLabel.setVisible(false); //init is optional so invis by default
-		initRelay.setVisible(false);
+		initTargetLabel.setVisible(false);
+		initNameBox.setVisible(false);
+		initActionLabel.setVisible(false);
+		initAction.setVisible(false);
+		
+		initNameBox.setVisible(false);
 		doInit.addItemListener(new ItemListener() { 
 			public void itemStateChanged(ItemEvent e) {
 				if(doInit.isSelected()) {
 					initLabel.setVisible(true);
-					initRelay.setVisible(true);
+					initTargetLabel.setVisible(true);
+					initNameBox.setVisible(true);
+					initActionLabel.setVisible(true);
+					initAction.setVisible(true);
 				}
 				else {
 					initLabel.setVisible(false);
-					initRelay.setVisible(false);
+					initTargetLabel.setVisible(false);
+					initNameBox.setVisible(false);
+					initActionLabel.setVisible(false);
+					initAction.setVisible(false);
 				}
 			}
 		});
@@ -68,13 +90,24 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		addGB(waveLabel, 0, 0);
 		
 		addGB(startLabel, 0, 1);
-		addGB(startRelay, 1, 1);
-		addGB(doneLabel, 2, 1);
-		addGB(doneRelay, 3, 1);
+		addGB(new JLabel("Target: "), 0, 2);
+		addGB(startNameBox, 1, 2);
+		addGB(new JLabel("Action: "), 0, 3);
+		addGB(startAction, 1, 3);
 		
-		addGB(doInit, 4, 1);
-		addGB(initLabel, 5, 1);
-		addGB(initRelay, 6, 1);
+		addGB(doneLabel, 2, 1);
+		addGB(new JLabel("Target: "), 2, 2);
+		addGB(doneNameBox, 3, 2);
+		addGB(new JLabel("Action: "), 2, 3);
+		addGB(doneAction, 3, 3);
+
+		addGB(doInit, 5, 1);
+		
+		addGB(initLabel, 4, 1);
+		addGB(initTargetLabel, 4, 2);
+		addGB(initNameBox, 5, 2);
+		addGB(initActionLabel, 4, 3);
+		addGB(initAction, 5, 3);
 	}
 	
 	public void setRelay(List<String> list) { //update relay list and attach to all the boxes
@@ -91,16 +124,16 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	
 	public void updatePanel(WaveNode wave) { 
 		if(wave.containsKey(WaveNode.STARTWAVEOUTPUT)) {
-			startRelay.setSelectedItem(((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).getValue(RelayNode.TARGET));
+			startNameBox.setSelectedItem(((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).getValue(RelayNode.TARGET));
 		}
 		
 		if(wave.containsKey(WaveNode.DONEOUTPUT)) {
-			doneRelay.setSelectedItem(((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).getValue(RelayNode.TARGET)); //possibly make this not mandatory
+			doneNameBox.setSelectedItem(((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).getValue(RelayNode.TARGET)); //possibly make this not mandatory
 		}
 		
 		if(wave.containsKey(WaveNode.INITWAVEOUTPUT)) { //not mandatory, so may not exist
 			doInit.setSelected(true);
-			initRelay.setSelectedItem(((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).getValue(RelayNode.TARGET));
+			initNameBox.setSelectedItem(((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).getValue(RelayNode.TARGET));
 		}
 		else {
 			doInit.setSelected(false);
@@ -108,14 +141,14 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	}
 	
 	public void updateNode(WaveNode wave) {
-		((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) startRelay.getSelectedItem());
-		((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).putKey(RelayNode.TARGET, (String) doneRelay.getSelectedItem());
+		((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).updateNode((String) startNameBox.getSelectedItem(), startAction.getText());
+		((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).putKey(RelayNode.TARGET, (String) doneNameBox.getSelectedItem());
 		
 		if(doInit.isSelected()) {
 			if(wave.getValue(WaveNode.INITWAVEOUTPUT) == null) { //make relay if data is entered and no relay exists
 				wave.putKey(WaveNode.INITWAVEOUTPUT, new RelayNode());
 			}
-			((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) initRelay.getSelectedItem());
+			((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) initNameBox.getSelectedItem());
 		}
 		else { //if it isn't selected, throw out old data
 			wave.removeKey(WaveNode.INITWAVEOUTPUT);

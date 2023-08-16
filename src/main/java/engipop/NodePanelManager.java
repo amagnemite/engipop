@@ -93,6 +93,9 @@ public class NodePanelManager {
 		spawnerPanel.setBackground(botPanel.getBackground());
 		listPanel.setBackground(new Color(240, 129, 73));
 		
+		spawnerInfo.setForeground(Color.CYAN);
+		spawnerInfo.setFont(spawnerInfo.getFont().deriveFont(16f));
+		
 		squadRandomList.setSelectionModel(new NoDeselectionModel());
 		squadRandomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		squadRandomListScroll.setMinimumSize(new Dimension(128, squadRandomList.getPreferredScrollableViewportSize().height));
@@ -139,7 +142,7 @@ public class NodePanelManager {
 			containingWindow.feedback.setText(" ");
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			botPanel.setVisible(true);
-			spawnerPanel.setVisible(true);
+			//spawnerPanel.setVisible(true);
 			
 			switch (addSpawner.getText()) {
 				//TODO: get the current wsnode from whatever parent window
@@ -195,7 +198,7 @@ public class NodePanelManager {
 			spawnerInfo.setText(noSpawner);
 			spawnerBLManager.changeButtonState(States.EMPTY);
 			botPanel.setVisible(false);
-			spawnerPanel.setVisible(false);
+			//spawnerPanel.setVisible(false);
 		});
 		
 		addSquadRandomBot.addActionListener(event -> { //squad/rc specific button for adding bots to them

@@ -33,9 +33,10 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	DefaultComboBoxModel<String> firstModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> lastModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> doneModel = new DefaultComboBoxModel<String>();
-	DefaultTableModel whereModel = new DefaultTableModel(0, 1);
+	//DefaultTableModel whereModel = new DefaultTableModel(0, 1);
+	WherePanel wherePanel = new WherePanel();
 	
-	JTable whereTable = new JTable(whereModel);
+	//JTable whereTable = new JTable(whereModel);
 	JComboBox<String> startRelay = new JComboBox<String>(startModel);
 	JComboBox<String> firstRelay = new JComboBox<String>(firstModel);
 	JComboBox<String> lastRelay = new JComboBox<String>(lastModel);
@@ -63,11 +64,11 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		double initWait = 0.0, minWait = 0.0, maxWait = 1000.0, incrWait = 1.0;
 		this.setBackground(new Color(130, 130, 130));
 		
-		secondaryWindow.addPropertyChangeListener(WaveNode.WAVESPAWN, this);
+		secondaryWindow.addPropertyChangeListener(this);
 		
 		JButton addWhereRow = new JButton("+");
 		JButton removeWhereRow = new JButton("-");
-		JScrollPane whereScroll = new JScrollPane(whereTable);
+		//JScrollPane whereScroll = new JScrollPane(whereTable);
 		
 		JLabel label = new JLabel("WaveSpawn editor");
 		JLabel wsName = new JLabel("Name: ");
@@ -100,7 +101,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		wsStartSpin.setModel(startModel);
 		wsBetweenSpin.setModel(betweenModel);
 		
-		whereTable.setTableHeader(null);
+		//whereTable.setTableHeader(null);
 		
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
@@ -116,18 +117,22 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		templateField.setMinimumSize(templateField.getPreferredSize());
 		
 		//prevent it from getting really big
+		/*
 		whereTable.setPreferredScrollableViewportSize(new Dimension (wsSpawnField.getPreferredSize().width, 
 				wsSpawnField.getPreferredScrollableViewportSize().height * 2));
 		whereScroll.setMinimumSize(new Dimension(wsSpawnField.getPreferredSize().width, 
 				wsSpawnField.getPreferredScrollableViewportSize().height * 2));
+				*/
 		
 		wsDeadField.setMinimumSize(wsDeadField.getPreferredSize());
 		wsSpawnField.setMinimumSize(wsSpawnField.getPreferredSize());
 		
+		/*
 		whereButtonPanel.add(addWhereRow);
 		whereButtonPanel.add(removeWhereRow);
 		addWhereRow.setToolTipText("Add a row to the where list");
 		removeWhereRow.setToolTipText("Remove the currently selected row from the where list");
+		*/
 		
 		wsDeaths.addItemListener(event -> { //update betweenspawns as appropriate
 			updateBetweenSpawns();
@@ -192,6 +197,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 		});
 		
+		/*
 		whereTable.getSelectionModel().addListSelectionListener(event -> {
 			if(whereTable.getSelectedRowCount() == 1) {
 				removeWhereRow.setEnabled(true);
@@ -206,6 +212,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		removeWhereRow.addActionListener(event -> {
 			whereModel.removeRow(whereTable.getSelectedRow());
 		});
+		*/
 		
 		addGB(label, 0, 0);
 		
@@ -255,16 +262,22 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		addGB(doneLabel, 2, 13);
 		addGB(doneRelay, 3, 13);
 		
-		addGB(whereButtonPanel, 4, 1);
+		//addGB(whereButtonPanel, 4, 1);
 		//gbConstraints.gridwidth = 3;
 		gbConstraints.gridheight = 2;
-		addGB(whereScroll, 3, 1);
+		addGB(wherePanel, 3, 1);
+		//addGB(whereScroll, 3, 1);
 	}
 	
 	public void updatePanel(WaveSpawnNode wsn) { //sets panel components to reflect the node
 		//wsn.printKeyVals();
 		wsNameField.setText((String) wsn.getValue(WaveSpawnNode.NAME));
 		
+		if(wsn.containsKey(WaveSpawnNode.WHERE)) {
+			wherePanel.updateWhere(wsn.getListValue(WaveSpawnNode.WHERE));
+		}
+	
+		/*
 		whereTable.clearSelection();
 		if(wsn.containsKey(WaveSpawnNode.WHERE)) {
 			List<Object> wheres = new ArrayList<Object>();
@@ -283,7 +296,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 				whereModel.addRow(new String[] {(String) newWhere});
 				whereTable.changeSelection(whereModel.getRowCount() - 1, 0, true, false);
 			}
-		}
+		} */
 		
 		templateField.setText((String) wsn.getValue(TFBotNode.TEMPLATE));
 		wsTotalSpin.setValue(wsn.getValue(WaveSpawnNode.TOTALCOUNT));
@@ -334,11 +347,14 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		wsn.putKey(WaveSpawnNode.NAME, wsNameField.getText());
 		wsn.putKey(TFBotNode.TEMPLATE, templateField.getText());
 		
+		
+		/*
 		List<String> wheres = new ArrayList<String>(4);
 		for(int row : whereTable.getSelectedRows()) {
 			wheres.add((String) whereTable.getValueAt(row, 0));
-		}
-		wsn.putKey(WaveSpawnNode.WHERE, wheres);
+		} */
+		wsn.putKey(WaveSpawnNode.WHERE, wherePanel.updateNode());
+		
 		
 		wsn.putKey(WaveSpawnNode.TOTALCOUNT, wsTotalSpin.getValue());
 		wsn.putKey(WaveSpawnNode.MAXACTIVE, wsMaxSpin.getValue());
@@ -417,13 +433,14 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		}
 	}
 	
+	/*
 	public void setWhere(List<String> spawns) {
 		whereModel.setRowCount(0);
 		
 		for(String s : spawns) {
 			whereModel.addRow(new String[] {s});
 		}
-	}
+	} */
 	
 	public void setRelay(List<String> list) { //update relay list and attach to all the boxes
 		startModel.removeAllElements();
@@ -446,7 +463,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			setRelay((List<String>) evt.getNewValue());
 		}
 		else if(evt.getPropertyName().equals(SecondaryWindow.BOTSPAWNS)) {
-			setWhere((List<String>) evt.getNewValue());
+			wherePanel.updateModel((List<String>) evt.getNewValue());
 		}
 	}
 }

@@ -35,6 +35,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 	EngiWindow containingWindow;
 	EngiPanel attrPanel = new EngiPanel();
+	WherePanel teleWherePanel = new WherePanel();
 	
 	//DefaultComboBoxModel<String> classModel;
 	DefaultComboBoxModel<String> iconModel = new DefaultComboBoxModel<String>();
@@ -66,7 +67,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JComboBox<String> hat2List = new JComboBox<String>(hat2Model);
 	JComboBox<String> hat3List = new JComboBox<String>(hat3Model);
 	
-	JLabel botBuilding = new JLabel("Sapper: ");
+	JLabel buildingLabel = new JLabel("Sapper: ");
+	JLabel teleportLabel = new JLabel("TeleportWhere");
 	
 	ButtonGroup wepGroup = new ButtonGroup();
 	ButtonGroup skillGroup = new ButtonGroup();
@@ -102,7 +104,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	List<Map<String, String>> attributeMapsArray = new ArrayList<Map<String, String>>(TFBotNode.ITEMCOUNT); //contains all item attribute maps
 	Map<String, String> currentAttributeMap = new HashMap<String, String>();
 	Map<String, String> currentCharAttributeMap = new HashMap<String, String>();
-	
 	
 	public BotPanel(EngiWindow containingWindow, MainWindow mainWindow, SecondaryWindow secondaryWindow) {
 		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
@@ -148,11 +149,24 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 							
 				if(classBox.getSelectedItem() == Classes.Spy) {
 					buildingList.setVisible(true);
-					botBuilding.setVisible(true);
+					buildingLabel.setVisible(true);
+					
+					teleportLabel.setVisible(false);
+					teleWherePanel.setVisible(false);
+				}
+				else if(classBox.getSelectedItem() == Classes.Engineer) {
+					teleportLabel.setVisible(true);
+					teleWherePanel.setVisible(true);
+					
+					buildingList.setVisible(false);
+					buildingLabel.setVisible(false);
 				}
 				else {
 					buildingList.setVisible(false);
-					botBuilding.setVisible(false);
+					buildingLabel.setVisible(false);
+					
+					teleportLabel.setVisible(false);
+					teleWherePanel.setVisible(false);
 				}
 			}
 		});
@@ -237,11 +251,13 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		JLabel botHat = new JLabel("Hats: ");
 		JLabel templateLabel = new JLabel("Template: ");
 		JLabel itemAttributesLabel = new JLabel("ItemAttributes: ");
-		JLabel teleportLabel = new JLabel("TeleportWhere");
 	
 		JScrollPane tagListPane = new JScrollPane(tagList);
 		JScrollPane attributesListPane = new JScrollPane(botAttributeList);
 		JPanel tagButtonPanel = new JPanel();
+		
+		teleportLabel.setVisible(false);
+		teleWherePanel.setVisible(false);
 		
 		//prevents dumb resizing stuff with the attr panel
 		//may fix later
@@ -287,19 +303,22 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		addGB(botMelee, 0, 10);
 		addGB(meleeList, 1, 10);
 		
-		addGB(botBuilding, 0, 11);
+		addGB(buildingLabel, 0, 11);
 		addGB(buildingList, 1, 11);
 		
 		addGB(botHat, 0, 12);
 		addGB(hat1List, 1, 12);		
 		addGB(hat2List, 1, 13);		
 		addGB(hat3List, 1, 14);
+		addGB(teleportLabel, 0, 15);
 		
 		addGB(itemAttributesLabel, 2, 7);
 		addGB(attributesSlotsBox, 3, 7);
 		
-		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.gridwidth = 2;
+		addGB(teleWherePanel, 1, 15);
+		
+		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.gridheight = 8;
 		addGB(attrPanel, 2, 8);
 	}
@@ -655,6 +674,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			currentCharAttributeMap = new HashMap<String, String>();
 		}
 		attributesSlotsBox.setSelectedItem(ItemSlot.NONE);
+		
+		teleWherePanel.clearSelection();
+		if(tf.containsKey(TFBotNode.TELEPORTWHERE)) {
+			teleWherePanel.updateWhere(tf.getListValue(TFBotNode.TELEPORTWHERE));
+		}
 	}
 	
 	public void updateNode(TFBotNode tf) { //put values into node
@@ -703,6 +727,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 	
 		tf.putKey(TFBotNode.ITEMATTRIBUTES, attributeMapsArray);
+		
+		tf.putKey(TFBotNode.TELEPORTWHERE, teleWherePanel.updateNode());
 		/*	
 				if(addedAttributes.isEmpty() || addedAttributes.containsValue(null) 
 						|| addedAttributes.containsValue("")) {

@@ -22,6 +22,7 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	TankPanel tankPanel;
 	NodePanelManager spawnerListManager;
 	JPanel listPanel;
+	WherePanel wherePanel = new WherePanel();
 	//JPanel spawnerPanel; for now only do bots
 	
 	//PopNode popNode;
@@ -40,10 +41,10 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 			updateMission, removeMission);
 	
 	DefaultListModel<String> missionListModel = new DefaultListModel<String>();
-	DefaultComboBoxModel<String> whereModel = new DefaultComboBoxModel<String>();
+	//DefaultComboBoxModel<String> whereModel = new DefaultComboBoxModel<String>();
 
 	JList<String> missionList = new JList<String>(missionListModel);
-	JComboBox<String> whereBox = new JComboBox<String>(whereModel);
+	//JComboBox<String> whereBox = new JComboBox<String>(whereModel);
 	JComboBox<String> objectiveBox = new JComboBox<String>(new String[] {"DestroySentries", "Sniper", "Spy", "Engineer"});
 	JSpinner initialCooldownSpinner = new JSpinner();
 	JSpinner cooldownSpinner = new JSpinner();
@@ -99,11 +100,13 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		missionList.setPrototypeCellValue("DestroySentries");
 		objectiveBox.setPrototypeDisplayValue("DestroySentries");
 		tankPanel.setVisible(false);
-		whereBox.setEditable(true);
+		//whereBox.setEditable(true);
+		objectiveBox.setMinimumSize(objectiveBox.getPreferredSize());
 		missionScroll.setMinimumSize(missionList.getPreferredScrollableViewportSize());
 		
 		missionPanel.setLayout(missionPanel.gbLayout);
 		missionPanel.setBackground(new Color(208, 169, 107));
+		missionPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		EngiPanel buttonPanel = new EngiPanel();
 		buttonPanel.setLayout(buttonPanel.gbLayout);
 		buttonPanel.setBackground(listPanel.getBackground());
@@ -112,7 +115,6 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		missionPanel.addGB(objectiveLabel, 0, 0);
 		missionPanel.addGB(objectiveBox, 1, 0);
 		missionPanel.addGB(whereLabel, 2, 0);
-		missionPanel.addGB(whereBox, 3, 0);
 		missionPanel.addGB(initialCooldownLabel, 0, 1);
 		missionPanel.addGB(initialCooldownSpinner, 1, 1);
 		missionPanel.addGB(cooldownLabel, 2, 1);
@@ -141,6 +143,7 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 		gbConstraints.gridwidth = 1;
 		addGB(buttonPanel, 2, 1);
 		addGB(listPanel, 2, 3);
+		missionPanel.addGB(wherePanel, 3, 0);
 		
 		initListeners();
 		
@@ -201,7 +204,9 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	}
 	
 	private void updatePanel(MissionNode mission) {
-		whereBox.setSelectedItem(mission.getValue(MissionNode.WHERE));
+		
+		wherePanel.updateWhere(mission.getListValue(MissionNode.WHERE));
+		//whereBox.setSelectedItem(mission.getValue(MissionNode.WHERE));
 		objectiveBox.setSelectedItem(mission.getValue(MissionNode.OBJECTIVE));
 		initialCooldownSpinner.setValue(mission.getValue(MissionNode.INITIALCOOLDOWN));
 		cooldownSpinner.setValue(mission.getValue(MissionNode.COOLDOWNTIME));
@@ -213,7 +218,8 @@ public class MissionWindow extends EngiWindow implements PropertyChangeListener{
 	}
 	
 	private void updateNode(MissionNode mission) {
-		mission.putKey(MissionNode.WHERE, whereBox.getSelectedItem());
+		//mission.putKey(MissionNode.WHERE, whereBox.getSelectedItem());
+		mission.putKey(MissionNode.WHERE, wherePanel.updateNode());
 		mission.putKey(MissionNode.OBJECTIVE, objectiveBox.getSelectedItem());
 		mission.putKey(MissionNode.INITIALCOOLDOWN, initialCooldownSpinner.getValue());
 		mission.putKey(MissionNode.COOLDOWNTIME, cooldownSpinner.getValue());

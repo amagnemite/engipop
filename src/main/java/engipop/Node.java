@@ -150,7 +150,14 @@ public class Node implements Serializable {
                         array.add(Double.valueOf(str));
                     }    
                     else if(Pattern.matches(Digits, str)) {
-                        array.add(Integer.valueOf(str)); //this may also catch certain booleans/flags
+                    	try {
+                    		array.add(Integer.valueOf(str)); //this may also catch certain booleans/flags
+                    	}
+                        catch(NumberFormatException n) {
+                        	//if people decide to be silly and use stupid large numbers, just keep it as string
+                        	//this will cause issues with the mandatory spinners though
+                        	array.add(arrayEntry);
+                        }
                     }
                     else {
                     	array.add(arrayEntry);
@@ -224,8 +231,11 @@ public class Node implements Serializable {
         		if((atk.equalsIgnoreCase("no") || atk.equalsIgnoreCase("false"))) {
         			putKey(BOTSATKINSPAWN, false);
         		}
+        		else {
+        			putKey(BOTSATKINSPAWN, true);
+        		}
         	}
-        	else {
+        	else { //double check this
         		putKey(BOTSATKINSPAWN, true);
         	}
         	
@@ -432,9 +442,32 @@ public class Node implements Serializable {
     		keyVals.putAll(map);
     	}
     	
-    	public List<String> getNode() {
+    	public List<String> getNodeKeyList() {
         	return new ArrayList<String>(Arrays.asList(TARGET, ACTION, PARAM, DELAY));
         }
+    	
+    	public void updateNode(String target, String action, String param, String delay) {
+    		putKey(TARGET, target);
+    		putKey(ACTION, action);
+    		
+    		if(param != null && !param.isBlank()) {
+    			putKey(PARAM, param);
+    		}
+    		else {
+    			removeKey(PARAM);
+    		}
+    		
+    		if(delay != null && !delay.isBlank()) {
+    			putKey(DELAY, delay);
+    		}
+    		else {
+    			removeKey(DELAY);
+    		}
+    	}
+    	
+    	public void updateNode(String target, String action) {
+    		updateNode(target, action, null, null);
+    	}
     	
     	/*
     	public boolean isTargetEmptyOrNull() {
