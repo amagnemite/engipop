@@ -46,8 +46,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	
 	
 	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, BotPanel botPanel, TankPanel tankPanel,
-			SecondaryWindow secondaryWindow) {
-		super(window, botPanel, tankPanel);
+			PopulationPanel secondaryWindow) {
+		super(window.getMainPanel(), botPanel, tankPanel);
 		initWaveListeners();
 		listPanel.removeAll(); //wavenode has a different layout than node, so need to set up here
 		
@@ -87,33 +87,33 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		listPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		listPanel.gbConstraints.insets = new Insets(5, 0, 5, 5);
 		
-		listPanel.addGB(addWave, 0, 1);
-		listPanel.addGB(updateWave, 0, 2);
-		listPanel.addGB(removeWave, 0, 3);
+		listPanel.addGB(addWave, 1, 1);
+		listPanel.addGB(updateWave, 1, 2);
+		listPanel.addGB(removeWave, 1, 3);
 		
-		listPanel.addGB(addWaveSpawn, 0, 5);
-		listPanel.addGB(updateWaveSpawn, 0, 6);
-		listPanel.addGB(removeWaveSpawn, 0, 7);
+		listPanel.addGB(addWaveSpawn, 1, 5);
+		listPanel.addGB(updateWaveSpawn, 1, 6);
+		listPanel.addGB(removeWaveSpawn, 1, 7);
 		
-		listPanel.addGB(addSpawner, 0, 8);
-		listPanel.addGB(updateSpawner, 0, 9);
-		listPanel.addGB(removeSpawner, 0, 10);
+		listPanel.addGB(addSpawner, 1, 8);
+		listPanel.addGB(updateSpawner, 1, 9);
+		listPanel.addGB(removeSpawner, 1, 10);
 		
-		listPanel.addGB(addSquadRandomBot, 0, 11);
-		listPanel.addGB(updateSquadRandomBot, 0, 12);
-		listPanel.addGB(removeSquadRandomBot, 0, 13);
+		listPanel.addGB(addSquadRandomBot, 1, 11);
+		listPanel.addGB(updateSquadRandomBot, 1, 12);
+		listPanel.addGB(removeSquadRandomBot, 1, 13);
 		
 		listPanel.gbConstraints.gridheight = 3;
-		listPanel.addGB(waveListScroll, 1, 1);
-		listPanel.addGB(waveSpawnListScroll, 1, 5);
-		listPanel.addGB(squadRandomListScroll, 1, 8);
+		listPanel.addGB(waveListScroll, 0, 1);
+		listPanel.addGB(waveSpawnListScroll, 0, 5);
+		listPanel.addGB(squadRandomListScroll, 0, 8);
 	}
 	
 	//can't override nodepanel's
 	protected void initWaveListeners() {
 		waveList.addListSelectionListener(event -> { //when a wave is selected from list
 			int waveIndex = waveList.getSelectedIndex();
-			containingWindow.feedback.setText(" ");
+			containingPanel.feedback.setText(" ");
 			
 			noneBut.setSelected(true);
 			
@@ -140,7 +140,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		
 		addWave.addActionListener(new ActionListener () { //adds a new wave to end of list 
 			public void actionPerformed(ActionEvent a) {
-				containingWindow.feedback.setText(" ");
+				containingPanel.feedback.setText(" ");
 				
 				currentWaveNode = new WaveNode();
 				currentWaveNode.connectNodes(popNode);
@@ -155,7 +155,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		removeWave.addActionListener(new ActionListener () { //remove the selected wave 
 			public void actionPerformed(ActionEvent a) {
 				List<Node> list = popNode.getChildren();
-				containingWindow.feedback.setText(" ");
+				containingPanel.feedback.setText(" ");
 				
 				list.remove(waveList.getSelectedIndex()); 
 				waveListModel.remove(waveList.getSelectedIndex());	
@@ -171,14 +171,14 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		});
 		
 		updateWave.addActionListener(event -> {
-			containingWindow.feedback.setText("Wave updated");
+			containingPanel.feedback.setText("Wave updated");
 			wavePanel.updateNode(currentWaveNode);
 			//don't update list since no real name
 		});
 		
 		waveSpawnList.addListSelectionListener(event -> { //when wavespawn is selected from list
 			int waveSpawnIndex = waveSpawnList.getSelectedIndex();
-			containingWindow.feedback.setText(" ");
+			containingPanel.feedback.setText(" ");
 			
 			noneBut.setSelected(true);
 			//TODO: update this since only time there can be nothing selected is if the list is empty
@@ -208,7 +208,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		
 		addWaveSpawn.addActionListener(new ActionListener() { //add button is clicked
 			public void actionPerformed(ActionEvent a) {
-				containingWindow.feedback.setText(" ");
+				containingPanel.feedback.setText(" ");
 				//System.out.println(currentWSNode);
 				
 				currentWSNode = new WaveSpawnNode();
@@ -229,7 +229,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		removeWaveSpawn.addActionListener(new ActionListener() { //remove button clicked
 			public void actionPerformed(ActionEvent a) {
 				List<Node> list = currentWaveNode.getChildren();
-				containingWindow.feedback.setText(" ");
+				containingPanel.feedback.setText(" ");
 				
 				list.remove(waveSpawnList.getSelectedIndex());
 				waveSpawnListModel.remove(waveSpawnList.getSelectedIndex());
@@ -248,7 +248,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		
 		updateWaveSpawn.addActionListener(new ActionListener() { //update wavespawn button clicked
 			public void actionPerformed(ActionEvent a) {
-				containingWindow.feedback.setText(" ");
+				containingPanel.feedback.setText(" ");
 				wsPanel.updateNode(currentWSNode);
 				
 				if(currentWSNode.getValue(WaveSpawnNode.NAME) != null) {
@@ -313,6 +313,6 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	public void propertyChange(PropertyChangeEvent evt) {
 		this.popNode = (PopNode) evt.getNewValue();
 		getWaveList();
-		containingWindow.revalidate();
+		containingPanel.revalidate();
 	}
 }

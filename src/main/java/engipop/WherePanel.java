@@ -66,6 +66,7 @@ public class WherePanel extends EngiPanel {
 	}
 	
 	public void updateWhere(List<Object> wheres) {
+		
 		List<Object> list = new ArrayList<Object>();
 		list.addAll(wheres);
 		

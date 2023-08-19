@@ -55,7 +55,7 @@ public class NodePanelManager {
 	protected SquadNode currentSquadNode = new SquadNode();
 	protected RandomChoiceNode currentRCNode = new RandomChoiceNode();
 	
-	protected EngiWindow containingWindow;
+	protected EngiPanel containingPanel;
 	BotPanel botPanel;
 	TankPanel tankPanel;
 	EngiPanel listPanel = new EngiPanel();
@@ -86,8 +86,8 @@ public class NodePanelManager {
 	JRadioButton noneBut = new JRadioButton("none");
 	//hidden button to ensure the buttongroup state always changes, so can't go from say tfbot to tfbot, which wouldn't cause a state change
 	
-	public NodePanelManager(EngiWindow containingWindow, BotPanel botPanel, TankPanel tankPanel) {
-		this.containingWindow = containingWindow;
+	public NodePanelManager(EngiPanel containingPanel, BotPanel botPanel, TankPanel tankPanel) {
+		this.containingPanel = containingPanel;
 		this.botPanel = botPanel;
 		this.tankPanel = tankPanel;
 		spawnerPanel.setBackground(botPanel.getBackground());
@@ -139,7 +139,7 @@ public class NodePanelManager {
 	//will need new contexts later
 	protected void initListeners() { //inits all the button/list listeners
 		addSpawner.addActionListener(event -> {
-			containingWindow.feedback.setText(" ");
+			containingPanel.feedback.setText(" ");
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			botPanel.setVisible(true);
 			//spawnerPanel.setVisible(true);
@@ -185,11 +185,11 @@ public class NodePanelManager {
 		updateSpawner.addActionListener(event -> { //update current spawner
 			if(tankBut.isSelected()) {
 				tankPanel.updateNode(currentTankNode);
-				containingWindow.feedback.setText("Tank successfully updated");
+				containingPanel.feedback.setText("Tank successfully updated");
 			}
 			else {
 				botPanel.updateNode(currentBotNode);
-				containingWindow.feedback.setText("Bot successfully updated");
+				containingPanel.feedback.setText("Bot successfully updated");
 			}
 		});
 		
@@ -202,7 +202,7 @@ public class NodePanelManager {
 		});
 		
 		addSquadRandomBot.addActionListener(event -> { //squad/rc specific button for adding bots to them
-			containingWindow.feedback.setText(" ");
+			containingPanel.feedback.setText(" ");
 			
 			//botPanel.updateNode(currentBotNode);
 			currentBotNode = new TFBotNode();
@@ -222,7 +222,7 @@ public class NodePanelManager {
 		
 		updateSquadRandomBot.addActionListener(event -> { //squad/rc specific button to update bots
 			botPanel.updateNode(currentBotNode);
-			containingWindow.feedback.setText("Bot successfully updated");
+			containingPanel.feedback.setText("Bot successfully updated");
 			
 			//similar logic to setsquadrandomlistelement but uses set instead of addelement to update
 			if(currentBotNode.containsKey(TFBotNode.NAME)) {
@@ -261,7 +261,7 @@ public class NodePanelManager {
 		
 		squadRandomList.addListSelectionListener(event -> { //list of squad/random's bots
 			int squadRandomIndex = squadRandomList.getSelectedIndex();
-			containingWindow.feedback.setText(" ");
+			containingPanel.feedback.setText(" ");
 			
 			//prevent fits if index is reset
 			if(squadRandomIndex != -1) {
@@ -271,7 +271,7 @@ public class NodePanelManager {
 					loadBot(false, currentBotNode);
 				}
 				else {
-					containingWindow.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					containingPanel.feedback.setText("Possible nested randomchoice/squad! Unable to load");
 				}
 				
 				squadRandomBLManager.changeButtonState(States.SELECTED);
@@ -493,7 +493,7 @@ public class NodePanelManager {
 					getSquadRandomList();
 				}
 				else {
-					containingWindow.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					containingPanel.feedback.setText("Possible nested randomchoice/squad! Unable to load");
 				}
 				squadRandomBLManager.changeButtonState(States.NOSELECTION);
 			}
@@ -522,7 +522,7 @@ public class NodePanelManager {
 					getSquadRandomList();
 				}
 				else {
-					containingWindow.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					containingPanel.feedback.setText("Possible nested randomchoice/squad! Unable to load");
 				}
 				squadRandomBLManager.changeButtonState(States.NOSELECTION);
 			}

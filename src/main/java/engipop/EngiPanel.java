@@ -14,6 +14,7 @@ import engipop.EngiPanel.Classes;
 public class EngiPanel extends JPanel {
 	protected GridBagLayout gbLayout = new GridBagLayout();
 	protected GridBagConstraints gbConstraints = new GridBagConstraints();
+	protected JLabel feedback; //output text feedback to user, not all windows need this
 	
 	public enum Classes { //class names + their default weps
 		None ("n/a", "n/a", "n/a", 0),
@@ -131,5 +132,9 @@ public class EngiPanel extends JPanel {
 	protected void setComponentAndLabelVisible(JLabel label, JComponent box, boolean state) {
 		label.setVisible(state);
 		box.setVisible(state);
+	}
+	
+	public void updateFeedback(String string) {
+		feedback.setText(string);
 	}
 }

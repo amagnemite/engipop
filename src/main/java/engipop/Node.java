@@ -359,6 +359,7 @@ public class Node implements Serializable {
     		putKey(BEGINATWAVE, 1);
     		putKey(RUNFORTHISMANYWAVES, 1);
     		putKey(DESIREDCOUNT, 1);
+    		putKey(WHERE, new ArrayList<Object>(2));
     	}
     	
     	public MissionNode(Map<String, List<Object>> map) {

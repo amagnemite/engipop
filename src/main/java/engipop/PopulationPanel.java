@@ -17,9 +17,10 @@ import javax.swing.*;
 
 import engipop.Node.PopNode;
 import engipop.PopulationParser.TemplateData;
+import engipop.EngiWindow;
 
 @SuppressWarnings("serial")
-public class SecondaryWindow extends EngiWindow { //window for less important/one off deals
+public class PopulationPanel extends EngiPanel { //window for less important/one off deals
 	
 	public static final String WAVERELAY = "waverelay";
 	public static final String WAVESPAWNRELAY = "wavespawnrelay";
@@ -32,7 +33,6 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	public static final String IMPORTED = "imported";
 	public static final String INTERNAL = "internal";
 	
-	EngiPanel popPanel = new EngiPanel();
 	DefaultComboBoxModel<String> mapsModel = new DefaultComboBoxModel<String>();
 	JComboBox<String> maps = new JComboBox<String>();
 	
@@ -55,58 +55,15 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 	private PopulationParser popParser;
 	private PropertyChangeSupport propertySupport = new PropertyChangeSupport(this);
 	
-	public SecondaryWindow(SettingsWindow setWin, PopNode popNode) {
-		super("Population settings");
+	public PopulationPanel(SettingsWindow setWin, PopNode popNode) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		setSize(800, 200);
-		this.setBackground(new Color(.86f, .22f, .22f, 1.0f));
+		//this.setBackground(new Color(.86f, .22f, .22f, 1.0f));
 		//189.0, 59.0, 59.0,
-		popPanel.setOpaque(false);
 		
 		this.popNode = popNode;
 		this.setWin = setWin;
 		popParser = new PopulationParser(this, setWin);
-		
-		makePopPanel();
-		
-		addGB(popPanel, 0, 0);
-		
-		setVisible(true);
-		//requestFocus();
-	}
-	
-	//listen to all changes
-	public void addPropertyChangeListener(PropertyChangeListener listener) {
-        propertySupport.addPropertyChangeListener(listener);
-    }
-	
-	//listen to a specific change
-	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        propertySupport.addPropertyChangeListener(propertyName, listener);
-    }
-
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        propertySupport.removePropertyChangeListener(listener);
-    }
-	
-    //take map info index, get map's info and tell the relevant listeners
-    private void loadMapInfo(int index) {
-    	MapInfo info = new MapInfo();
-    	info.getMapData(index);
-    	
-    	propertySupport.firePropertyChange(WAVERELAY, null, info.getWaveRelay());
-    	propertySupport.firePropertyChange(WAVESPAWNRELAY, null, info.getWSRelay());
-    	propertySupport.firePropertyChange(BOTSPAWNS, null, info.getBotSpawns());
-    	propertySupport.firePropertyChange(TAGS, null, info.getTags());
-    	propertySupport.firePropertyChange(TANKSPAWNS, null, info.getTankSpawns());
-    	propertySupport.firePropertyChange(TANKRELAY, null, info.getTankRelays());
-    }
-    
-	private void makePopPanel() { //makes population panel
-		popPanel.setLayout(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.EAST;
 		
 		MapInfo mapinfo = new MapInfo();
 		
@@ -137,20 +94,37 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		
 		feedback = new JLabel(" ");
 		
-		updatePop.addActionListener(event -> {
-			updateNode();
-			feedback.setText("Population settings updated");
-			if(popNode.getMapIndex() > -1) { //if user entered a map
-				loadMapInfo(popNode.getMapIndex());
-			}
-		});
+		initListeners();
 		
 		for(String s : mapinfo.getMapNames()) {
 			mapsModel.addElement(s);
 		}
 		maps.setModel(mapsModel);
 		
-		popPanel.addMouseListener(new MouseListener() { //this is wonky, fix
+		addGB(maps, 1, 1);
+		
+		addGB(loadPop, 2, 1);
+		addGB(loadTemplate, 3, 1);
+		
+		addGB(currLabel, 0, 2);
+		addGB(currSpinner, 1, 2);
+		addGB(respawnWaveLabel, 2, 2);
+		addGB(respawnWaveSpinner, 3, 2);
+		addGB(waveTimeBox, 4, 2);
+		
+		addGB(busterDmgLabel, 0, 3);
+		addGB(busterDmgSpinner, 1, 3);
+		addGB(busterKillLabel, 2, 3);
+		addGB(busterKillSpinner, 3, 3);
+		
+		addGB(eventBox, 0, 4);
+		addGB(atkSpawnBox, 1, 4);
+		//this.addGB(advancedBox, 2, 4);
+		addGB(updatePop, 2, 5);
+	}
+	
+	private void initListeners() {
+		this.addMouseListener(new MouseListener() { //this is wonky, fix
 			public void mousePressed(MouseEvent e) {
 				clearFeedback();
 			}
@@ -164,6 +138,14 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 			}
 			public void mouseExited(MouseEvent e) {
 				clearFeedback();
+			}
+		});
+		
+		updatePop.addActionListener(event -> {
+			updateNode();
+			feedback.setText("Population settings updated");
+			if(popNode.getMapIndex() > -1) { //if user entered a map
+				loadMapInfo(popNode.getMapIndex());
 			}
 		});
 		
@@ -191,28 +173,34 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 				propertySupport.firePropertyChange(IMPORTED, null, templateMap);
 			}
 		});
-		
-		popPanel.addGB(maps, 1, 1);
-		
-		popPanel.addGB(loadPop, 2, 1);
-		popPanel.addGB(loadTemplate, 3, 1);
-		
-		popPanel.addGB(currLabel, 0, 2);
-		popPanel.addGB(currSpinner, 1, 2);
-		popPanel.addGB(respawnWaveLabel, 2, 2);
-		popPanel.addGB(respawnWaveSpinner, 3, 2);
-		popPanel.addGB(waveTimeBox, 4, 2);
-		
-		popPanel.addGB(busterDmgLabel, 0, 3);
-		popPanel.addGB(busterDmgSpinner, 1, 3);
-		popPanel.addGB(busterKillLabel, 2, 3);
-		popPanel.addGB(busterKillSpinner, 3, 3);
-		
-		popPanel.addGB(eventBox, 0, 4);
-		popPanel.addGB(atkSpawnBox, 1, 4);
-		//popPanel.addGB(advancedBox, 2, 4);
-		popPanel.addGB(updatePop, 2, 5);
 	}
+	
+	//listen to all changes
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+        propertySupport.addPropertyChangeListener(listener);
+    }
+	
+	//listen to a specific change
+	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        propertySupport.addPropertyChangeListener(propertyName, listener);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        propertySupport.removePropertyChangeListener(listener);
+    }
+	
+    //take map info index, get map's info and tell the relevant listeners
+    private void loadMapInfo(int index) {
+    	MapInfo info = new MapInfo();
+    	info.getMapData(index);
+    	
+    	propertySupport.firePropertyChange(WAVERELAY, null, info.getWaveRelay());
+    	propertySupport.firePropertyChange(WAVESPAWNRELAY, null, info.getWSRelay());
+    	propertySupport.firePropertyChange(BOTSPAWNS, null, info.getBotSpawns());
+    	propertySupport.firePropertyChange(TAGS, null, info.getTags());
+    	propertySupport.firePropertyChange(TANKSPAWNS, null, info.getTankSpawns());
+    	propertySupport.firePropertyChange(TANKRELAY, null, info.getTankRelays());
+    }
 	
 	private void clearFeedback() { //clears feedback so things don't get stuck on it
 		if(!feedback.getText().equals(" ")) {
@@ -256,7 +244,7 @@ public class SecondaryWindow extends EngiWindow { //window for less important/on
 		else {
 			fileChooser = new JFileChooser();
 		}	
-		fileChooser.setFileFilter(new PopFileFilter());
+		fileChooser.setFileFilter(new EngiWindow.PopFileFilter());
 		fileChooser.showOpenDialog(this);
 		
 		return fileChooser.getSelectedFile();

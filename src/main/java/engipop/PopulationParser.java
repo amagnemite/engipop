@@ -22,11 +22,11 @@ import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParser;
 
 public class PopulationParser { //parse .pop
-	private EngiWindow window;
+	private EngiPanel containingPanel;
 	private SettingsWindow setWindow;
 	
-	public PopulationParser(EngiWindow window, SettingsWindow setWindow) {
-		this.window = window;
+	public PopulationParser(EngiPanel containingPanel, SettingsWindow setWindow) {
+		this.containingPanel = containingPanel;
 		this.setWindow = setWindow;
 	}
 	
@@ -48,12 +48,12 @@ public class PopulationParser { //parse .pop
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
 		catch (IOException i) {
-			window.updateFeedback(file.getName() + " was not found");
+			containingPanel.updateFeedback(file.getName() + " was not found");
 			return null;
 		}
 		
 		if(root.size() > 2) {
-			window.updateFeedback("Population file has too many root keys");
+			containingPanel.updateFeedback("Population file has too many root keys");
 			return null;
 		}
 		
@@ -113,7 +113,7 @@ public class PopulationParser { //parse .pop
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
 		catch (IOException i) {
-			window.updateFeedback(file.getName() + " was not found");
+			containingPanel.updateFeedback(file.getName() + " was not found");
 			return;
 		}
 		root = root.getSubNode(root.lastKey());
@@ -151,7 +151,7 @@ public class PopulationParser { //parse .pop
 			}
 		}
 		else {
-			window.updateFeedback("No templates to process");
+			containingPanel.updateFeedback("No templates to process");
 		}
 		
 		templateMap.put(filename, templateList);

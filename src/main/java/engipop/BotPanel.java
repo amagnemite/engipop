@@ -33,7 +33,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 	String[] tags = {"bot_giant", "bot_squad_member"}; //potentially move bot_giant
 	
-	EngiWindow containingWindow;
+	EngiPanel containingWindow;
 	EngiPanel attrPanel = new EngiPanel();
 	WherePanel teleWherePanel = new WherePanel();
 	
@@ -105,7 +105,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	Map<String, String> currentAttributeMap = new HashMap<String, String>();
 	Map<String, String> currentCharAttributeMap = new HashMap<String, String>();
 	
-	public BotPanel(EngiWindow containingWindow, MainWindow mainWindow, SecondaryWindow secondaryWindow) {
+	public BotPanel(EngiPanel containingPanel, MainWindow mainWindow, PopulationPanel secondaryWindow) {
 		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
 		JTextField cellEditor = new JTextField();
 		JButton addTagRow = new JButton("+");
@@ -113,10 +113,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
-		this.setBackground(new Color(192, 192, 192));
+		setBackground(new Color(192, 192, 192));
 		attrPanel.setOpaque(false);
 		
-		this.containingWindow = containingWindow;
+		this.containingWindow = containingPanel;
 		secondaryWindow.addPropertyChangeListener(this);
 		mainWindow.addPropertyChangeListener(this);
 		
@@ -267,6 +267,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		iconBox.setMinimumSize(iconBox.getPreferredSize()); //double check this once custom input happens
 		//tagListPane.setMinimumSize(tagList.getPreferredScrollableViewportSize());
 		tagListPane.setMinimumSize(new Dimension(200, 100));
+		tagListPane.setPreferredSize(new Dimension(200, 100));
 		attributesListPane.setMinimumSize(new Dimension(botAttributeList.getPreferredScrollableViewportSize().width + 20, 
 				botAttributeList.getPreferredScrollableViewportSize().height));
 		
@@ -924,7 +925,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	//get info changes from secondarywindow
 	public void propertyChange(PropertyChangeEvent evt) {
 		switch(evt.getPropertyName()) {
-			case SecondaryWindow.TAGS:
+			case PopulationPanel.TAGS:
 				updateTagList((List<String>) evt.getNewValue()); //this should always be a list<string>, may want to sanity check though
 				//tagList.setFixedCellWidth(-1);
 				break;

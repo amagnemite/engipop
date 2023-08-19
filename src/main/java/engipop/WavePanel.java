@@ -38,13 +38,13 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	
 	//String sound; 
 	
-	public WavePanel(SecondaryWindow secondaryWindow) {
+	public WavePanel(PopulationPanel secondaryWindow) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.insets = new Insets(0, 0, 0, 5);
 		this.setBackground(new Color(208, 169, 107));
 		
-		secondaryWindow.addPropertyChangeListener(SecondaryWindow.WAVERELAY, this);
+		secondaryWindow.addPropertyChangeListener(PopulationPanel.WAVERELAY, this);
 		
 		JLabel waveLabel = new JLabel("Wave editor");
 		JLabel startLabel = new JLabel("StartWaveOutput");

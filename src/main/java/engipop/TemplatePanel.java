@@ -34,7 +34,7 @@ import engipop.PopulationParser.TemplateData;
 //window to edit bot and ws templates
 //similar structure to main window
 @SuppressWarnings("serial")
-public class TemplateWindow extends EngiWindow implements PropertyChangeListener {
+public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	private static final String ADDWS = "Add wavespawn template";
 	private static final String UPDATEWS = "Update wavespawn template";
 	private static final String REMOVEWS = "Remove wavespawn template";
@@ -43,7 +43,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 	private static final String UPDATEBOT = "Update TFBot template";
 	private static final String REMOVEBOT = "Remove TFBot template";
 	
-	SecondaryWindow w2;
+	PopulationPanel w2;
 	WaveSpawnPanel wsPanel;
 	BotPanel botPanel;
 	EngiPanel templateButtonPanel = new EngiPanel();
@@ -84,11 +84,10 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 	
 	//TODO: needs to be cleaned up due to template handling changes
 	
-	public TemplateWindow(MainWindow mainWindow, SecondaryWindow w2) {
-		super("Template editor");
-		setSize(1300, 800);
+	public TemplatePanel(MainWindow mainWindow, PopulationPanel w2) {
+		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		this.setBackground(new Color(11, 97, 163));
+		//setBackground(new Color(11, 97, 163));
 		
 		this.w2 = w2;
 		w2.addPropertyChangeListener("POPNODE", this);
@@ -114,6 +113,7 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 		
 		spawnerListManager.setButtonState(States.DISABLE);
 		
+		templateComboBox.setPrototypeDisplayValue("T_TFBot_Giant_Demo_Spammer_Reload_Chief");
 		templateComboBox.setMinimumSize(templateNameField.getPreferredSize());
 		
 		wsModeButton.addItemListener(event -> {
@@ -162,8 +162,6 @@ public class TemplateWindow extends EngiWindow implements PropertyChangeListener
 		gbConstraints.gridheight = 2;
 		addGB(templateButtonPanel, 2, 1);
 		addGB(listPanel, 2, 4);
-		
-		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 	}
 	
 	private void initTemplateButtonPanel() {

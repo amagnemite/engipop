@@ -33,7 +33,7 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	JLabel killedLabel = new JLabel("OnKilledOutput");
 	JLabel bombLabel = new JLabel("OnBombDroppedOutput");
 	
-	public TankPanel(SecondaryWindow SecondaryWindow) {
+	public TankPanel(PopulationPanel SecondaryWindow) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.insets = new Insets(0, 0, 0, 5);
@@ -157,10 +157,10 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 
 	//get tankspawn and tankrelays from secondarywindow
 	public void propertyChange(PropertyChangeEvent evt) {
-		if(evt.getPropertyName().equals(SecondaryWindow.TANKSPAWNS)) {
+		if(evt.getPropertyName().equals(PopulationPanel.TANKSPAWNS)) {
 			setPathModel((List<String>) evt.getNewValue());
 		}
-		else if(evt.getPropertyName().equals(SecondaryWindow.TANKRELAY)) {
+		else if(evt.getPropertyName().equals(PopulationPanel.TANKRELAY)) {
 			setRelays((List<String>) evt.getNewValue());
 		}
 	}

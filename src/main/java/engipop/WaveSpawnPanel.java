@@ -59,10 +59,10 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	JCheckBox doLast = new JCheckBox("LastSpawnOutput?");
 	JCheckBox doDone = new JCheckBox("DoneOutput?");
 	
-	public WaveSpawnPanel(SecondaryWindow secondaryWindow) {
+	public WaveSpawnPanel(PopulationPanel secondaryWindow) {
 		int initial = 1, totalMax = 999, activeMax = 22, incr = 1, currMax = 30000, currIncr = 50;
 		double initWait = 0.0, minWait = 0.0, maxWait = 1000.0, incrWait = 1.0;
-		this.setBackground(new Color(130, 130, 130));
+		setBackground(new Color(96, 139, 165));
 		
 		secondaryWindow.addPropertyChangeListener(this);
 		
@@ -459,10 +459,10 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	//get ws relay and where from secondarywindow
 	//once again consider checking casts
 	public void propertyChange(PropertyChangeEvent evt) {
-		if(evt.getPropertyName().equals(SecondaryWindow.WAVESPAWNRELAY)) {
+		if(evt.getPropertyName().equals(PopulationPanel.WAVESPAWNRELAY)) {
 			setRelay((List<String>) evt.getNewValue());
 		}
-		else if(evt.getPropertyName().equals(SecondaryWindow.BOTSPAWNS)) {
+		else if(evt.getPropertyName().equals(PopulationPanel.BOTSPAWNS)) {
 			wherePanel.updateModel((List<String>) evt.getNewValue());
 		}
 	}
