@@ -120,6 +120,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		templateTree = new TemplateTree(populationPanel);
 		JPanel listPanel = waveNodeManager.getListPanel();
 		JPanel spawnerPanel = waveNodeManager.getSpawnerPanel();
+		EngiPanel populationFillerPanel = new EngiPanel();
 		JScrollPane templateTreePane = templateTree.getTreePane();
 		JScrollPane panelScroll = new JScrollPane(mainPanel);
 	
@@ -135,11 +136,18 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 				generateFile();
 			}
 			else {
-				feedback.setText(error);
+				mainPanel.feedback.setText(error);
 			}	 
 		});
 		
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		
+		//for positioning populationpanel since it's much smaller than the rest
+		populationFillerPanel.setLayout(populationFillerPanel.gbLayout);
+		populationFillerPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
+		populationFillerPanel.gbConstraints.weightx = 1;
+		populationFillerPanel.gbConstraints.weighty = 1;
+		populationFillerPanel.addGB(populationPanel, 0, 0);
 		
 		mainPanel.addGB(mainPanel.feedback, 0, 1);
 		mainPanel.addGB(createPop, 2, 6);
@@ -167,8 +175,12 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		panelScroll.setMinimumSize(mainPanel.getMinimumSize());
 		panelScroll.setPreferredSize(mainPanel.getPreferredSize());
 		
+		populationFillerPanel.setMinimumSize(mainPanel.getMinimumSize());
+		populationFillerPanel.setPreferredSize(mainPanel.getPreferredSize());
+		//populationFillerPanel.setBackground(Color.BLUE);
+		
 		tabbedPane.addTab("Main", panelScroll);
-		tabbedPane.addTab("Population", populationPanel);
+		tabbedPane.addTab("Population", populationFillerPanel);
 		tabbedPane.addTab("Templates", tempPanel);
 		tabbedPane.addTab("Missions", missionPanel);
 		
@@ -224,12 +236,12 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 				int op = JOptionPane.showConfirmDialog(this, "Overwrite this file?");
 				if (op == JOptionPane.YES_OPTION) {
 					new TreeParse().parseTree(file, popNode);
-					feedback.setText("Popfile successfully generated!");
+					mainPanel.feedback.setText("Popfile successfully generated!");
 				}
 			}
 			else { //if it doesn't exist, no overwrite check needed
 				new TreeParse().parseTree(file, popNode);
-				feedback.setText("Popfile successfully generated!");
+				mainPanel.feedback.setText("Popfile successfully generated!");
 			}
 		//}
 		//catch(IOException i) {

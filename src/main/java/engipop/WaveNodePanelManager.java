@@ -123,8 +123,10 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				waveBLManager.changeButtonState(States.SELECTED);
 				wavePanel.setVisible(true);
 				
+				getWaveSpawnList();
+				
 				if(currentWaveNode.getChildren().size() > 0) {
-					getWaveSpawnList();
+					waveSpawnList.setSelectedIndex(-1);
 					waveSpawnList.setSelectedIndex(0);
 				}
 				else { //should only happen if user removes all wavespawns
@@ -289,7 +291,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				waveSpawnListModel.addElement(Integer.toString(i));
 			}
 		}
-		waveSpawnList.setSelectedIndex(0);
+		//waveSpawnList.setSelectedIndex(0);
 		//waveSpawnListScroll.revalidate();
 	}
 	

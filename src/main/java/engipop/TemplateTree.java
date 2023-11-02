@@ -91,14 +91,13 @@ public class TemplateTree implements PropertyChangeListener {
 			case PopulationPanel.INCLUDED:
 				addNonInternalTemplates((Map<String, List<TemplateData>>) evt.getNewValue(), PopulationPanel.INCLUDED);
 				break;
-			/*
+
 			case WaveSpawnNode.TFBOT:
 				updateInternalTemplate((TemplateData) evt.getOldValue(), (TemplateData) evt.getNewValue());
 				break;
 			case WaveNode.WAVESPAWN:
 				
 				break;
-			*/
 			case PopulationPanel.INTERNAL:	
 				addInternalTemplates((List<TemplateData>) evt.getNewValue());
 				break;

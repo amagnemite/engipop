@@ -43,29 +43,41 @@ public class TreeParse { //it is time to parse
 		
 		//error returned is the lowest offense (something related to spawner, then wavespawn, then wave)
 		return stopCheck; 
-	} 
+	}
 	
-	private String checkWave(WaveNode wave, int waveNum, boolean lastWave) {
-		String error = "Wave " + waveNum + " has an empty ";
+	private String checkRelay(Node parent, String key) {
 		String stopCheck = "";
-
-		//all waves need to have a start
-		if(wave.containsKey(WaveNode.STARTWAVEOUTPUT)) {
-			stopCheck = ((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "StartWaveOutput";
-		}	
-		if(stopCheck.isEmpty() && !lastWave && wave.containsKey(WaveNode.DONEOUTPUT)) { //all waves need done except last wave
-			stopCheck = ((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "DoneOutput";
+		
+		if(parent.containsKey(key) ) {
+			RelayNode relay = (RelayNode) parent.getValue(key);
 			
-		}
-		if(stopCheck.isEmpty() && wave.containsKey(WaveNode.INITWAVEOUTPUT)) { 
-			stopCheck = ((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).containsKey(RelayNode.TARGET) ? "" : error + "InitWaveOutput";
+			if(!relay.containsKey(RelayNode.TARGET)) {
+				stopCheck = key + " has no target";
+			}
+			else if(!relay.containsKey(RelayNode.ACTION)) {
+				stopCheck = key + " has no action";
+			}
 		}
 		
+		return stopCheck;
+	}
+	
+	private String checkWave(WaveNode wave, int waveNum, boolean lastWave) {
+		String error = "Wave " + waveNum + "'s ";
+		String stopCheck = "";
+		
+		stopCheck = checkRelay(wave, WaveNode.STARTWAVEOUTPUT);
+		stopCheck = checkRelay(wave, WaveNode.DONEOUTPUT);
+		stopCheck = checkRelay(wave, WaveNode.INITWAVEOUTPUT);
+			
 		if(stopCheck.isEmpty()) {
 			ListIterator<Node> iterator = wave.getChildren().listIterator();
 			while(stopCheck.isEmpty() && iterator.hasNext()) {
 				stopCheck = checkWaveSpawn((WaveSpawnNode) iterator.next(), waveNum);
 			}
+		}
+		else {
+			stopCheck = error + stopCheck;
 		}
 		
 		return stopCheck;
@@ -300,7 +312,7 @@ public class TreeParse { //it is time to parse
 				indentPrintln(pw, "{");
 				indentCount++;
 				
-				for(String key : mission.printNode()) {
+				for(String key : mission.getNodeKeyList()) {
 					if(mission.containsKey(key)) {
 						indentPrintln(pw, key + " " + mission.getValue(key));
 						mapCopyM.remove(key);
@@ -468,15 +480,15 @@ public class TreeParse { //it is time to parse
 			mapCopy.remove(WaveSpawnNode.WAITFORALLDEAD);
 		}
 		
-		if(node.containsKey(WaveSpawnNode.SUPPORT)) {
+		if(((Boolean) node.getValue(WaveSpawnNode.SUPPORT)) == true) {
 			if(node.getSupportLimited()) {
 				indentPrintln(pw, "Support Limited");
 			}
 			else {
 				indentPrintln(pw, "Support true");
 			}
-			mapCopy.remove(WaveSpawnNode.SUPPORT);
 		}
+		mapCopy.remove(WaveSpawnNode.SUPPORT);
 		
 		if(node.containsKey(WaveSpawnNode.STARTWAVEOUTPUT)) {
 			printRelay(pw, "StartWaveOutput", (RelayNode) node.getValue(WaveSpawnNode.STARTWAVEOUTPUT));
@@ -595,8 +607,10 @@ public class TreeParse { //it is time to parse
 			List<Object> mapList = mapCopy.remove(TFBotNode.ITEMATTRIBUTES);
 			
 			for(Object submap : mapList ) {
-				printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), 
-						mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
+				if(!((Map<String, String>) submap).isEmpty()) {
+					printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), 
+							mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
+				}
 			}
 		}
 		

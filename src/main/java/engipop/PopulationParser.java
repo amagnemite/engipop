@@ -19,6 +19,7 @@ import java.util.Set;
 import engipop.EngiPanel.Classes;
 import engipop.Node.*;
 import net.platinumdigitalgroup.jvdf.VDFNode;
+import net.platinumdigitalgroup.jvdf.VDFParseException;
 import net.platinumdigitalgroup.jvdf.VDFParser;
 
 public class PopulationParser { //parse .pop
@@ -47,8 +48,13 @@ public class PopulationParser { //parse .pop
 			
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
-		catch (IOException i) {
+		catch(IOException i) {
 			containingPanel.updateFeedback(file.getName() + " was not found");
+			return null;
+		}
+		catch(VDFParseException v) { //TODO: edit vdfparser for more specifics
+			//also need to do something about missing values
+			containingPanel.updateFeedback("Failed to parse popfile, mismatched number of brackets?");
 			return null;
 		}
 		
@@ -57,7 +63,7 @@ public class PopulationParser { //parse .pop
 			return null;
 		}
 		
-		if(root.containsKey("#include") || root.containsKey("#base")) {
+		if(root.containsKey("#base")) {
 			includes = root.get(root.firstKey());
 			
 			for(Object includedPop : includes) {
@@ -70,7 +76,7 @@ public class PopulationParser { //parse .pop
 				}
 				else {
 					//Entry<String, List<TemplateData>> entry = parseTemplates(
-					parseTemplates(new File(setWindow.getScriptPathString() + "\\population\\" + (String) includedPop), templateMap);
+					parseTemplates(new File(setWindow.getTFPathString() + "\\population\\" + (String) includedPop), templateMap);
 					
 					//templateMap.put(entry.getKey(), entry.getValue());
 				}

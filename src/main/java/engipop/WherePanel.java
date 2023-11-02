@@ -63,6 +63,8 @@ public class WherePanel extends EngiPanel {
 		
 		addGB(whereScroll, 0, 0);
 		addGB(buttonPanel, 0, 1);
+		
+		whereModel.addRow(new String[] {"spawnbot"});
 	}
 	
 	public void updateWhere(List<Object> wheres) {

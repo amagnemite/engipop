@@ -375,14 +375,13 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		}
 		wsn.setBetweenDeaths(wsDeaths.isSelected());
 		
-		if(isLimited.isSelected()) {
-			wsn.putKey(WaveSpawnNode.SUPPORT, false);
+		if(isSupport.isSelected()) {
+			wsn.putKey(WaveSpawnNode.SUPPORT, true);
+			wsn.setSupportLimited(isLimited.isSelected());
 		}
 		else {
-			wsn.putKey(WaveSpawnNode.SUPPORT, true);
+			wsn.putKey(WaveSpawnNode.SUPPORT, false);
 		}
-		wsn.setSupportLimited(isLimited.isSelected());
-		
 		
 		if(doStart.isSelected()) {
 			if(wsn.getValue(WaveSpawnNode.STARTWAVEOUTPUT) == null) { //make relays if data is entered and no relay exists

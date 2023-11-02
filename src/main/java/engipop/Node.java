@@ -1,5 +1,4 @@
 package engipop;
-import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
@@ -10,8 +9,7 @@ import net.platinumdigitalgroup.jvdf.VDFNode;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
 @SuppressWarnings("unchecked")
-public class Node implements Serializable {
-	private static final long serialVersionUID = 1029176597406135628L;
+public class Node {
 	private transient Node parent;
 	private List<Node> children = new ArrayList<Node>();
 	protected Map<String, List<Object>> keyVals = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
@@ -173,7 +171,6 @@ public class Node implements Serializable {
 	}
     
     public static class PopNode extends Node {
-		private static final long serialVersionUID = 8298901116813898839L;
 		public static final String STARTINGCURRENCY = "StartingCurrency"; //int
     	public static final String RESPAWNWAVETIME = "RespawnWaveTime"; //int
     	public static final String FIXEDRESPAWNWAVETIME = "FixedRespawnWaveTime"; //boolean
@@ -312,7 +309,7 @@ public class Node implements Serializable {
         	return this.botTemplateMap;
         }
     
-        public List<String> printNode() {
+        public static List<String> getNodeKeyList() {
         	List<String> list = new ArrayList<String>(Arrays.asList(STARTINGCURRENCY, RESPAWNWAVETIME, FIXEDRESPAWNWAVETIME,
         			BUSTERDAMAGE, BUSTERKILLS, BOTSATKINSPAWN, EVENTPOPFILE, TEMPLATE, MISSION));
         	
@@ -335,7 +332,6 @@ public class Node implements Serializable {
     } */
     
     public static class MissionNode extends Node {
-		private static final long serialVersionUID = 1757828183752920816L;
 		public static final String WHERE = "Where"; //string
     	public static final String OBJECTIVE = "Objective"; //string
     	public static final String INITIALCOOLDOWN = "InitialCooldown"; //float
@@ -372,7 +368,7 @@ public class Node implements Serializable {
     		}
     	}
     	
-    	public List<String> printNode() {
+    	public static List<String> getNodeKeyList() {
     		List<String> keyValList = new ArrayList<String>(Arrays.asList(WHERE, OBJECTIVE, INITIALCOOLDOWN, COOLDOWNTIME, BEGINATWAVE,
     				RUNFORTHISMANYWAVES, DESIREDCOUNT));
     		
@@ -381,7 +377,6 @@ public class Node implements Serializable {
     }
     
     public static class WaveNode extends Node { 
-		private static final long serialVersionUID = 5277478750013077900L;
 		//todo: sound support
     	//description?
     	//waitwhendone and checkpoint are both vestigal
@@ -391,8 +386,8 @@ public class Node implements Serializable {
     	public static final String WAVESPAWN = "WaveSpawn";
     	
     	public WaveNode() {
-    		putKey(STARTWAVEOUTPUT, new RelayNode());
-    		putKey(DONEOUTPUT, new RelayNode());
+    		//putKey(STARTWAVEOUTPUT, new RelayNode());
+    		//putKey(DONEOUTPUT, new RelayNode());
     	}
     	
         public WaveNode(Map<String, List<Object>> map) { //readin node, key case should already be converted
@@ -422,13 +417,12 @@ public class Node implements Serializable {
         	}
         }
         
-        public List<String> getNode() {
+        public static List<String> getNodeKeyList() {
         	return new ArrayList<String>(Arrays.asList(STARTWAVEOUTPUT, DONEOUTPUT, INITWAVEOUTPUT));
         }
     }
     
     public static class RelayNode extends Node { //something experimental
-		private static final long serialVersionUID = 6997941017069474364L;
 		public static final String TARGET = "Target";
     	public static final String ACTION = "Action";
     	public static final String PARAM = "Param";
@@ -436,16 +430,12 @@ public class Node implements Serializable {
     	
     	public RelayNode() { //for now, assume all actions are trigger
     		//putKey(TARGET, null);
-			putKey(ACTION, "trigger");
+			//putKey(ACTION, "trigger");
 		}
     	
     	public RelayNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     	}
-    	
-    	public List<String> getNodeKeyList() {
-        	return new ArrayList<String>(Arrays.asList(TARGET, ACTION, PARAM, DELAY));
-        }
     	
     	public void updateNode(String target, String action, String param, String delay) {
     		putKey(TARGET, target);
@@ -470,6 +460,10 @@ public class Node implements Serializable {
     		updateNode(target, action, null, null);
     	}
     	
+    	public static List<String> getNodeKeyList() {
+        	return new ArrayList<String>(Arrays.asList(TARGET, ACTION, PARAM, DELAY));
+        }
+    	
     	/*
     	public boolean isTargetEmptyOrNull() {
     		boolean check = false;
@@ -486,7 +480,6 @@ public class Node implements Serializable {
     }
     
     public static class WaveSpawnNode extends Node { //node for wavespawns
-		private static final long serialVersionUID = 8227518791283123088L;
 		public static final String WHERE = "Where"; //string
     	public static final String TOTALCOUNT = "TotalCount"; //int
     	public static final String MAXACTIVE = "MaxActive"; //int
@@ -513,11 +506,11 @@ public class Node implements Serializable {
     	public static final String RANDOMCHOICE = "RandomChoice";
     	//TODO: fix support
     	
-    	private transient boolean waitBetweenDeaths; //betweenspawns and betweenspawnsafterdeath are mutually exclusive
-    	private transient boolean supportLimited;
+    	private boolean waitBetweenDeaths; //betweenspawns and betweenspawnsafterdeath are mutually exclusive
+    	private boolean supportLimited;
     	
     	public WaveSpawnNode() {
-    		putKey(WHERE, "spawnbot");
+    		//putKey(WHERE, "spawnbot");
     		putKey(TOTALCOUNT, 1);
     		putKey(MAXACTIVE, 1);
     		putKey(SPAWNCOUNT, 1);
@@ -658,7 +651,6 @@ public class Node implements Serializable {
     }
     
     public static class TankNode extends Node {
-		private static final long serialVersionUID = -4923846338890204356L;
 		public static final String HEALTH = "Health"; //int
     	public static final String SPEED = "Speed"; //float
     	public static final String NAME = "Name"; //string
@@ -696,12 +688,11 @@ public class Node implements Serializable {
     }
     
     public static class TFBotNode extends Node { //node for tfbot spawners
-		private static final long serialVersionUID = -4048312032891579094L;
 		public static final String CLASSNAME = "Class"; //class 
     	public static final String CLASSICON = "ClassIcon"; //string
     	public static final String NAME = "Name"; //string
     	public static final String SKILL = "Skill"; //skill
-    	public static final String WEAPONRESTRICT = "WeaponRestriction"; //weaponrestriction
+    	public static final String WEAPONRESTRICT = "WeaponRestrictions"; //weaponrestriction
     	public static final String TAGS = "Tag"; //List<String>
     	public static final String ATTRIBUTES = "Attributes";  //List<String>
     	public static final String ITEM = "Item"; //List<Object>
@@ -826,10 +817,8 @@ public class Node implements Serializable {
     
     //these two are mostly convenience 
     public static class SquadNode extends Node {
-		private static final long serialVersionUID = -5640678276809303546L;
 
 		public SquadNode() {
-    		
     	}
     	
     	public SquadNode(Map<String, List<Object>> map) {
@@ -847,10 +836,7 @@ public class Node implements Serializable {
     }
     
     public static class RandomChoiceNode extends Node {
-		private static final long serialVersionUID = -7656129117713922281L;
-
 		public RandomChoiceNode() {
-    		
     	}
     	
     	public RandomChoiceNode(Map<String, List<Object>> map) { 

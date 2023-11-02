@@ -27,10 +27,15 @@ import javax.swing.JTextField;
 @SuppressWarnings("serial")
 public class SettingsWindow extends EngiWindow {
 	static File cfgFileName = new File("engiconfig.cfg");
-	private static final String scriptsPath = "ScriptsPath";
-	private static final String itemsTxtPath = "\\items\\items_game.txt";
+	private static final String tfPath = "TFPath";
+	//optional keyvals
+	private static final String HEALTH = "IsHealth";
+	private static final String SCALE = "IsScale";
+	private static final String AUTOJUMPMIN = "IsAutoJumpMin";
 	
-	//String itemsTxtPath;
+	
+	private static final String itemsTxtPath = "\\scripts\\items\\items_game.txt";
+	
 	Map<String, String> modifiedConfig = new HashMap<String, String>();
 	Map<String, String> oldConfig = new HashMap<String, String>();
 	
@@ -43,14 +48,18 @@ public class SettingsWindow extends EngiWindow {
 		setSize(800, 200);
 		
 		this.window = window;
-		JLabel itemsTxtLabel = new JLabel("tf2 scripts path: ");
+		JLabel itemsTxtLabel = new JLabel("tf path: ");
+		itemsTxtBox.setEditable(false);
 		
 		readFromConfig();
 		
-		itemsTxtBox.setEditable(false);
 		
-		if(modifiedConfig.get(scriptsPath) != null) {
-			itemsTxtBox.setText(modifiedConfig.get(scriptsPath));
+		if(modifiedConfig.isEmpty() || modifiedConfig.get(tfPath) == null) {
+			modifiedConfig.put(tfPath, null);
+		} //there may be other possibly null values, in which case it'd be better handle nulls generically
+		
+		if(modifiedConfig.get(tfPath) != null) {
+			itemsTxtBox.setText(modifiedConfig.get(tfPath));
 			//possibly fix length here
 		}
 		else {
@@ -69,8 +78,8 @@ public class SettingsWindow extends EngiWindow {
 		updateConfig.addActionListener(event -> {
 			writeToConfig();
 			
-			if(modifiedConfig.get(scriptsPath) != null) {
-				parseItems(new File(modifiedConfig.get(scriptsPath) + itemsTxtPath));
+			if(modifiedConfig.get(tfPath) != null) {
+				parseItems(new File(getScriptPathString()));
 			}
 			
 			oldConfig.clear();
@@ -99,8 +108,8 @@ public class SettingsWindow extends EngiWindow {
 					switch (op) {
 						case JOptionPane.YES_OPTION: 
 							writeToConfig();
-							if(modifiedConfig.get(scriptsPath) != null) {
-								parseItems(new File(modifiedConfig.get(scriptsPath) + itemsTxtPath));
+							if(modifiedConfig.get(tfPath) != null) {
+								parseItems(new File(getScriptPathString()));
 							}
 							oldConfig.clear();
 							oldConfig.putAll(modifiedConfig); //copies modified into old without making them point the same place
@@ -124,18 +133,22 @@ public class SettingsWindow extends EngiWindow {
 	
 	public void setScriptPathString(File file) {
 		if(file != null) {
-			modifiedConfig.put(scriptsPath, file.getPath());
-			itemsTxtBox.setText(modifiedConfig.get(scriptsPath));
+			modifiedConfig.put(tfPath, file.getPath());
+			itemsTxtBox.setText(modifiedConfig.get(tfPath));
 		}
 		else {
-			modifiedConfig.put(scriptsPath, null);
+			modifiedConfig.put(tfPath, null);
 			itemsTxtBox.setText(" ");
 		}
 		this.validate(); //updates textbox size
 	}
 	
+	public String getTFPathString() {
+		return modifiedConfig.get(tfPath);
+	}
+	
 	public String getScriptPathString() {
-		return modifiedConfig.get(scriptsPath);
+		return modifiedConfig.get(tfPath) + itemsTxtPath;
 	}
 	
 	//write map from config file
@@ -153,11 +166,6 @@ public class SettingsWindow extends EngiWindow {
 					//key = substring of length (where the = is) - 1 to 0
 					//value = substring starting at where the = is + 1
 				}
-				if(modifiedConfig.isEmpty() || modifiedConfig.get(scriptsPath).equals("null")) {
-					//TODO: this will error if modifiedConfig is not empty but scriptsPath isn't present
-					//also may need a way to remove old vars
-					modifiedConfig.put(scriptsPath, null);
-				} //there may be othe rpossibly null values, in which case it'd be better handle nulls generically
 			}
 			catch (IOException e) {
 				window.updateFeedback("Engiconfig.cfg could not be read");
@@ -192,8 +200,8 @@ public class SettingsWindow extends EngiWindow {
 	}
 	
 	public void updateWindow() {
-		if(modifiedConfig.get(scriptsPath) != null) {
-			itemsTxtBox.setText(modifiedConfig.get(scriptsPath));
+		if(modifiedConfig.get(tfPath) != null) {
+			itemsTxtBox.setText(modifiedConfig.get(tfPath));
 		}
 		else {
 			itemsTxtBox.setText(" ");
@@ -207,7 +215,7 @@ public class SettingsWindow extends EngiWindow {
 	public void initConfig() {
 		File cfg = new File("engiconfig.cfg");
 		try {
-			if(cfg.createNewFile() || this.getScriptPathString() == null) { //if no cfg existed or cfg existed but has no path set
+			if(cfg.createNewFile() || getTFPathString() == null) { //if no cfg existed or cfg existed but has no path set
 				int op = JOptionPane.showConfirmDialog(this, "The TF2 scripts path is currently unset. Set it?");
 				
 				if(op == JOptionPane.YES_OPTION) {
@@ -216,12 +224,12 @@ public class SettingsWindow extends EngiWindow {
 						setScriptPathString(itemsTxt);
 						writeToConfig();
 						//sw.updateWindow();
-						parseItems(new File(getScriptPathString() + itemsTxtPath));
+						parseItems(new File(getTFPathString() + itemsTxtPath));
 					}
 				}
 			}
-			else {	
-				parseItems(new File(getScriptPathString() + itemsTxtPath));
+			else {
+				parseItems(new File(getTFPathString() + itemsTxtPath));
 			}
 		}
 		catch (IOException io) {

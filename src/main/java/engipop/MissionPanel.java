@@ -97,8 +97,8 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		tankPanel.setVisible(false);
 		missionList.setSelectionModel(new NoDeselectionModel());
 		missionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		missionList.setPrototypeCellValue("DestroySentries");
-		objectiveBox.setPrototypeDisplayValue("DestroySentries");
+		missionList.setPrototypeCellValue("DestroySentries ");
+		objectiveBox.setPrototypeDisplayValue("DestroySentries ");
 		objectiveBox.setMinimumSize(objectiveBox.getPreferredSize());
 		missionScroll.setMinimumSize(missionList.getPreferredScrollableViewportSize());
 		//missionScroll.setPreferredSize(missionList.getPreferredScrollableViewportSize());
