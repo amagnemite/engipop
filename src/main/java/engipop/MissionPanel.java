@@ -25,8 +25,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	WherePanel wherePanel = new WherePanel();
 	//JPanel spawnerPanel; for now only do bots
 	
-	//PopNode popNode;
-	List<MissionNode> missionArray = new ArrayList<MissionNode>();
+	List<Object> missionArray = new ArrayList<Object>();
 	MissionNode currentMissionNode = new MissionNode();
 	TFBotNode currentBotNode = new TFBotNode();
 	//TankNode currentTankNode = new TankNode();
@@ -62,15 +61,13 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		double dMin = 0.0;
 		
 		secondaryWindow.addPropertyChangeListener("POPNODE", this);
-		for(Object item :  mainWindow.getPopNode().getListValue(PopNode.MISSION)) {
-			missionArray.add((MissionNode) item);
-		}
+		missionArray = mainWindow.getPopNode().getListValue(PopNode.MISSION);
 		
-		SpinnerNumberModel initialCooldownModel = new SpinnerNumberModel(dMin, dMin, null, 1.0);
-		SpinnerNumberModel cooldownModel = new SpinnerNumberModel(dMin, dMin, null, 1.0);
+		SpinnerNumberModel initialCooldownModel = new SpinnerNumberModel(10.0, dMin, null, 1.0);
+		SpinnerNumberModel cooldownModel = new SpinnerNumberModel(10.0, dMin, null, 1.0);
 		SpinnerNumberModel beginModel = new SpinnerNumberModel(1, iMin, null, 1);
 		SpinnerNumberModel runModel = new SpinnerNumberModel(1, iMin, null, 1);
-		SpinnerNumberModel desiredModel = new SpinnerNumberModel(1, iMin, null, botMax);
+		SpinnerNumberModel desiredModel = new SpinnerNumberModel(1, iMin, 22, 1);
 		
 		JScrollPane missionScroll = new JScrollPane(missionList);
 		JLabel whereLabel = new JLabel("Where:");
@@ -142,11 +139,11 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		componentPanel.addGB(wherePanel, 3, 0);
 		
 		initListeners();
-		
-		currentBotNode.connectNodes(currentMissionNode);
-		missionArray.add(currentMissionNode);
-		missionListModel.addElement(MissionNode.DESTROYSENTRIES);
-		missionList.setSelectedIndex(missionListModel.getSize() - 1);
+		missionBLManager.changeButtonState(States.EMPTY);
+		//currentBotNode.connectNodes(currentMissionNode);
+		//missionArray.add(currentMissionNode);
+		//missionListModel.addElement(MissionNode.DESTROYSENTRIES);
+		//missionList.setSelectedIndex(missionListModel.getSize() - 1);
 	}
 	
 	private void initListeners() {
@@ -157,7 +154,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 			
 			if(index != -1) { 
 				//spawnerListManager.checkSpawner(missionArray.get(index));
-				currentMissionNode = missionArray.get(index);
+				currentMissionNode = (MissionNode) missionArray.get(index);
 				currentBotNode = (TFBotNode) currentMissionNode.getChildren().get(0);
 				updatePanel(currentMissionNode);
 				
@@ -226,13 +223,20 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		PopNode popNode = (PopNode) evt.getNewValue();
-		if(!popNode.containsKey(PopNode.MISSION)) {
-			return;
-		}
+		missionArray = popNode.getListValue(PopNode.MISSION);
 		
-		for(Object node : popNode.getListValue(PopNode.MISSION)) {
-			missionArray.add((MissionNode) node);
+		missionListModel.clear();
+		
+		for(Object node : missionArray) {
+			MissionNode mission = (MissionNode) node;
+			
+			missionListModel.addElement((String) mission.getValue(MissionNode.OBJECTIVE));
 		}
-		//force a list reload
+		if(missionArray.size() > 0) {
+			missionList.setSelectedIndex(0);
+		}
+		else {
+			missionList.setSelectedIndex(-1);
+		}
 	}
 }

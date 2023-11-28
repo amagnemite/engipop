@@ -124,16 +124,26 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	
 	public void updatePanel(WaveNode wave) { 
 		if(wave.containsKey(WaveNode.STARTWAVEOUTPUT)) {
-			startNameBox.setSelectedItem(((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).getValue(RelayNode.TARGET));
+			RelayNode relay = (RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT);
+			
+			startNameBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
+			startAction.setText((String) relay.getValue(RelayNode.ACTION));
 		}
 		
 		if(wave.containsKey(WaveNode.DONEOUTPUT)) {
-			doneNameBox.setSelectedItem(((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).getValue(RelayNode.TARGET)); //possibly make this not mandatory
+			RelayNode relay = (RelayNode) wave.getValue(WaveNode.DONEOUTPUT);
+			
+			doneNameBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
+			doneAction.setText((String) relay.getValue(RelayNode.ACTION));
 		}
 		
-		if(wave.containsKey(WaveNode.INITWAVEOUTPUT)) { //not mandatory, so may not exist
+		if(wave.containsKey(WaveNode.INITWAVEOUTPUT)) {
 			doInit.setSelected(true);
-			initNameBox.setSelectedItem(((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).getValue(RelayNode.TARGET));
+			
+			RelayNode relay = (RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT);
+			
+			initNameBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
+			initAction.setText((String) relay.getValue(RelayNode.ACTION));
 		}
 		else {
 			doInit.setSelected(false);

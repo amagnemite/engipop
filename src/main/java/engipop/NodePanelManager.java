@@ -225,6 +225,7 @@ public class NodePanelManager {
 			containingPanel.feedback.setText("Bot successfully updated");
 			
 			//similar logic to setsquadrandomlistelement but uses set instead of addelement to update
+			//TODO: use template names
 			if(currentBotNode.containsKey(TFBotNode.NAME)) {
 				squadRandomListModel.set(squadRandomList.getSelectedIndex(), (String) currentBotNode.getValue(TFBotNode.NAME));
 			}
@@ -410,6 +411,7 @@ public class NodePanelManager {
 	}
 	
 	void checkSpawner(Node node) { //check what the wavespawn's spawner is
+		botPanel.setVisible(true);
 		if(node.getClass() == TFBotNode.class) {
 			tfbotBut.setSelected(true);
 			spawnerInfo.setText(botSpawner);

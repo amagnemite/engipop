@@ -276,6 +276,9 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		if(wsn.containsKey(WaveSpawnNode.WHERE)) {
 			wherePanel.updateWhere(wsn.getListValue(WaveSpawnNode.WHERE));
 		}
+		else {
+			wherePanel.clearSelection();
+		}
 	
 		/*
 		whereTable.clearSelection();

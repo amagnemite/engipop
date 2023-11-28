@@ -606,7 +606,7 @@ public class TreeParse { //it is time to parse
 		if(node.containsKey(TFBotNode.ITEMATTRIBUTES)) {
 			List<Object> mapList = mapCopy.remove(TFBotNode.ITEMATTRIBUTES);
 			
-			for(Object submap : mapList ) {
+			for(Object submap : mapList) {
 				if(!((Map<String, String>) submap).isEmpty()) {
 					printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), 
 							mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
@@ -731,12 +731,12 @@ public class TreeParse { //it is time to parse
 		mapCopy.putAll(node.getMap());
 		
 		if(node.containsKey(TankNode.NAME)) {
-			indentPrintln(pw, "Name " + node.getValue(TankNode.NAME));
+			indentPrintln(pw, TankNode.NAME + " " + node.getValue(TankNode.NAME));
 			mapCopy.remove(TankNode.NAME);
 		}
 		
 		if(node.containsKey(TankNode.HEALTH)) {
-			indentPrintln(pw, "Health " + node.getValue(TankNode.HEALTH));
+			indentPrintln(pw, TankNode.HEALTH + " " + node.getValue(TankNode.HEALTH));
 			mapCopy.remove(TankNode.HEALTH);
 		}
 		if((boolean) node.containsKey(TankNode.SKIN)) {
@@ -745,17 +745,17 @@ public class TreeParse { //it is time to parse
 		mapCopy.remove(TankNode.SKIN);
 		
 		if(node.containsKey(TankNode.STARTINGPATHTRACKNODE)) {
-			indentPrintln(pw, "StatingPathTrackNode \"" + node.getValue(TankNode.STARTINGPATHTRACKNODE) + "\"");
+			indentPrintln(pw, TankNode.STARTINGPATHTRACKNODE + " \"" + node.getValue(TankNode.STARTINGPATHTRACKNODE) + "\"");
 			mapCopy.remove(TankNode.STARTINGPATHTRACKNODE);
 		}
 		
 		if(node.containsKey(TankNode.ONKILLEDOUTPUT)) {
-			printRelay(pw, "OnKilledOutput", (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT));
+			printRelay(pw, TankNode.ONKILLEDOUTPUT, (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT));
 			mapCopy.remove(TankNode.ONKILLEDOUTPUT);
 		}
 		
 		if(node.containsKey(TankNode.ONBOMBDROPPEDOUTPUT)) {
-			printRelay(pw, "OnBombOutput", (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT));
+			printRelay(pw, TankNode.ONBOMBDROPPEDOUTPUT, (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT));
 			mapCopy.remove(TankNode.ONBOMBDROPPEDOUTPUT);
 		}
 		

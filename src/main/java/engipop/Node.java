@@ -261,6 +261,9 @@ public class Node {
         		}
         		putKey(MISSION, array);
         	}
+        	else {
+        		putKey(MISSION, new ArrayList<Node>());
+        	}
         	
         	if(keyVals.containsKey(TEMPLATE)) {
         		List<Object> list = keyVals.get(TEMPLATE);
@@ -429,8 +432,6 @@ public class Node {
     	public static final String DELAY = "Delay";
     	
     	public RelayNode() { //for now, assume all actions are trigger
-    		//putKey(TARGET, null);
-			//putKey(ACTION, "trigger");
 		}
     	
     	public RelayNode(Map<String, List<Object>> map) {

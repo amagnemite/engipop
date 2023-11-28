@@ -130,8 +130,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 					waveSpawnList.setSelectedIndex(0);
 				}
 				else { //should only happen if user removes all wavespawns
-					waveSpawnBLManager.changeButtonState(States.EMPTY);
-					//waveSpawnList.setSelectedIndex(-1);
+					//waveSpawnBLManager.changeButtonState(States.EMPTY);
+					waveSpawnList.setSelectedIndex(-1);
 				}
 			}
 			else { 
@@ -204,7 +204,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			}
 			else { //disable updating when there is not a subwave explicitly selected
 				waveSpawnBLManager.changeButtonState(States.EMPTY);
-				//spawnerBLManager.changeButtonState(States.DISABLE);
+				//resetWaveSpawnState(States.EMPTY);
+				//resetSpawnerState();
 			}
 		});
 		
