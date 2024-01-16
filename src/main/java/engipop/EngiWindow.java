@@ -36,6 +36,7 @@ public class EngiWindow extends JFrame {
 
 	public EngiWindow(String frameText) {
 		super(frameText);
+		feedback = new JLabel("");
 		setLayout(gbLayout);
 		setIconImage(icon.getImage());
 		gbConstraints.insets = new Insets(0, 0, 5, 0);
