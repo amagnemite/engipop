@@ -28,8 +28,3 @@ application {
     // Define the main class for the application.
     mainClass = 'engipop.MainWindow'
 }
-
-tasks.named('test') {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
-}
