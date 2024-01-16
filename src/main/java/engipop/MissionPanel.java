@@ -49,7 +49,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	JSpinner runSpinner = new JSpinner();
 	JSpinner desiredSpinner = new JSpinner();
 	
-	public MissionPanel(MainWindow mainWindow, PopulationPanel secondaryWindow) {
+	public MissionPanel(MainWindow mainWindow, PopulationPanel secondaryWindow, WaveBarPanel wavebar) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		componentPanel.setLayout(componentPanel.gbLayout);
@@ -81,7 +81,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		
 		botPanel = new BotPanel(this, mainWindow, secondaryWindow);
 		tankPanel = new TankPanel(secondaryWindow);
-		spawnerListManager = new NodePanelManager(this, botPanel, tankPanel);
+		spawnerListManager = new NodePanelManager(this, botPanel, tankPanel, wavebar);
 		listPanel = spawnerListManager.getListPanel();
 		//spawnerPanel = spawnerListManager.getSpawnerPanel();
 		

@@ -26,6 +26,7 @@ import engipop.Node.SquadNode;
 import engipop.Node.TFBotNode;
 import engipop.Node.TankNode;
 import engipop.Node.WaveSpawnNode;
+import engipop.WaveBarPanel.BotType;
 
 //buttons to interface with backend / select panel visibility
 //split across two panels
@@ -58,6 +59,7 @@ public class NodePanelManager {
 	protected EngiPanel containingPanel;
 	BotPanel botPanel;
 	TankPanel tankPanel;
+	WaveBarPanel wavebar;
 	EngiPanel listPanel = new EngiPanel();
 	EngiPanel spawnerPanel = new EngiPanel();
 	
@@ -86,10 +88,18 @@ public class NodePanelManager {
 	JRadioButton noneBut = new JRadioButton("none");
 	//hidden button to ensure the buttongroup state always changes, so can't go from say tfbot to tfbot, which wouldn't cause a state change
 	
+	//TODO: change showing/hiding panels to greying out panels
+	
+	//TODO: may want a better way of handling classes that use nodepanelmanager but don't need wavebar support
 	public NodePanelManager(EngiPanel containingPanel, BotPanel botPanel, TankPanel tankPanel) {
+		this(containingPanel, botPanel, tankPanel, null);
+	}
+	
+	public NodePanelManager(EngiPanel containingPanel, BotPanel botPanel, TankPanel tankPanel, WaveBarPanel wavebar) {
 		this.containingPanel = containingPanel;
 		this.botPanel = botPanel;
 		this.tankPanel = tankPanel;
+		this.wavebar = wavebar;
 		spawnerPanel.setBackground(botPanel.getBackground());
 		listPanel.setBackground(new Color(240, 129, 73));
 		
@@ -152,15 +162,27 @@ public class NodePanelManager {
 					currentBotNode.connectNodes(currentWSNode);
 					spawnerInfo.setText(botSpawner);
 					//window.feedback.setText("Bot successfully created");
+					if(wavebar != null) {
+						String iconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
+						int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
+						Classes cclass = (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME);
+							
+						wavebar.addIcon(BotType.COMMON, iconName, false, count); //by default new tfbots are just scouts
+					}
 					break;
 				case (addTankMsg):
 					//tankPanel.updateNode(currentTankNode);
 					currentTankNode = new TankNode();
 					currentTankNode.connectNodes(currentWSNode);
 					spawnerInfo.setText(tankSpawner);
+					
+					if(wavebar != null) {
+						int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
+						wavebar.addIcon(BotType.GIANT, "tank", false, count);
+					}
 					//window.feedback.setText("Tank successfully created");
 					break;
-				case (addSquadMsg):
+				case (addSquadMsg): //for squadrc handle their wavebars when bots actually get added
 					currentSquadNode = new SquadNode();
 					currentSquadNode.connectNodes(currentWSNode);
 					squadRandomBLManager.changeButtonState(States.EMPTY); //enable adding bot subnodes
@@ -186,10 +208,51 @@ public class NodePanelManager {
 			if(tankBut.isSelected()) {
 				tankPanel.updateNode(currentTankNode);
 				containingPanel.feedback.setText("Tank successfully updated");
+				
+				if(wavebar != null) { //is this even needed? tank icon is added at creation and count/support only changes when ws does
+					//String iconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
+					int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
+					
+					if((boolean) currentWSNode.getValue(WaveSpawnNode.SUPPORT)) { //vanilla wise only support tanks can have white bg
+						wavebar.addIcon(BotType.SUPPORT, "tank", false, count);
+					}
+					else {
+						wavebar.addIcon(BotType.GIANT, "tank", false, count);
+					}
+				}
 			}
 			else {
+				boolean oldCrit = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit");
+				String oldIconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
+				Classes oldClass = (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME);
+				BotType oldType = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss") ? BotType.GIANT : BotType.COMMON;
+				
 				botPanel.updateNode(currentBotNode);
 				containingPanel.feedback.setText("Bot successfully updated");
+				
+				if(wavebar != null) {
+					//TODO: standardize attributes somewhere
+					boolean isCrit = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit");
+					String iconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
+					int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT); //TODO: check ws state
+					Classes cclass = (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME);
+					BotType type = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss") ? BotType.GIANT : BotType.COMMON;
+					
+					//TODO: also need to resolve templates 
+					if(iconName == null && cclass != Classes.None) {
+						iconName = cclass.toString();
+					}
+					
+					if((boolean) currentWSNode.getValue(WaveSpawnNode.SUPPORT)) { //first since giants are white bg in support
+						wavebar.addIcon(BotType.SUPPORT, iconName, isCrit, count);
+					}
+					else if(currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss")) {
+						wavebar.addIcon(BotType.GIANT, iconName, isCrit, count);
+					}
+					else {
+						wavebar.addIcon(BotType.COMMON, iconName, isCrit, count);
+					} 
+				}
 			}
 		});
 		

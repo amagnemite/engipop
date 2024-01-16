@@ -23,6 +23,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	
 	JTabbedPane tabbedPane = new JTabbedPane();
 	EngiPanel mainPanel = new EngiPanel();
+	WaveBarPanel wavebar = new WaveBarPanel();
 	
 	//todo: update botpanel
 	//JMenuItem popSet = new JMenuItem("Open population settings");
@@ -61,7 +62,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		SettingsWindow settingsWindow = new SettingsWindow(this);
 		PopulationPanel populationPanel = new PopulationPanel(settingsWindow, popNode);
 		TemplatePanel tempPanel = new TemplatePanel(this, populationPanel);
-		MissionPanel missionPanel = new MissionPanel(this, populationPanel);
+		MissionPanel missionPanel = new MissionPanel(this, populationPanel, wavebar);
 			
 		settingsWindow.initConfig();
 		populationPanel.addPropertyChangeListener("POPNODE", this);
@@ -116,14 +117,14 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		wavePanel = new WavePanel(populationPanel);
 		tankPanel = new TankPanel(populationPanel);
 		
-		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, botPanel, tankPanel, populationPanel);
+		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, botPanel, tankPanel, populationPanel, wavebar);
 		templateTree = new TemplateTree(populationPanel);
 		JPanel listPanel = waveNodeManager.getListPanel();
 		JPanel spawnerPanel = waveNodeManager.getSpawnerPanel();
 		EngiPanel populationFillerPanel = new EngiPanel();
 		JScrollPane templateTreePane = templateTree.getTreePane();
 		JScrollPane panelScroll = new JScrollPane(mainPanel);
-	
+		
 		templateTreePane.setMinimumSize(new Dimension(225, templateTreePane.getPreferredSize().height));
 		templateTreePane.setPreferredSize(new Dimension(225, templateTreePane.getPreferredSize().height));
 		//botPanel.setMinimumSize(botPanel.getPreferredSize());
@@ -149,6 +150,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		populationFillerPanel.gbConstraints.weighty = 1;
 		populationFillerPanel.addGB(populationPanel, 0, 0);
 		
+		mainPanel.addGB(wavebar, 0, 0);
 		mainPanel.addGB(mainPanel.feedback, 0, 1);
 		mainPanel.addGB(createPop, 2, 6);
 		
@@ -198,6 +200,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		}
 		
 		MainWindow w = new MainWindow();
+		//SwingUtilities.updateComponentTreeUI(w);
 	}
 	
 	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {

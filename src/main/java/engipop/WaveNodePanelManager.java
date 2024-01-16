@@ -46,8 +46,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	
 	
 	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, BotPanel botPanel, TankPanel tankPanel,
-			PopulationPanel secondaryWindow) {
-		super(window.getMainPanel(), botPanel, tankPanel);
+			PopulationPanel secondaryWindow, WaveBarPanel wavebar) {
+		super(window.getMainPanel(), botPanel, tankPanel, wavebar);
 		initWaveListeners();
 		listPanel.removeAll(); //wavenode has a different layout than node, so need to set up here
 		
