@@ -51,11 +51,11 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		//this.setBackground(new Color(193, 161, 138));
 	
 		setSize(1500, 1000);
-		//gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
 		mainPanel.setLayout(mainPanel.gbLayout);
 		mainPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
+		feedback = new JLabel(" ");
 		mainPanel.feedback = new JLabel(" ");
 		
 		//may want to reconsider this
@@ -186,7 +186,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		tabbedPane.addTab("Templates", tempPanel);
 		tabbedPane.addTab("Missions", missionPanel);
 		
-		this.add(tabbedPane);
+		add(tabbedPane);
 		
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

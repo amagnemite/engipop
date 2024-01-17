@@ -3,6 +3,14 @@
 
 # Ignore Gradle build output directory
 build
+/bin/
 
 # Engipop config files
 engiconfig.cfg
+
+.settings
+settings.gradle
+gradle*
+.project
+.gitattributes
+.classpath

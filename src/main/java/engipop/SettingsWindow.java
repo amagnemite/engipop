@@ -47,12 +47,13 @@ public class SettingsWindow extends EngiWindow {
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		setSize(800, 200);
 		
+		//feedback = new JLabel(" ");
+		
 		this.window = window;
 		JLabel itemsTxtLabel = new JLabel("tf path: ");
 		itemsTxtBox.setEditable(false);
 		
 		readFromConfig();
-		
 		
 		if(modifiedConfig.isEmpty() || modifiedConfig.get(tfPath) == null) {
 			modifiedConfig.put(tfPath, null);
