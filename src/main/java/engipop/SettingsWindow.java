@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,9 +34,6 @@ public class SettingsWindow extends EngiWindow {
 	private static final String HEALTH = "IsHealth";
 	private static final String SCALE = "IsScale";
 	private static final String AUTOJUMPMIN = "IsAutoJumpMin";
-	
-	
-	private static final String itemsTxtPath = "\\scripts\\items\\items_game.txt";
 	
 	Map<String, String> modifiedConfig = new HashMap<String, String>();
 	Map<String, String> oldConfig = new HashMap<String, String>();
@@ -71,8 +70,7 @@ public class SettingsWindow extends EngiWindow {
 		//update map
 		JButton updateItemsPath = new JButton("...");
 		updateItemsPath.addActionListener(event -> {
-			File file = getScriptPath();
-			setScriptPathString(file);
+			setTFPath(promptTFPath());
 		});
 		
 		JButton updateConfig = new JButton("Update settings");
@@ -80,7 +78,7 @@ public class SettingsWindow extends EngiWindow {
 			writeToConfig();
 			
 			if(modifiedConfig.get(tfPath) != null) {
-				parseItems(new File(getScriptPathString()));
+				parseItems(getItemSchemaPath().toFile());
 			}
 			
 			oldConfig.clear();
@@ -110,7 +108,7 @@ public class SettingsWindow extends EngiWindow {
 						case JOptionPane.YES_OPTION: 
 							writeToConfig();
 							if(modifiedConfig.get(tfPath) != null) {
-								parseItems(new File(getScriptPathString()));
+								parseItems(getItemSchemaPath().toFile());
 							}
 							oldConfig.clear();
 							oldConfig.putAll(modifiedConfig); //copies modified into old without making them point the same place
@@ -132,9 +130,9 @@ public class SettingsWindow extends EngiWindow {
 		});
 	}
 	
-	public void setScriptPathString(File file) {
-		if(file != null) {
-			modifiedConfig.put(tfPath, file.getPath());
+	public void setTFPath(Path path) {
+		if(path != null) {
+			modifiedConfig.put(tfPath, path.toString());
 			itemsTxtBox.setText(modifiedConfig.get(tfPath));
 		}
 		else {
@@ -144,12 +142,16 @@ public class SettingsWindow extends EngiWindow {
 		this.validate(); //updates textbox size
 	}
 	
-	public String getTFPathString() {
-		return modifiedConfig.get(tfPath);
+	public Path getTFPath() {
+		return Paths.get(modifiedConfig.get(tfPath));
 	}
 	
-	public String getScriptPathString() {
-		return modifiedConfig.get(tfPath) + itemsTxtPath;
+	public Path getScriptPath() {
+		return Paths.get(getTFPath().toString(), "scripts");
+	}
+
+	public Path getItemSchemaPath() {
+		return Paths.get(getScriptPath().toString(), "items", "items_game.txt");
 	}
 	
 	//write map from config file
@@ -216,21 +218,21 @@ public class SettingsWindow extends EngiWindow {
 	public void initConfig() {
 		File cfg = new File("engiconfig.cfg");
 		try {
-			if(cfg.createNewFile() || getTFPathString() == null) { //if no cfg existed or cfg existed but has no path set
+			if(cfg.createNewFile() || getTFPath() == null) { //if no cfg existed or cfg existed but has no path set
 				int op = JOptionPane.showConfirmDialog(this, "The TF2 scripts path is currently unset. Set it?");
 				
 				if(op == JOptionPane.YES_OPTION) {
-					File itemsTxt = getScriptPath(); //try to get item path, then parse
-					if(itemsTxt != null) {
-						setScriptPathString(itemsTxt);
+					Path tfPath = promptTFPath(); //try to get item path, then parse
+					if(tfPath != null) {
+						setTFPath(tfPath);
 						writeToConfig();
 						//sw.updateWindow();
-						parseItems(new File(getTFPathString() + itemsTxtPath));
+						parseItems(getItemSchemaPath().toFile());
 					}
 				}
 			}
 			else {
-				parseItems(new File(getTFPathString() + itemsTxtPath));
+				parseItems(getItemSchemaPath().toFile());
 			}
 		}
 		catch (IOException io) {
@@ -238,38 +240,26 @@ public class SettingsWindow extends EngiWindow {
 		}
 	}
 	
-	private File getScriptPath() { //get file object of scripts
-		JFileChooser c;
-		File file = null; //prob shouldn't do this but no defaults for linux/osx
-		//boolean selectingFile = true;
-		
-		if(System.getProperty("os.name").contains("Windows")) { //for windows, default to standard items_game path
-			file = new File("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf\\scripts");
-			c = new JFileChooser(file);
+	private Path promptTFPath() { //get file object of scripts
+		Path defaultScriptsPath = null;
+		if(System.getProperty("os.name").contains("Windows")) {
+			defaultScriptsPath =
+				Paths.get("C:", "Program Files (x86)", "Steam", "steamapps", "common", "Team Fortress 2", "tf");
 		}
-		else { //make linux and rare osx people suffer
-			//file = new File();
-			c = new JFileChooser();
+		else {
+			// Linux/OSX
+			defaultScriptsPath =
+				Paths.get(System.getProperty("user.home"), ".steam", "steam", "steamapps", "common", "Team Fortress 2", "tf");
 		}
-		
+		JFileChooser c = new JFileChooser(defaultScriptsPath.toFile());
+		c.setDialogTitle("Select tf/ folder");
 		c.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		
-		//while(selectingFile) {
-			c.showOpenDialog(this);
-			file = c.getSelectedFile();
-			/*
-			if(file != null && !file.getName().equals("items_game.txt")) {
-				int op = JOptionPane.showConfirmDialog(this, "File selected is not items_game.txt. Select a new file?");
-				if (op != JOptionPane.YES_OPTION) { //if cancelled or no, leave
-					selectingFile = false;
-					file = null; //clear out
-				} //otherwise it just opens the dialogue again
-			}
-			else { //if it turns out it's a different file named items_game.txt, the parser will handle it
-				selectingFile = false;
-			} */
-		//}
-		return file;
+		c.showOpenDialog(this);
+		File selection = c.getSelectedFile();
+		if (selection == null) {
+			return null;
+		}
+		return c.getSelectedFile().toPath();
 	}
 	
 	private void parseItems(File itemsTxt) { //take items file and parse into lists

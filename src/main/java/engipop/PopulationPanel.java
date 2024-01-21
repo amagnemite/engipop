@@ -238,8 +238,8 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 	
 	private File getPopFile() {
 		JFileChooser fileChooser;
-		if(setWin.getTFPathString() != null) {
-			fileChooser = new JFileChooser(setWin.getTFPathString());
+		if(setWin.getTFPath() != null) {
+			fileChooser = new JFileChooser(setWin.getTFPath().toFile());
 		}
 		else {
 			fileChooser = new JFileChooser();

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,7 +77,8 @@ public class PopulationParser { //parse .pop
 				}
 				else {
 					//Entry<String, List<TemplateData>> entry = parseTemplates(
-					parseTemplates(new File(setWindow.getTFPathString() + "\\population\\" + (String) includedPop), templateMap);
+					// parseTemplates(new File(setWindow.getTFPathString() + "\\population\\" + (String) includedPop), templateMap);
+					parseTemplates(Paths.get(setWindow.getScriptPath().toString(), "population", (String)includedPop).toFile(), templateMap);
 					
 					//templateMap.put(entry.getKey(), entry.getValue());
 				}
