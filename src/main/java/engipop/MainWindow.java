@@ -7,7 +7,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.io.IOException;
 
 import engipop.Node.*;
 
@@ -39,9 +38,10 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	WaveNodePanelManager waveNodeManager;
 	TemplateTree templateTree;
 	
+	JLabel feedback = new JLabel("");
 	JButton createPop = new JButton("Create popfile"); //may consider putting this in window
 	
-	PopNode popNode = new PopNode();
+	PopNode popNode;
 	
 	private PropertyChangeSupport support = new PropertyChangeSupport(this);
 	
@@ -49,23 +49,22 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	public MainWindow() {
 		super("Engipop main");
 		//this.setBackground(new Color(193, 161, 138));
-	
+		
+		popNode = Engipop.getPopNode();
 		setSize(1500, 1000);
 		
 		mainPanel.setLayout(mainPanel.gbLayout);
 		mainPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
-		feedback = new JLabel(" ");
-		mainPanel.feedback = new JLabel(" ");
-		
 		//may want to reconsider this
 		SettingsWindow settingsWindow = new SettingsWindow(this);
-		PopulationPanel populationPanel = new PopulationPanel(settingsWindow, popNode);
+		PopulationPanel populationPanel = new PopulationPanel(this, settingsWindow);
 		TemplatePanel tempPanel = new TemplatePanel(this, populationPanel);
 		MissionPanel missionPanel = new MissionPanel(this, populationPanel, wavebar);
 			
 		settingsWindow.initConfig();
 		populationPanel.addPropertyChangeListener("POPNODE", this);
+		
 		
 		/*
 		popSet.addActionListener(event -> {
@@ -137,7 +136,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 				generateFile();
 			}
 			else {
-				mainPanel.feedback.setText(error);
+				feedback.setText(error);
 			}	 
 		});
 		
@@ -151,7 +150,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		populationFillerPanel.addGB(populationPanel, 0, 0);
 		
 		mainPanel.addGB(wavebar, 0, 0);
-		mainPanel.addGB(mainPanel.feedback, 0, 1);
+		mainPanel.addGB(feedback, 0, 1);
 		mainPanel.addGB(createPop, 2, 6);
 		
 		mainPanel.gbConstraints.gridwidth = 2;
@@ -220,13 +219,20 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
     	//support.firePropertyChange(BOTTEMPLATELISTFIXED, null, popParse.getBotTemplateList());
     }
 	
-	public PopNode getPopNode() {
-		return this.popNode;
-	}
-	
 	public EngiPanel getMainPanel() {
 		return this.mainPanel;
 	}
+	
+	public void setFeedback(String string) {
+		feedback.setText(string);
+	}
+	
+	/* TODO: automate clearing feedback
+	private void clearFeedback() { //clears feedback so things don't get stuck on it
+		if(!feedback.getText().equals(" ")) {
+			feedback.setText(" ");
+		}
+	} */
 	
 	private void generateFile() { //get filename/place to save pop at
 		JFileChooser c = new JFileChooser();
@@ -239,12 +245,12 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 				int op = JOptionPane.showConfirmDialog(this, "Overwrite this file?");
 				if (op == JOptionPane.YES_OPTION) {
 					new TreeParse().parseTree(file, popNode);
-					mainPanel.feedback.setText("Popfile successfully generated!");
+					feedback.setText("Popfile successfully generated!");
 				}
 			}
 			else { //if it doesn't exist, no overwrite check needed
 				new TreeParse().parseTree(file, popNode);
-				mainPanel.feedback.setText("Popfile successfully generated!");
+				feedback.setText("Popfile successfully generated!");
 			}
 		//}
 		//catch(IOException i) {
@@ -253,6 +259,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
-		this.popNode = (PopNode) evt.getNewValue();
+		this.popNode = Engipop.getPopNode();
 	}
 }

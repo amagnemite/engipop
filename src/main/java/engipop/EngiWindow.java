@@ -31,12 +31,9 @@ public class EngiWindow extends JFrame {
 	
 	GridBagLayout gbLayout = new GridBagLayout();
 	GridBagConstraints gbConstraints = new GridBagConstraints();
-	
-	protected JLabel feedback; //output text feedback to user, not all windows need this
 
 	public EngiWindow(String frameText) {
 		super(frameText);
-		feedback = new JLabel("");
 		setLayout(gbLayout);
 		setIconImage(icon.getImage());
 		gbConstraints.insets = new Insets(0, 0, 5, 0);
@@ -48,21 +45,14 @@ public class EngiWindow extends JFrame {
 		gbConstraints.gridy = y;
 		this.add(comp, gbConstraints);
 	}
-	
-	public void updateFeedback(String string) {
-		feedback.setText(string);
-	}
-	
-	public static class NoDeselectionModel extends DefaultListSelectionModel {
 
-	    @Override
+	public static class NoDeselectionModel extends DefaultListSelectionModel {
 	    public void removeSelectionInterval(int index0, int index1) {
-	    	
+	    	//intentionally does nothing
 	    }
 	}
 	
 	public static class PopFileFilter extends FileFilter {
-
 		public boolean accept(File file) {
 			if(file.isDirectory()) {
 				return true;

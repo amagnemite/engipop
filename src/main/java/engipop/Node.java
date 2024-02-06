@@ -3,7 +3,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
-import engipop.EngiPanel.Classes;
+import engipop.Engipop.Classes;
 import engipop.PopulationParser.TemplateData;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 
@@ -189,13 +189,21 @@ public class Node {
         public PopNode() {
         	putKey(STARTINGCURRENCY, 400);
         	putKey(RESPAWNWAVETIME, 6);
-        	putKey(BUSTERDAMAGE, EngiPanel.BUSTERDEFAULTDMG);
-        	putKey(BUSTERKILLS, EngiPanel.BUSTERDEFAULTKILLS);
+        	putKey(BUSTERDAMAGE, Engipop.BUSTERDEFAULTDMG);
+        	putKey(BUSTERKILLS, Engipop.BUSTERDEFAULTKILLS);
         	putKey(BOTSATKINSPAWN, false);
         	putKey(FIXEDRESPAWNWAVETIME, false);
         	putKey(EVENTPOPFILE, false);
         	putKey(MISSION, new ArrayList<Node>());
         	//putKey(ADVANCED, false);
+        	
+        	WaveNode wave = new WaveNode();
+        	WaveSpawnNode ws = new WaveSpawnNode();
+        	TFBotNode bot = new TFBotNode();
+        	
+        	wave.connectNodes(this);
+    		ws.connectNodes(wave);
+    		bot.connectNodes(ws);
         }
         
         //only constructor to use Object[] as opposed to List<Object>> since hasn't been processed yet
@@ -248,10 +256,10 @@ public class Node {
         	}
         	
         	if(!keyVals.containsKey(BUSTERDAMAGE)) {
-        		putKey(BUSTERDAMAGE, EngiPanel.BUSTERDEFAULTDMG);
+        		putKey(BUSTERDAMAGE, Engipop.BUSTERDEFAULTDMG);
         	}
         	if(!keyVals.containsKey(BUSTERKILLS)) {
-        		putKey(BUSTERKILLS, EngiPanel.BUSTERDEFAULTKILLS);
+        		putKey(BUSTERKILLS, Engipop.BUSTERDEFAULTKILLS);
         	}
         	
         	if(keyVals.containsKey(MISSION)) {
@@ -661,7 +669,7 @@ public class Node {
     	public static final String ONBOMBDROPPEDOUTPUT = "OnBombDroppedOutput";
     	
     	public TankNode() {
-    		putKey(HEALTH, EngiPanel.TANKDEFAULTHEALTH);
+    		putKey(HEALTH, Engipop.TANKDEFAULTHEALTH);
     		putKey(NAME, "tankboss");
     		putKey(SKIN, false);
     	}
@@ -818,8 +826,7 @@ public class Node {
     
     //these two are mostly convenience 
     public static class SquadNode extends Node {
-
-		public SquadNode() {
+    	public SquadNode() {
     	}
     	
     	public SquadNode(Map<String, List<Object>> map) {
@@ -837,7 +844,7 @@ public class Node {
     }
     
     public static class RandomChoiceNode extends Node {
-		public RandomChoiceNode() {
+    	public RandomChoiceNode() {
     	}
     	
     	public RandomChoiceNode(Map<String, List<Object>> map) { 

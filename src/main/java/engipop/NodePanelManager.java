@@ -18,13 +18,15 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import engipop.ButtonListManager.States;
-import engipop.EngiPanel.Classes;
+import engipop.Engipop.Classes;
 import engipop.EngiWindow.NoDeselectionModel;
+import engipop.Node.PopNode;
 import engipop.Node.RandomChoiceNode;
 import engipop.Node.SpawnerType;
 import engipop.Node.SquadNode;
 import engipop.Node.TFBotNode;
 import engipop.Node.TankNode;
+import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
 import engipop.WaveBarPanel.BotType;
 
@@ -50,13 +52,15 @@ public class NodePanelManager {
 	static final String squadSpawner = "Current spawner type: squad";
 	static final String randomSpawner = "Current spawner type: randomchoice";
 	
+	protected PopNode popNode;
+	protected WaveNode currentWaveNode = new WaveNode();
 	protected WaveSpawnNode currentWSNode = new WaveSpawnNode();
 	protected TFBotNode currentBotNode = new TFBotNode();
 	protected TankNode currentTankNode = new TankNode();
 	protected SquadNode currentSquadNode = new SquadNode();
 	protected RandomChoiceNode currentRCNode = new RandomChoiceNode();
 	
-	protected EngiPanel containingPanel;
+	MainWindow mainWindow;
 	BotPanel botPanel;
 	TankPanel tankPanel;
 	WaveBarPanel wavebar;
@@ -91,12 +95,13 @@ public class NodePanelManager {
 	//TODO: change showing/hiding panels to greying out panels
 	
 	//TODO: may want a better way of handling classes that use nodepanelmanager but don't need wavebar support
-	public NodePanelManager(EngiPanel containingPanel, BotPanel botPanel, TankPanel tankPanel) {
-		this(containingPanel, botPanel, tankPanel, null);
+	public NodePanelManager(MainWindow mainWindow, BotPanel botPanel, TankPanel tankPanel) {
+		this(mainWindow, botPanel, tankPanel, null);
 	}
 	
-	public NodePanelManager(EngiPanel containingPanel, BotPanel botPanel, TankPanel tankPanel, WaveBarPanel wavebar) {
-		this.containingPanel = containingPanel;
+	public NodePanelManager(MainWindow mainWindow, BotPanel botPanel, TankPanel tankPanel, WaveBarPanel wavebar) {
+		popNode = Engipop.getPopNode();
+		this.mainWindow = mainWindow;
 		this.botPanel = botPanel;
 		this.tankPanel = tankPanel;
 		this.wavebar = wavebar;
@@ -149,7 +154,7 @@ public class NodePanelManager {
 	//will need new contexts later
 	protected void initListeners() { //inits all the button/list listeners
 		addSpawner.addActionListener(event -> {
-			containingPanel.feedback.setText(" ");
+			mainWindow.setFeedback(" ");
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			botPanel.setVisible(true);
 			//spawnerPanel.setVisible(true);
@@ -163,11 +168,8 @@ public class NodePanelManager {
 					spawnerInfo.setText(botSpawner);
 					//window.feedback.setText("Bot successfully created");
 					if(wavebar != null) {
-						String iconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
 						int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
-						Classes cclass = (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME);
-							
-						wavebar.addIcon(BotType.COMMON, iconName, false, count); //by default new tfbots are just scouts
+						wavebar.addIcon(currentBotNode, count, BotType.COMMON); //by default new tfbots are just scouts
 					}
 					break;
 				case (addTankMsg):
@@ -178,7 +180,7 @@ public class NodePanelManager {
 					
 					if(wavebar != null) {
 						int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
-						wavebar.addIcon(BotType.GIANT, "tank", false, count);
+						wavebar.addIcon("tank", false, count, BotType.GIANT);
 					}
 					//window.feedback.setText("Tank successfully created");
 					break;
@@ -207,31 +209,21 @@ public class NodePanelManager {
 		updateSpawner.addActionListener(event -> { //update current spawner
 			if(tankBut.isSelected()) {
 				tankPanel.updateNode(currentTankNode);
-				containingPanel.feedback.setText("Tank successfully updated");
-				
-				if(wavebar != null) { //is this even needed? tank icon is added at creation and count/support only changes when ws does
-					//String iconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
-					int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
-					
-					if((boolean) currentWSNode.getValue(WaveSpawnNode.SUPPORT)) { //vanilla wise only support tanks can have white bg
-						wavebar.addIcon(BotType.SUPPORT, "tank", false, count);
-					}
-					else {
-						wavebar.addIcon(BotType.GIANT, "tank", false, count);
-					}
-				}
+				mainWindow.setFeedback("Tank successfully updated");
 			}
 			else {
-				boolean oldCrit = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit");
-				String oldIconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
-				Classes oldClass = (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME);
-				BotType oldType = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss") ? BotType.GIANT : BotType.COMMON;
+				//boolean oldCrit = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit");
+				//String oldIconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
+				//Classes oldClass = (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME);
+				//BotType oldType = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss") ? BotType.GIANT : BotType.COMMON;
 				
 				botPanel.updateNode(currentBotNode);
-				containingPanel.feedback.setText("Bot successfully updated");
+				mainWindow.setFeedback("Bot successfully updated");
 				
 				if(wavebar != null) {
 					//TODO: standardize attributes somewhere
+					wavebar.rebuildWavebar((WaveNode) currentWSNode.getParent(), (PopNode) currentWSNode.getParent().getParent());
+					/*
 					boolean isCrit = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit");
 					String iconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
 					int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT); //TODO: check ws state
@@ -251,7 +243,8 @@ public class NodePanelManager {
 					}
 					else {
 						wavebar.addIcon(BotType.COMMON, iconName, isCrit, count);
-					} 
+					}
+					*/ 
 				}
 			}
 		});
@@ -265,7 +258,7 @@ public class NodePanelManager {
 		});
 		
 		addSquadRandomBot.addActionListener(event -> { //squad/rc specific button for adding bots to them
-			containingPanel.feedback.setText(" ");
+			mainWindow.setFeedback(" ");
 			
 			//botPanel.updateNode(currentBotNode);
 			currentBotNode = new TFBotNode();
@@ -285,7 +278,7 @@ public class NodePanelManager {
 		
 		updateSquadRandomBot.addActionListener(event -> { //squad/rc specific button to update bots
 			botPanel.updateNode(currentBotNode);
-			containingPanel.feedback.setText("Bot successfully updated");
+			mainWindow.setFeedback("Bot successfully updated");
 			
 			//similar logic to setsquadrandomlistelement but uses set instead of addelement to update
 			//TODO: use template names
@@ -325,7 +318,7 @@ public class NodePanelManager {
 		
 		squadRandomList.addListSelectionListener(event -> { //list of squad/random's bots
 			int squadRandomIndex = squadRandomList.getSelectedIndex();
-			containingPanel.feedback.setText(" ");
+			mainWindow.setFeedback(" ");
 			
 			//prevent fits if index is reset
 			if(squadRandomIndex != -1) {
@@ -335,7 +328,7 @@ public class NodePanelManager {
 					loadBot(false, currentBotNode);
 				}
 				else {
-					containingPanel.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					mainWindow.setFeedback("Possible nested randomchoice/squad! Unable to load");
 				}
 				
 				squadRandomBLManager.changeButtonState(States.SELECTED);
@@ -558,7 +551,7 @@ public class NodePanelManager {
 					getSquadRandomList();
 				}
 				else {
-					containingPanel.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					mainWindow.setFeedback("Possible nested randomchoice/squad! Unable to load");
 				}
 				squadRandomBLManager.changeButtonState(States.NOSELECTION);
 			}
@@ -587,7 +580,7 @@ public class NodePanelManager {
 					getSquadRandomList();
 				}
 				else {
-					containingPanel.feedback.setText("Possible nested randomchoice/squad! Unable to load");
+					mainWindow.setFeedback("Possible nested randomchoice/squad! Unable to load");
 				}
 				squadRandomBLManager.changeButtonState(States.NOSELECTION);
 			}

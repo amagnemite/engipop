@@ -17,6 +17,7 @@ import engipop.Node.*;
 @SuppressWarnings("serial")
 public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	
+	MainWindow mainWindow;
 	EngiPanel componentPanel = new EngiPanel();
 	BotPanel botPanel;
 	TankPanel tankPanel;
@@ -61,13 +62,13 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		double dMin = 0.0;
 		
 		secondaryWindow.addPropertyChangeListener("POPNODE", this);
-		missionArray = mainWindow.getPopNode().getListValue(PopNode.MISSION);
+		missionArray = Engipop.getPopNode().getListValue(PopNode.MISSION);
 		
 		SpinnerNumberModel initialCooldownModel = new SpinnerNumberModel(10.0, dMin, null, 1.0);
 		SpinnerNumberModel cooldownModel = new SpinnerNumberModel(10.0, dMin, null, 1.0);
 		SpinnerNumberModel beginModel = new SpinnerNumberModel(1, iMin, null, 1);
 		SpinnerNumberModel runModel = new SpinnerNumberModel(1, iMin, null, 1);
-		SpinnerNumberModel desiredModel = new SpinnerNumberModel(1, iMin, 22, 1);
+		SpinnerNumberModel desiredModel = new SpinnerNumberModel(0, iMin, 22, 1); //TODO: remove 0 desired count from printing
 		
 		JScrollPane missionScroll = new JScrollPane(missionList);
 		JLabel whereLabel = new JLabel("Where:");
@@ -77,11 +78,11 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		JLabel beginLabel = new JLabel("BeginAtWave:");
 		JLabel runLabel = new JLabel("RunForThisManyWaves:");
 		JLabel desiredLabel = new JLabel("DesiredCount:");
-		feedback = new JLabel();
 		
+		this.mainWindow = mainWindow;
 		botPanel = new BotPanel(this, mainWindow, secondaryWindow);
 		tankPanel = new TankPanel(secondaryWindow);
-		spawnerListManager = new NodePanelManager(this, botPanel, tankPanel, wavebar);
+		spawnerListManager = new NodePanelManager(mainWindow, botPanel, tankPanel, wavebar);
 		listPanel = spawnerListManager.getListPanel();
 		//spawnerPanel = spawnerListManager.getSpawnerPanel();
 		
@@ -125,7 +126,6 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		buttonPanel.gbConstraints.gridheight = 3;
 		buttonPanel.addGB(missionScroll, 0, 0);
 		
-		addGB(feedback, 0, 0);
 		gbConstraints.gridwidth = 2;
 		gbConstraints.gridheight = 2;
 		addGB(componentPanel, 0, 1);
@@ -204,7 +204,12 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		cooldownSpinner.setValue(mission.getValue(MissionNode.COOLDOWNTIME));
 		beginSpinner.setValue(mission.getValue(MissionNode.BEGINATWAVE));
 		runSpinner.setValue(mission.getValue(MissionNode.RUNFORTHISMANYWAVES));
-		desiredSpinner.setValue(mission.getValue(MissionNode.DESIREDCOUNT));
+		if(mission.containsKey(MissionNode.DESIREDCOUNT)) {
+			desiredSpinner.setValue(mission.getValue(MissionNode.DESIREDCOUNT));
+		}
+		else {
+			desiredSpinner.setValue(0);
+		}
 		
 		spawnerListManager.loadBot(false, currentBotNode);
 	}
@@ -222,7 +227,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
-		PopNode popNode = (PopNode) evt.getNewValue();
+		PopNode popNode = Engipop.getPopNode();
 		missionArray = popNode.getListValue(PopNode.MISSION);
 		
 		missionListModel.clear();

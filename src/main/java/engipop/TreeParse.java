@@ -5,8 +5,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
-import engipop.EngiPanel.Classes;
-import engipop.EngiPanel.ItemSlot;
+import engipop.Engipop.Classes;
+import engipop.Engipop.ItemSlot;
 import engipop.Node.*;
 import engipop.Node.TFBotNode.*;
 
@@ -135,7 +135,7 @@ public class TreeParse { //it is time to parse
 	
 	//unlike wave/spawn, for now just strip out stock weapons here so they don't get unnecessarily printed
 	private void checkBot(TFBotNode bot) {
-		EngiPanel.Classes botClass = (EngiPanel.Classes) bot.getValue(TFBotNode.CLASSNAME);
+		Classes botClass = (Classes) bot.getValue(TFBotNode.CLASSNAME);
 		
 		if(bot.containsKey(TFBotNode.ITEM)) {
 			List<Object> itemList = bot.getListValue(TFBotNode.ITEM);
@@ -284,14 +284,14 @@ public class TreeParse { //it is time to parse
 		mapCopy.remove(PopNode.FIXEDRESPAWNWAVETIME);
 		
 		if(root.containsKey(PopNode.BUSTERDAMAGE)) {
-			if((int) root.getValue(PopNode.BUSTERDAMAGE) != EngiPanel.BUSTERDEFAULTDMG) {
+			if((int) root.getValue(PopNode.BUSTERDAMAGE) != Engipop.BUSTERDEFAULTDMG) {
 				indentPrintln(pw, "AddSentryBusterWhenDamageDealtExceeds " + root.getValue(PopNode.BUSTERDAMAGE));
 			}
 			mapCopy.remove(PopNode.BUSTERDAMAGE);
 		}
 		
 		if(root.containsKey(PopNode.BUSTERKILLS)) {
-			if((int) root.getValue(PopNode.BUSTERKILLS) != EngiPanel.BUSTERDEFAULTKILLS) {
+			if((int) root.getValue(PopNode.BUSTERKILLS) != Engipop.BUSTERDEFAULTKILLS) {
 				indentPrintln(pw, "AddSentryBusterWhenKillCountExceeds " + root.getValue(PopNode.BUSTERKILLS));
 			}
 			mapCopy.remove(PopNode.BUSTERKILLS);
@@ -597,7 +597,7 @@ public class TreeParse { //it is time to parse
 			List<Object> mapList = mapCopy.remove(TFBotNode.CHARACTERATTRIBUTES);
 			
 			for(Object submap : mapList ) {
-				printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), 
+				printAttr(pw, (Classes) node.getValue(TFBotNode.CLASSNAME), 
 						mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
 			}
 		}
@@ -608,7 +608,7 @@ public class TreeParse { //it is time to parse
 			
 			for(Object submap : mapList) {
 				if(!((Map<String, String>) submap).isEmpty()) {
-					printAttr(pw, (EngiPanel.Classes) node.getValue(TFBotNode.CLASSNAME), 
+					printAttr(pw, (Classes) node.getValue(TFBotNode.CLASSNAME), 
 							mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
 				}
 			}
@@ -662,7 +662,7 @@ public class TreeParse { //it is time to parse
 		System.out.println("printed tfbot");
 	}
 	
-	private void printAttr(PrintWriter pw, EngiPanel.Classes tfClass, int slot, TFBotNode botNode, Map<String, String> attrNode) {
+	private void printAttr(PrintWriter pw, Classes tfClass, int slot, TFBotNode botNode, Map<String, String> attrNode) {
 		Object itemName = null;
 		
 		if(slot == ItemSlot.CHARACTER.getSlot()) { //different subtree name

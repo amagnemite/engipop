@@ -30,10 +30,6 @@ import javax.swing.JTextField;
 public class SettingsWindow extends EngiWindow {
 	static File cfgFileName = new File("engiconfig.cfg");
 	private static final String tfPath = "TFPath";
-	//optional keyvals
-	private static final String HEALTH = "IsHealth";
-	private static final String SCALE = "IsScale";
-	private static final String AUTOJUMPMIN = "IsAutoJumpMin";
 	
 	Map<String, String> modifiedConfig = new HashMap<String, String>();
 	Map<String, String> oldConfig = new HashMap<String, String>();
@@ -45,8 +41,6 @@ public class SettingsWindow extends EngiWindow {
 		super("Settings");
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		setSize(800, 200);
-		
-		//feedback = new JLabel(" ");
 		
 		this.window = window;
 		JLabel itemsTxtLabel = new JLabel("tf path: ");
@@ -60,6 +54,7 @@ public class SettingsWindow extends EngiWindow {
 		
 		if(modifiedConfig.get(tfPath) != null) {
 			itemsTxtBox.setText(modifiedConfig.get(tfPath));
+			Engipop.setTFPath(Paths.get(modifiedConfig.get(tfPath)));
 			//possibly fix length here
 		}
 		else {
@@ -78,7 +73,8 @@ public class SettingsWindow extends EngiWindow {
 			writeToConfig();
 			
 			if(modifiedConfig.get(tfPath) != null) {
-				parseItems(getItemSchemaPath().toFile());
+				Engipop.setTFPath(Paths.get(modifiedConfig.get(tfPath)));
+				parseItems(Engipop.getItemSchemaPath().toFile());	
 			}
 			
 			oldConfig.clear();
@@ -108,7 +104,7 @@ public class SettingsWindow extends EngiWindow {
 						case JOptionPane.YES_OPTION: 
 							writeToConfig();
 							if(modifiedConfig.get(tfPath) != null) {
-								parseItems(getItemSchemaPath().toFile());
+								parseItems(Engipop.getItemSchemaPath().toFile());
 							}
 							oldConfig.clear();
 							oldConfig.putAll(modifiedConfig); //copies modified into old without making them point the same place
@@ -134,24 +130,13 @@ public class SettingsWindow extends EngiWindow {
 		if(path != null) {
 			modifiedConfig.put(tfPath, path.toString());
 			itemsTxtBox.setText(modifiedConfig.get(tfPath));
+			Engipop.setTFPath(path);
 		}
 		else {
 			modifiedConfig.put(tfPath, null);
 			itemsTxtBox.setText(" ");
 		}
 		this.validate(); //updates textbox size
-	}
-	
-	public Path getTFPath() {
-		return Paths.get(modifiedConfig.get(tfPath));
-	}
-	
-	public Path getScriptPath() {
-		return Paths.get(getTFPath().toString(), "scripts");
-	}
-
-	public Path getItemSchemaPath() {
-		return Paths.get(getScriptPath().toString(), "items", "items_game.txt");
 	}
 	
 	//write map from config file
@@ -171,11 +156,11 @@ public class SettingsWindow extends EngiWindow {
 				}
 			}
 			catch (IOException e) {
-				window.updateFeedback("Engiconfig.cfg could not be read");
+				window.setFeedback("Engiconfig.cfg could not be read");
 			}
 		}
 		catch (FileNotFoundException f) {
-			window.updateFeedback("Engiconfig.cfg could not be found");
+			window.setFeedback("Engiconfig.cfg could not be found");
 		}
 	}
 	
@@ -198,7 +183,7 @@ public class SettingsWindow extends EngiWindow {
 			oldConfig.putAll(modifiedConfig);
 		}
 		catch (IOException e) {
-			window.updateFeedback("Could not write to engiconfig.cfg");
+			window.setFeedback("Could not write to engiconfig.cfg");
 		}
 	}
 	
@@ -218,7 +203,7 @@ public class SettingsWindow extends EngiWindow {
 	public void initConfig() {
 		File cfg = new File("engiconfig.cfg");
 		try {
-			if(cfg.createNewFile() || getTFPath() == null) { //if no cfg existed or cfg existed but has no path set
+			if(cfg.createNewFile() || Engipop.getTFPath() == null) { //if no cfg existed or cfg existed but has no path set
 				int op = JOptionPane.showConfirmDialog(this, "The TF2 scripts path is currently unset. Set it?");
 				
 				if(op == JOptionPane.YES_OPTION) {
@@ -227,16 +212,16 @@ public class SettingsWindow extends EngiWindow {
 						setTFPath(tfPath);
 						writeToConfig();
 						//sw.updateWindow();
-						parseItems(getItemSchemaPath().toFile());
+						parseItems(Engipop.getItemSchemaPath().toFile());
 					}
 				}
 			}
 			else {
-				parseItems(getItemSchemaPath().toFile());
+				parseItems(Engipop.getItemSchemaPath().toFile());
 			}
 		}
 		catch (IOException io) {
-			window.updateFeedback("engiconfig.cfg was not found or is unable to be written to");
+			window.setFeedback("engiconfig.cfg was not found or is unable to be written to");
 		}
 	}
 	
@@ -264,7 +249,7 @@ public class SettingsWindow extends EngiWindow {
 	
 	private void parseItems(File itemsTxt) { //take items file and parse into lists
 		ItemParser itemParser = new ItemParser();
-		itemParser.parse(itemsTxt, this);
+		itemParser.parse(itemsTxt, window);
 		BotPanel.setItemParser(itemParser);
 	}
 }

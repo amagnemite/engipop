@@ -5,30 +5,27 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.TreeSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import engipop.EngiPanel.Classes;
+import engipop.Engipop.Classes;
 import engipop.Node.*;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParseException;
 import net.platinumdigitalgroup.jvdf.VDFParser;
 
 public class PopulationParser { //parse .pop
-	private EngiPanel containingPanel;
+	private MainWindow mainWindow;
 	private SettingsWindow setWindow;
 	
-	public PopulationParser(EngiPanel containingPanel, SettingsWindow setWindow) {
-		this.containingPanel = containingPanel;
+	public PopulationParser(MainWindow mainWindow, SettingsWindow setWindow) {
+		this.mainWindow = mainWindow;
 		this.setWindow = setWindow;
 	}
 	
@@ -50,17 +47,17 @@ public class PopulationParser { //parse .pop
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
 		catch(IOException i) {
-			containingPanel.updateFeedback(file.getName() + " was not found");
+			mainWindow.setFeedback(file.getName() + " was not found");
 			return null;
 		}
 		catch(VDFParseException v) { //TODO: edit vdfparser for more specifics
 			//also need to do something about missing values
-			containingPanel.updateFeedback("Failed to parse popfile, mismatched number of brackets?");
+			mainWindow.setFeedback("Failed to parse popfile, mismatched number of brackets?");
 			return null;
 		}
 		
 		if(root.size() > 2) {
-			containingPanel.updateFeedback("Population file has too many root keys");
+			mainWindow.setFeedback("Population file has too many root keys");
 			return null;
 		}
 		
@@ -78,7 +75,7 @@ public class PopulationParser { //parse .pop
 				else {
 					//Entry<String, List<TemplateData>> entry = parseTemplates(
 					// parseTemplates(new File(setWindow.getTFPathString() + "\\population\\" + (String) includedPop), templateMap);
-					parseTemplates(Paths.get(setWindow.getScriptPath().toString(), "population", (String)includedPop).toFile(), templateMap);
+					parseTemplates(Paths.get(Engipop.getScriptPath().toString(), "population", (String)includedPop).toFile(), templateMap);
 					
 					//templateMap.put(entry.getKey(), entry.getValue());
 				}
@@ -121,7 +118,7 @@ public class PopulationParser { //parse .pop
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
 		catch (IOException i) {
-			containingPanel.updateFeedback(file.getName() + " was not found");
+			mainWindow.setFeedback(file.getName() + " was not found");
 			return;
 		}
 		root = root.getSubNode(root.lastKey());
@@ -159,7 +156,7 @@ public class PopulationParser { //parse .pop
 			}
 		}
 		else {
-			containingPanel.updateFeedback("No templates to process");
+			mainWindow.setFeedback("No templates to process");
 		}
 		
 		templateMap.put(filename, templateList);

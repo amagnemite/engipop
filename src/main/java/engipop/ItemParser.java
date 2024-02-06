@@ -9,8 +9,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import engipop.EngiPanel.Classes;
-import engipop.EngiPanel.ItemSlot;
+import engipop.Engipop.Classes;
+import engipop.Engipop.ItemSlot;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 import net.platinumdigitalgroup.jvdf.VDFParser;
 
@@ -26,10 +26,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 	List<ItemData> sniperItems = new ArrayList<ItemData>(500);
 	List<ItemData> spyItems = new ArrayList<ItemData>(470);
 	
-	public ItemParser() {
-	}
-    
-	public void parse(File file, EngiWindow window) {
+	public void parse(File file, MainWindow mainWindow) {
 		String schema = "";
 		VDFNode item;
 		VDFNode allPrefabs;
@@ -42,12 +39,12 @@ public class ItemParser { //parse item schema, get weapons and hats
 			schema = readFile(path, StandardCharsets.US_ASCII);
 		}
 		catch (IOException i) {
-			window.updateFeedback("items_game.txt was moved or not found");
+			mainWindow.setFeedback("items_game.txt was moved or not found");
 		}
 		item = new VDFParser().parse(schema);
 		if(!item.containsKey("items_game")) {
 			//wrong items_game.txt
-			window.updateFeedback("The file does not contain TF2 item definitions");
+			mainWindow.setFeedback("The file does not contain TF2 item definitions");
 		}
 		else {
 			allPrefabs = item.getSubNode("items_game").getSubNode("prefabs");
@@ -303,7 +300,7 @@ public class ItemParser { //parse item schema, get weapons and hats
 	}
 	
 	//returns set containing only items that are in the slot list
-	public List<ItemData> checkIfItemInSlot(List<Object> items, EngiPanel.Classes selected, int slot) throws IndexOutOfBoundsException {
+	public List<ItemData> checkIfItemInSlot(List<Object> items, Classes selected, int slot) throws IndexOutOfBoundsException {
 		List<ItemData> list = new ArrayList<ItemData>(getClassList(selected));
 		//Set<String> subset = new HashSet<String>(list);
 		//Set<String> itemSet = new HashSet<String>(items);

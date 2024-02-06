@@ -20,6 +20,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.text.Position;
 
 import engipop.ButtonListManager.States;
+import engipop.Engipop.Classes;
+import engipop.Engipop.ItemSlot;
 import engipop.ItemParser.ItemData;
 import engipop.Node.TFBotNode;
 import engipop.Node.WaveSpawnNode;
@@ -34,6 +36,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	String[] tags = {"bot_giant", "bot_squad_member"}; //potentially move bot_giant
 	
 	EngiPanel containingWindow;
+	MainWindow mainWindow;
 	EngiPanel attrPanel = new EngiPanel();
 	WherePanel teleWherePanel = new WherePanel();
 	
@@ -129,6 +132,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		attrPanel.setOpaque(false);
 		
 		this.containingWindow = containingPanel;
+		this.mainWindow = mainWindow;
 		popPanel.addPropertyChangeListener(this);
 		mainWindow.addPropertyChangeListener(this);
 		
@@ -432,11 +436,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				}
 				
 				if(((String) cellEditor.getCellEditorValue()).isBlank()) {
-					containingWindow.updateFeedback("No value to add to attribute");
+					mainWindow.setFeedback("No value to add to attribute");
 				}
 				else { //put attr - value pair in map
 					currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), (String) cellEditor.getCellEditorValue());
-					containingWindow.updateFeedback("Attribute value added");
+					mainWindow.setFeedback("Attribute value added");
 				}
 			}
 		});
@@ -447,7 +451,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				//currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), null);
 			}
 			else {
-				containingWindow.updateFeedback("Attribute already in list");
+				mainWindow.setFeedback("Attribute already in list");
 			}
 			
 			if(itemAttributeTable.getRowCount() - 1 == ATTRMAX) {

@@ -49,21 +49,23 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 	JButton loadTemplate = new JButton("Load a template file");
 	JButton updatePop = new JButton("Update population settings");
 	
+	MainWindow mainWindow;
 	SettingsWindow setWin;
 	PopNode popNode;
 	
 	private PopulationParser popParser;
 	private PropertyChangeSupport propertySupport = new PropertyChangeSupport(this);
 	
-	public PopulationPanel(SettingsWindow setWin, PopNode popNode) {
+	public PopulationPanel(MainWindow mainwindow, SettingsWindow setWin) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		//this.setBackground(new Color(.86f, .22f, .22f, 1.0f));
 		//189.0, 59.0, 59.0,
 		
-		this.popNode = popNode;
+		popNode = Engipop.getPopNode();
 		this.setWin = setWin;
-		popParser = new PopulationParser(this, setWin);
+		this.mainWindow = mainwindow;
+		popParser = new PopulationParser(mainWindow, setWin);
 		
 		MapInfo mapinfo = new MapInfo();
 		
@@ -91,8 +93,6 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 		
 		maps.setEditable(true);
 		maps.setPrototypeDisplayValue("mvm_waterlogged_rc4g");
-		
-		feedback = new JLabel(" ");
 		
 		initListeners();
 		
@@ -124,6 +124,7 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 	}
 	
 	private void initListeners() {
+		/*
 		this.addMouseListener(new MouseListener() { //this is wonky, fix
 			public void mousePressed(MouseEvent e) {
 				clearFeedback();
@@ -139,11 +140,11 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 			public void mouseExited(MouseEvent e) {
 				clearFeedback();
 			}
-		});
+		}); */
 		
 		updatePop.addActionListener(event -> {
 			updateNode();
-			feedback.setText("Population settings updated");
+			mainWindow.setFeedback("Population settings updated");
 			if(popNode.getMapIndex() > -1) { //if user entered a map
 				loadMapInfo(popNode.getMapIndex());
 			}
@@ -154,7 +155,7 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 			Map<String, List<TemplateData>> templateMap = new HashMap<String, List<TemplateData>>();
 			
 			if(file != null) {
-				popNode = popParser.parsePopulation(file, templateMap);
+				Engipop.setPopNode(popParser.parsePopulation(file, templateMap));
 				updatePanel();
 				propertySupport.firePropertyChange("POPNODE", null, popNode);
 				propertySupport.firePropertyChange(INCLUDED, null, templateMap);
@@ -202,12 +203,6 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
     	propertySupport.firePropertyChange(TANKRELAY, null, info.getTankRelays());
     }
 	
-	private void clearFeedback() { //clears feedback so things don't get stuck on it
-		if(!feedback.getText().equals(" ")) {
-			feedback.setText(" ");
-		}
-	}
-	
 	private void updateNode() {
 		popNode.setMapIndex(maps.getSelectedIndex());
 		popNode.putKey(PopNode.STARTINGCURRENCY, currSpinner.getValue());
@@ -238,8 +233,8 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 	
 	private File getPopFile() {
 		JFileChooser fileChooser;
-		if(setWin.getTFPath() != null) {
-			fileChooser = new JFileChooser(setWin.getTFPath().toFile());
+		if(Engipop.getTFPath() != null) {
+			fileChooser = new JFileChooser(Engipop.getTFPath().toFile());
 		}
 		else {
 			fileChooser = new JFileChooser();

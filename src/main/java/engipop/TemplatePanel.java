@@ -20,7 +20,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import engipop.ButtonListManager.States;
-import engipop.EngiPanel.Classes;
+import engipop.Engipop.Classes;
 import engipop.Node.PopNode;
 import engipop.Node.RandomChoiceNode;
 import engipop.Node.SpawnerType;
@@ -43,7 +43,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	private static final String UPDATEBOT = "Update TFBot template";
 	private static final String REMOVEBOT = "Remove TFBot template";
 	
-	PopulationPanel w2;
+	MainWindow mainWindow;
+	PopulationPanel popPanel;
 	WaveSpawnPanel wsPanel;
 	BotPanel botPanel;
 	EngiPanel templateButtonPanel = new EngiPanel();
@@ -84,21 +85,20 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	
 	//TODO: needs to be cleaned up due to template handling changes
 	
-	public TemplatePanel(MainWindow mainWindow, PopulationPanel w2) {
+	public TemplatePanel(MainWindow mainWindow, PopulationPanel popPanel) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		//setBackground(new Color(11, 97, 163));
 		
-		this.w2 = w2;
-		w2.addPropertyChangeListener("POPNODE", this);
+		this.mainWindow = mainWindow;
+		this.popPanel = popPanel;
+		popPanel.addPropertyChangeListener("POPNODE", this);
 		
-		feedback = new JLabel(" ");
-		
-		this.popNode = mainWindow.getPopNode();
-		wsPanel = new WaveSpawnPanel(w2);
-		botPanel = new BotPanel(this, mainWindow, w2);
-		tankPanel = new TankPanel(w2);
-		spawnerListManager = new NodePanelManager(this, botPanel, tankPanel);
+		popNode = Engipop.getPopNode();;
+		wsPanel = new WaveSpawnPanel(popPanel);
+		botPanel = new BotPanel(this, mainWindow, popPanel);
+		tankPanel = new TankPanel(popPanel);
+		spawnerListManager = new NodePanelManager(mainWindow, botPanel, tankPanel);
 		spawnerPanel = spawnerListManager.getSpawnerPanel();
 		listPanel = spawnerListManager.getListPanel();
 		
@@ -148,7 +148,6 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		modeGroup.setSelected(wsModeButton.getModel(), true);
 		modeGroup.setSelected(botModeButton.getModel(), true);
 		
-		addGB(feedback, 0, 0);
 		addGB(modePanel, 0, 1);
 		
 		gbConstraints.gridwidth = 2;
@@ -305,7 +304,6 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		//ignore panel, create fresh node
 		addTemplateButton.addActionListener(event -> {
 			boolean addNode = false;
-			feedback.setText("");
 			String type;
 			Map<String, Node> map;
 			Node currentNode;
@@ -372,7 +370,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 					data = new TemplateData(name, (String) currentNode.getValue(TFBotNode.NAME), WaveNode.WAVESPAWN);
 				}
 				
-				w2.fireTemplateChange(type, null, data);
+				popPanel.fireTemplateChange(type, null, data);
 			}	
 		});
 		
@@ -448,7 +446,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 					templateComboModel.insertElementAt(newName, index);
 					
 					templateComboModel.setSelectedItem(newName);
-					feedback.setText("Template successfully updated");
+					mainWindow.setFeedback("Template successfully updated");
 					
 					if(oldNodeName != currentNode.getValue(TFBotNode.NAME) || !oldName.equals(newName)) {
 						//bot/ws's actual name or templatename was updated
@@ -456,12 +454,12 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 						//String newValue = currentNode.getValue(TFBotNode.NAME) != null ? 
 						//		currentNode.getValue(TFBotNode.NAME) + " (" + newName + ")" : "(" + newName + ")";
 						
-						w2.fireTemplateChange(type, oldData, newData);
+						popPanel.fireTemplateChange(type, oldData, newData);
 					}					
 				}
 			}
 			else {
-				feedback.setText("Failed to update template; name must be not be blank");
+				mainWindow.setFeedback("Failed to update template; name must be not be blank");
 			}
 		});
 		
@@ -493,7 +491,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 			templateComboModel.removeElement(removed);
 			map.remove(removed);
 			
-			w2.fireTemplateChange(type, data, null);
+			popPanel.fireTemplateChange(type, data, null);
 		});
 	}
 	

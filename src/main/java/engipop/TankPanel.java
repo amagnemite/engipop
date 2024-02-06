@@ -38,7 +38,7 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.insets = new Insets(0, 0, 0, 5);
 		
-		int tankInit = EngiPanel.TANKDEFAULTHEALTH, min = 0, tankMax = 300000, tankIncr = 1000;
+		int tankInit = Engipop.TANKDEFAULTHEALTH, min = 0, tankMax = 300000, tankIncr = 1000;
 		//double speedInit = Values.tankDefaultSpeed, dMin = 0.0, speedMax = 300.0, speedIncr = 1.0;
 		
 		SpinnerNumberModel healthModel = new SpinnerNumberModel(tankInit, min, tankMax, tankIncr);
