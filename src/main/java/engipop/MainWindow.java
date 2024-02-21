@@ -25,10 +25,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	WaveBarPanel wavebar = new WaveBarPanel();
 	
 	//todo: update botpanel
-	//JMenuItem popSet = new JMenuItem("Open population settings");
 	JMenuItem settings = new JMenuItem("Engipop settings");
-	//JMenuItem templateSet = new JMenuItem("Template editor");
-	//JMenuItem missionSet = new JMenuItem("Mission editor");
 	JMenuItem timeline = new JMenuItem("Minimum timeline viewer");
 	
 	WavePanel wavePanel;
@@ -65,22 +62,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		settingsWindow.initConfig();
 		populationPanel.addPropertyChangeListener("POPNODE", this);
 		
-		
-		/*
-		popSet.addActionListener(event -> {
-			secondaryWindow.updatePanel();
-			secondaryWindow.setVisible(true);
-		});
-		templateSet.addActionListener(event -> {
-			if(!tempPanel.isVisible()) {
-				tempPanel.setVisible(true);
-			}
-		});
-		missionSet.addActionListener(event -> {
-			if(!missionWindow.isVisible()) {
-				missionWindow.setVisible(true);
-			}
-		}); */
 		settings.addActionListener(event -> {
 			if(!settingsWindow.isVisible()) {
 				settingsWindow.updateWindow();
@@ -102,9 +83,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		});
 		
 		optionsMenu.add(settings);
-		//optionsMenu.add(popSet);
-		//editorsMenu.add(templateSet);
-		//editorsMenu.add(missionSet);
 		utilitiesMenu.add(timeline);
 		menuBar.add(optionsMenu);
 		menuBar.add(editorsMenu);
@@ -149,20 +127,23 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		populationFillerPanel.gbConstraints.weighty = 1;
 		populationFillerPanel.addGB(populationPanel, 0, 0);
 		
+		mainPanel.gbConstraints.gridwidth = 2;
 		mainPanel.addGB(wavebar, 0, 0);
+		
+		mainPanel.gbConstraints.gridwidth = 1;
 		mainPanel.addGB(feedback, 0, 1);
 		mainPanel.addGB(createPop, 2, 6);
 		
 		mainPanel.gbConstraints.gridwidth = 2;
-		mainPanel.addGB(wavePanel, 0, 2);
-		mainPanel.addGB(wsPanel, 0, 3);
+		mainPanel.addGB(wavePanel.getDisabledPanel(), 0, 2);
+		mainPanel.addGB(wsPanel.getDisabledPanel(), 0, 3);
 		mainPanel.addGB(spawnerPanel, 0, 4);
 				
 		mainPanel.gbConstraints.gridheight = 2;
 		mainPanel.gbConstraints.weighty = 1;
-		mainPanel.addGB(botPanel, 0, 5);
+		mainPanel.addGB(botPanel.getDisabledPanel(), 0, 5);
 		//add insets?
-		mainPanel.addGB(tankPanel, 0, 5);
+		mainPanel.addGB(tankPanel.getDisabledPanel(), 0, 5);
 		
 		mainPanel.gbConstraints.weighty = 0;
 		mainPanel.gbConstraints.gridheight = 4;

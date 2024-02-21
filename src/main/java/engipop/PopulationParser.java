@@ -30,12 +30,9 @@ public class PopulationParser { //parse .pop
 	}
 	
 	//parses entire population
-	public PopNode parsePopulation(File file, Map<String, List<TemplateData>> templateMap) {
+	public PopNode parsePopulation(File file, String type) {
 		VDFNode root = null;
 		Object[] includes;
-		Set<String> defaultTemplates = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		defaultTemplates.addAll(Arrays.asList("robot_standard.pop", "robot_giant.pop", "robot_gatebot.pop"));
-		//PopNode popNode;
 		
 		try {
 			root = new VDFParser().parse(ItemParser.readFile(file.toPath(), StandardCharsets.US_ASCII));
@@ -65,20 +62,7 @@ public class PopulationParser { //parse .pop
 			includes = root.get(root.firstKey());
 			
 			for(Object includedPop : includes) {
-				if(defaultTemplates.contains(includedPop)) {
-					URL popURL = MainWindow.class.getResource("/" + (String) includedPop);
-					//Entry<String, List<TemplateData>> entry = parseTemplates(new File(popURL.getFile()));
-					parseTemplates(new File(popURL.getFile()), templateMap);
-					
-					//templateMap.put(entry.getKey(), entry.getValue());
-				}
-				else {
-					//Entry<String, List<TemplateData>> entry = parseTemplates(
-					// parseTemplates(new File(setWindow.getTFPathString() + "\\population\\" + (String) includedPop), templateMap);
-					parseTemplates(Paths.get(Engipop.getScriptPath().toString(), "population", (String)includedPop).toFile(), templateMap);
-					
-					//templateMap.put(entry.getKey(), entry.getValue());
-				}
+				parseTemplates((String) includedPop, type);
 			}
 		}
 		
@@ -87,34 +71,35 @@ public class PopulationParser { //parse .pop
 	}
 	
 	//parses one template pop at a time
-	//public Entry<String, List<TemplateData>> parseTemplates(File file, Map<String, List<TemplateData>>) {
-	public void parseTemplates(File file, Map<String, List<TemplateData>> templateMap) {
-		String filename = file.getName().substring(0, file.getName().length() - 4);
-		VDFNode root = null;
-		VDFNode templates = null;
+	public void parseTemplates(String filename, String location) {
+		Set<String> defaultTemplates = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+		defaultTemplates.addAll(Arrays.asList("robot_standard.pop", "robot_giant.pop", "robot_gatebot.pop"));
+		File file = null;
 		
-		List<TemplateData> templateList = new ArrayList<TemplateData>();
+		if(defaultTemplates.contains(filename)) {
+			URL popURL = MainWindow.class.getResource("/" + filename);
+			file = new File(popURL.getFile());
+		}
+		else {
+			file = Engipop.getPopulationPath().resolve(filename).toFile();
+			if(!file.exists()) {
+				file = Engipop.getDownloadPopulationPath().resolve(filename).toFile();
+			}
+		}
+		
+		if(file == null) {
+			mainWindow.setFeedback("Can't find " + filename);
+			return;
+		}
+		
+		parseTemplates(file, location);
+	}
 	
-		//this is kinda awful, probably should do something better
-		//excludes name and template
-		Set<String> wsKeys = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		Set<String> botKeys = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		Set<String> overlappingKeys = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		wsKeys.addAll(Arrays.asList("Where", "TotalCount", "MaxActive", "SpawnCount",
-				"WaitBeforeStarting", "WaitBetweenSpawns", "WaitBetweenSpawnsAfterDeath", "TotalCurrency", 
-				"WaitForAllSpawned", "WaitForAllDead", "Support", "StartWaveOutput", "FirstSpawnOutput",
-				"LastSpawnOutput", "DoneOutput"));
-		botKeys.addAll(Arrays.asList("Class", "ClassIcon", "Health",
-				"Scale", "TeleportWhere", "AutoJumpMin", "AutoJumpMax", "Skill", "WeaponRestrictions",
-				"BehaviorModifiers", "MaxVisionRange", "Item", "Attributes", "ItemAttributes",
-				"CharacterAttributes", "EventChangeAttributes"));
-		overlappingKeys.addAll(Arrays.asList("Template", "Name"));
-				
-		LinkedList<Entry<String, Object[]>> templateQueue = new LinkedList<Entry<String, Object[]>>();
+	public void parseTemplates(File file, String location) {
+		VDFNode root = null;
 		
 		try {
 			root = new VDFParser().parse(ItemParser.readFile(file.toPath(), StandardCharsets.US_ASCII));
-			
 			//only two possible keyvals at root, include which is always first and waveschedule
 		}
 		catch (IOException i) {
@@ -123,44 +108,17 @@ public class PopulationParser { //parse .pop
 		}
 		root = root.getSubNode(root.lastKey());
 		
-		if(root.containsKey("Templates")) { //templates to process
-			templates = root.getSubNode("Templates");
-			
-			for(Entry<String, Object[]> entry : templates.entrySet()) {
-				VDFNode node = templates.getSubNode(entry.getKey());		
-				Set<String> subset = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER); //copies
-				subset.addAll(node.keySet());
-				String name = null;
-				String cclass = null;
-				
-				if(node.containsKey("Name")) {
-					name = node.getString("Name");
-				}
-				if(node.containsKey("Class")) {
-					cclass = node.getString("Class");
-				}
-				
-				if(subset.removeAll(botKeys)) { //keep all keys that are also in botkeys
-					templateList.add(new TemplateData(entry.getKey(), cclass, name, WaveSpawnNode.TFBOT));
-				}
-				else if(subset.removeAll(wsKeys)) {
-					templateList.add(new TemplateData(entry.getKey(), name, WaveNode.WAVESPAWN));
-				}
-				else if(subset.removeAll(overlappingKeys)) { //contains template, name or both, handle later
-					templateQueue.add(entry);
-				}
-				else { //consists either of uncommon keys or rafmod keys, deal with later
-					//note also rafmod allows tank templates
-					templateList.add(new TemplateData(entry.getKey(), name, "OTHER"));
-				}
+		if(root.containsKey("Templates")) {
+			if(location == PopulationPanel.IMPORTED) {
+				Engipop.getImportedTemplatePops().put(file.getName(), new PopNode(root));
+			}
+			else if(location == PopulationPanel.INCLUDED) {
+				Engipop.getIncludedTemplatePops().put(file.getName(), new PopNode(root));
 			}
 		}
 		else {
 			mainWindow.setFeedback("No templates to process");
 		}
-		
-		templateMap.put(filename, templateList);
-		//return new AbstractMap.SimpleEntry<String, List<TemplateData>>(filename, templateList);
 	}
 	
 	public static class TemplateData {

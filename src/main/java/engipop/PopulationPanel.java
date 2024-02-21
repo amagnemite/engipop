@@ -1,6 +1,5 @@
 package engipop;
 
-import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.MouseEvent;
@@ -11,13 +10,11 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.swing.*;
 
 import engipop.Node.PopNode;
 import engipop.PopulationParser.TemplateData;
-import engipop.EngiWindow;
 
 @SuppressWarnings("serial")
 public class PopulationPanel extends EngiPanel { //window for less important/one off deals
@@ -29,9 +26,9 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 	public static final String TANKSPAWNS = "tankspawn";
 	public static final String TANKRELAY = "tankrelay";
 	
-	public static final String INCLUDED = "included";
-	public static final String IMPORTED = "imported";
-	public static final String INTERNAL = "internal";
+	public static final String INCLUDED = "INCLUDED";
+	public static final String IMPORTED = "IMPORTED";
+	public static final String INTERNAL = "INTERNAL";
 	
 	DefaultComboBoxModel<String> mapsModel = new DefaultComboBoxModel<String>();
 	JComboBox<String> maps = new JComboBox<String>();
@@ -151,27 +148,23 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 		});
 		
 		loadPop.addActionListener(event -> {
-			File file = getPopFile();
-			Map<String, List<TemplateData>> templateMap = new HashMap<String, List<TemplateData>>();
+			File file = promptPopFile();
 			
 			if(file != null) {
-				Engipop.setPopNode(popParser.parsePopulation(file, templateMap));
+				Engipop.setPopNode(popParser.parsePopulation(file, INCLUDED));
+				popNode = Engipop.getPopNode();
 				updatePanel();
-				propertySupport.firePropertyChange("POPNODE", null, popNode);
-				propertySupport.firePropertyChange(INCLUDED, null, templateMap);
+				propertySupport.firePropertyChange("POPNODE", null, null);
+				propertySupport.firePropertyChange(INCLUDED, null, null);
 			}
 		});
 		
 		loadTemplate.addActionListener(event -> {
-			File file = getPopFile();
-			Map<String, List<TemplateData>> templateMap = new HashMap<String, List<TemplateData>>();
+			File file = promptPopFile();
 			
 			if(file != null) {
-				//Entry<String, List<TemplateData>> entry = popParser.parseTemplates(file, templateMap);
-				popParser.parseTemplates(file, templateMap);
-				//templateMap.put(entry.getKey(), entry.getValue());
-				
-				propertySupport.firePropertyChange(IMPORTED, null, templateMap);
+				popParser.parseTemplates(file, IMPORTED);
+				propertySupport.firePropertyChange(IMPORTED, null, null);
 			}
 		});
 	}
@@ -231,7 +224,7 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 		propertySupport.firePropertyChange(type, oldData, newData);
 	}
 	
-	private File getPopFile() {
+	private File promptPopFile() {
 		JFileChooser fileChooser;
 		if(Engipop.getTFPath() != null) {
 			fileChooser = new JFileChooser(Engipop.getTFPath().toFile());

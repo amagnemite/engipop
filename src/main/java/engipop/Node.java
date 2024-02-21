@@ -4,7 +4,6 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import engipop.Engipop.Classes;
-import engipop.PopulationParser.TemplateData;
 import net.platinumdigitalgroup.jvdf.VDFNode;
 
 //class to mimic popfile structure via a tree so it can be later parsed into a popfile
@@ -182,7 +181,7 @@ public class Node {
     	public static final String MISSION = "Mission";
     	public static final String TEMPLATE = "Templates";
     	
-    	private transient int mapIndex = -1;
+    	private int mapIndex = -1;
     	private Map<String, Node> wsTemplateMap = new HashMap<String, Node>();
     	private Map<String, Node> botTemplateMap = new HashMap<String, Node>();
 
@@ -279,17 +278,25 @@ public class Node {
         		for(Entry<String, Object> node : ((Map<String, Object>) list.get(0)).entrySet()) {
         			//i love casting i love casting
         			List<Object> sublist = (List<Object>) node.getValue();
-        			Map<String, List<Object>> keyvals = (Map<String, List<Object>>) sublist.get(0);
-        			Set<String> subset = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-        			subset.addAll(TFBotNode.getNodeKeyList());
-        			subset.remove(TFBotNode.NAME);
-        			subset.remove(TFBotNode.TEMPLATE);
+        			Map<String, List<Object>> templateKeyVals = (Map<String, List<Object>>) sublist.get(0);
+        			Set<String> botKeys = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        			Set<String> wsKeys = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         			
-        			if(subset.removeAll(keyvals.keySet())) {
-        				botTemplateMap.put(node.getKey(), new TFBotNode(keyvals));
+        			botKeys.addAll(TFBotNode.getNodeKeyList());
+        			botKeys.remove(TFBotNode.NAME);
+        			botKeys.remove(TFBotNode.TEMPLATE);
+        			wsKeys.addAll(WaveSpawnNode.getNodeKeyList());
+        			wsKeys.remove(WaveSpawnNode.NAME);
+        			wsKeys.remove(WaveSpawnNode.TEMPLATE);
+        			
+        			if(botKeys.removeAll(templateKeyVals.keySet())) {
+        				botTemplateMap.put(node.getKey(), new TFBotNode(templateKeyVals));
+        			}
+        			else if(wsKeys.removeAll(templateKeyVals.keySet())){
+        				wsTemplateMap.put(node.getKey(), new WaveSpawnNode(templateKeyVals));
         			}
         			else {
-        				wsTemplateMap.put(node.getKey(), new WaveSpawnNode(keyvals));
+        				//not bot/ws templates, ignore for now
         			}
         		}
         		keyVals.remove(TEMPLATE);
@@ -309,7 +316,7 @@ public class Node {
         }
         
         public Map<String, Node> getWSTemplateMap() {
-        	return this.wsTemplateMap;
+        	return wsTemplateMap;
         }
         
         public void setBotTemplateMap(Map<String, Node> map) {
@@ -317,7 +324,7 @@ public class Node {
         }
         
         public Map<String, Node> getBotTemplateMap() {
-        	return this.botTemplateMap;
+        	return botTemplateMap;
         }
     
         public static List<String> getNodeKeyList() {
@@ -508,6 +515,7 @@ public class Node {
     	public static final String FIRSTSPAWNOUTPUT = "FirstSpawnOutput";
     	public static final String LASTSPAWNOUTPUT = "LastSpawnOutput";
     	public static final String DONEOUTPUT = "DoneOutput";
+    	public static final String TEMPLATE = "Template";
     	
     	public static final String TFBOT = "TFBot";
     	public static final String TANK = "Tank";
@@ -628,7 +636,10 @@ public class Node {
     	}
     	
     	public Node getSpawner() {
-    		return this.getChildren().get(0);
+    		if(getChildren().isEmpty()) {
+    			return null;
+    		}
+    		return getChildren().get(0);
     	}
     	
     	//precheck spawner type
@@ -636,6 +647,10 @@ public class Node {
     	public SpawnerType getSpawnerType() {
     		Node node = getSpawner();
     		SpawnerType type = null;
+    		
+    		if(node == null) {
+    			return null;
+    		}
     		
     		if(node.getClass() == TFBotNode.class) {
     			type = SpawnerType.TFBOT;
@@ -655,7 +670,7 @@ public class Node {
     	public static List<String> getNodeKeyList() {
     		return new ArrayList<String>(Arrays.asList(NAME, WHERE, TOTALCOUNT, MAXACTIVE, SPAWNCOUNT, TOTALCURRENCY, WAITBEFORESTARTING,
     				WAITBETWEENSPAWNS, WAITBETWEENSPAWNSAFTERDEATH, WAITFORALLSPAWNED, WAITFORALLDEAD, SUPPORT, STARTWAVEOUTPUT,
-    					FIRSTSPAWNOUTPUT, LASTSPAWNOUTPUT, DONEOUTPUT, TFBOT, TANK, SQUAD, RANDOMCHOICE));
+    					FIRSTSPAWNOUTPUT, LASTSPAWNOUTPUT, DONEOUTPUT, TFBOT, TANK, SQUAD, RANDOMCHOICE, TEMPLATE));
     	}
     }
     

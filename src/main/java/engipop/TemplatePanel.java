@@ -509,7 +509,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
-		this.popNode = (PopNode) evt.getNewValue();
+		popNode = Engipop.getPopNode();
 		updateTemplateComboBox(popNode.getBotTemplateMap());
 		//force a reload
 	}

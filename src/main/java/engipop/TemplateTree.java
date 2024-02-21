@@ -87,6 +87,7 @@ public class TemplateTree implements PropertyChangeListener {
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		
+		/*
 		switch(evt.getPropertyName()) {
 			case PopulationPanel.INCLUDED:
 				addNonInternalTemplates((Map<String, List<TemplateData>>) evt.getNewValue(), PopulationPanel.INCLUDED);
@@ -99,14 +100,15 @@ public class TemplateTree implements PropertyChangeListener {
 				
 				break;
 			case PopulationPanel.INTERNAL:	
-				addInternalTemplates((List<TemplateData>) evt.getNewValue());
+				addInternalTemplates();
 				break;
 			case PopulationPanel.IMPORTED:
-				addNonInternalTemplates((Map<String, List<TemplateData>>) evt.getNewValue(), PopulationPanel.IMPORTED);
+				addNonInternalTemplates(PopulationPanel.IMPORTED);
 				break;
 			default:
 				break;
 		}
+		*/
 	}
 	
 	private void updateInternalTemplate(TemplateData oldData, TemplateData newData) {

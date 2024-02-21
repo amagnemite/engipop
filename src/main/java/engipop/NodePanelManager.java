@@ -92,8 +92,6 @@ public class NodePanelManager {
 	JRadioButton noneBut = new JRadioButton("none");
 	//hidden button to ensure the buttongroup state always changes, so can't go from say tfbot to tfbot, which wouldn't cause a state change
 	
-	//TODO: change showing/hiding panels to greying out panels
-	
 	//TODO: may want a better way of handling classes that use nodepanelmanager but don't need wavebar support
 	public NodePanelManager(MainWindow mainWindow, BotPanel botPanel, TankPanel tankPanel) {
 		this(mainWindow, botPanel, tankPanel, null);
@@ -156,7 +154,7 @@ public class NodePanelManager {
 		addSpawner.addActionListener(event -> {
 			mainWindow.setFeedback(" ");
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
-			botPanel.setVisible(true);
+			botPanel.getDisabledPanel().setEnabled(true);
 			//spawnerPanel.setVisible(true);
 			
 			switch (addSpawner.getText()) {
@@ -169,7 +167,7 @@ public class NodePanelManager {
 					//window.feedback.setText("Bot successfully created");
 					if(wavebar != null) {
 						int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
-						wavebar.addIcon(currentBotNode, count, BotType.COMMON); //by default new tfbots are just scouts
+						wavebar.modifyIcon(currentBotNode, count, BotType.COMMON, true); //by default new tfbots are just scouts
 					}
 					break;
 				case (addTankMsg):
@@ -180,7 +178,7 @@ public class NodePanelManager {
 					
 					if(wavebar != null) {
 						int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
-						wavebar.addIcon("tank", false, count, BotType.GIANT);
+						wavebar.addIcon("tank", false, count, BotType.GIANT); //may need to check support tanks as well
 					}
 					//window.feedback.setText("Tank successfully created");
 					break;
@@ -212,49 +210,38 @@ public class NodePanelManager {
 				mainWindow.setFeedback("Tank successfully updated");
 			}
 			else {
-				//boolean oldCrit = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit");
-				//String oldIconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
-				//Classes oldClass = (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME);
-				//BotType oldType = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss") ? BotType.GIANT : BotType.COMMON;
-				
 				botPanel.updateNode(currentBotNode);
 				mainWindow.setFeedback("Bot successfully updated");
 				
 				if(wavebar != null) {
-					//TODO: standardize attributes somewhere
-					wavebar.rebuildWavebar((WaveNode) currentWSNode.getParent(), (PopNode) currentWSNode.getParent().getParent());
-					/*
-					boolean isCrit = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit");
-					String iconName = (String) currentBotNode.getValue(TFBotNode.CLASSICON);
-					int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT); //TODO: check ws state
-					Classes cclass = (Classes) currentBotNode.getValue(TFBotNode.CLASSNAME);
-					BotType type = currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss") ? BotType.GIANT : BotType.COMMON;
-					
-					//TODO: also need to resolve templates 
-					if(iconName == null && cclass != Classes.None) {
-						iconName = cclass.toString();
-					}
-					
-					if((boolean) currentWSNode.getValue(WaveSpawnNode.SUPPORT)) { //first since giants are white bg in support
-						wavebar.addIcon(BotType.SUPPORT, iconName, isCrit, count);
-					}
-					else if(currentBotNode.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss")) {
-						wavebar.addIcon(BotType.GIANT, iconName, isCrit, count);
-					}
-					else {
-						wavebar.addIcon(BotType.COMMON, iconName, isCrit, count);
-					}
-					*/ 
+					wavebar.rebuildWavebar((WaveNode) currentWSNode.getParent());
 				}
 			}
 		});
 		
-		removeSpawner.addActionListener(event -> { //remove current spawner from wavespawn	
+		removeSpawner.addActionListener(event -> { //remove current spawner from wavespawn
+			if(wavebar != null) {
+				int count = (Integer) currentWSNode.getValue(WaveSpawnNode.TOTALCOUNT);
+				
+				if(tfbotBut.isSelected()) {
+					
+				}
+				else if(tankBut.isSelected()) {
+					
+				}
+				else if(squadBut.isSelected()) {
+					
+				}
+				else if(randomBut.isSelected()) {
+					
+				}
+				
+				wavebar.modifyIcon(currentBotNode, count, null, false);
+			}
 			currentWSNode.getChildren().clear();
 			spawnerInfo.setText(noSpawner);
 			spawnerBLManager.changeButtonState(States.EMPTY);
-			botPanel.setVisible(false);
-			//spawnerPanel.setVisible(false);
+			botPanel.getDisabledPanel().setEnabled(false);
 		});
 		
 		addSquadRandomBot.addActionListener(event -> { //squad/rc specific button for adding bots to them
@@ -281,9 +268,11 @@ public class NodePanelManager {
 			mainWindow.setFeedback("Bot successfully updated");
 			
 			//similar logic to setsquadrandomlistelement but uses set instead of addelement to update
-			//TODO: use template names
 			if(currentBotNode.containsKey(TFBotNode.NAME)) {
 				squadRandomListModel.set(squadRandomList.getSelectedIndex(), (String) currentBotNode.getValue(TFBotNode.NAME));
+			}
+			else if(currentBotNode.containsKey(TFBotNode.TEMPLATE)) {
+				squadRandomListModel.set(squadRandomList.getSelectedIndex(), (String) currentBotNode.getValue(TFBotNode.TEMPLATE));
 			}
 			else {
 				squadRandomListModel.set(squadRandomList.getSelectedIndex(), currentBotNode.getValue(TFBotNode.CLASSNAME).toString());
@@ -372,8 +361,8 @@ public class NodePanelManager {
 		});
 		tankBut.addItemListener(event -> {
 			if(event.getStateChange() == ItemEvent.SELECTED) {
-				botPanel.setVisible(false);
 				tankPanel.setVisible(true);
+				botPanel.setVisible(false);
 				
 				try { //if currentwsnode doesn't have anything linked
 					Node node = currentWSNode.getSpawner();
@@ -553,7 +542,7 @@ public class NodePanelManager {
 				else {
 					mainWindow.setFeedback("Possible nested randomchoice/squad! Unable to load");
 				}
-				squadRandomBLManager.changeButtonState(States.NOSELECTION);
+				squadRandomBLManager.changeButtonState(States.SELECTED);
 			}
 			else { //only allow children removal if there are children to remove
 				squadRandomBLManager.changeButtonState(States.EMPTY);
@@ -595,7 +584,7 @@ public class NodePanelManager {
 		spawnerInfo.setText(noSpawner);
 		tfbotBut.setSelected(true);
 		spawnerBLManager.changeButtonState(States.DISABLE);
-		botPanel.setVisible(false);
+		botPanel.getDisabledPanel().setEnabled(false);
 		//probably should hide spawner panel as well
 	}
 	
@@ -622,11 +611,11 @@ public class NodePanelManager {
 		if(node.containsKey(TFBotNode.NAME)) {
 			squadRandomListModel.addElement((String) node.getValue(TFBotNode.NAME)); //this sucks
 		}
-		else if(node.containsKey(TFBotNode.CLASSNAME)) {
-			squadRandomListModel.addElement(node.getValue(TFBotNode.CLASSNAME).toString());
-		}
 		else if(node.containsKey(TFBotNode.TEMPLATE)) {
 			squadRandomListModel.addElement((String) node.getValue(TFBotNode.TEMPLATE));
+		}
+		else if(node.containsKey(TFBotNode.CLASSNAME)) {
+			squadRandomListModel.addElement(node.getValue(TFBotNode.CLASSNAME).toString());
 		}
 		else {
 			squadRandomListModel.addElement("Non TFBot spawner");

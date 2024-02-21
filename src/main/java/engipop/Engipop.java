@@ -2,6 +2,8 @@ package engipop;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import engipop.Node.PopNode;
 
@@ -10,6 +12,8 @@ public class Engipop {
 	
 	private static Path TFPATH = null;
 	private static PopNode POPNODE = null;
+	private static Map<String, PopNode> INCLUDEDTEMPLATEPOPS = null;
+	private static Map<String, PopNode> IMPORTEDTEMPLATEPOPS = null;
 	
 	public enum Classes { //class names + their default weps
 		None ("n/a", "n/a", "n/a", 0),
@@ -127,6 +131,20 @@ public class Engipop {
 		return POPNODE;
 	}
 	
+	public static Map<String, PopNode> getIncludedTemplatePops() {
+		if(INCLUDEDTEMPLATEPOPS == null) {
+			INCLUDEDTEMPLATEPOPS = new HashMap<String, PopNode>();
+		}
+		return INCLUDEDTEMPLATEPOPS;
+	}
+	
+	public static Map<String, PopNode> getImportedTemplatePops() {
+		if(IMPORTEDTEMPLATEPOPS == null) {
+			IMPORTEDTEMPLATEPOPS = new HashMap<String, PopNode>();
+		}
+		return IMPORTEDTEMPLATEPOPS;
+	}
+	
 	public static void setTFPath(Path tfpath) {
 		TFPATH = tfpath;
 	}
@@ -135,9 +153,9 @@ public class Engipop {
 		return TFPATH;
 	}
 	
-	public static Path getScriptPath() {
-		return TFPATH.resolve("scripts");
-	}
+	//public static Path getScriptPath() {
+	//	return TFPATH.resolve("scripts");
+	//}
 
 	public static Path getItemSchemaPath() {
 		return Paths.get(TFPATH.toString(), "items", "items_game.txt");
@@ -149,5 +167,38 @@ public class Engipop {
 	
 	public static Path getDownloadIconPath() {
 		return Paths.get(TFPATH.toString(), "download", "materials", "hud");
+	}
+	
+	public static Path getPopulationPath() {
+		return Paths.get(TFPATH.toString(), "scripts", "population");
+	}
+	
+	public static Path getDownloadPopulationPath() {
+		return Paths.get(TFPATH.toString(), "download", "scripts", "population");
+	}
+	
+	public static Node findTemplateNode(String name) {
+		for(String pop : getIncludedTemplatePops().keySet()) {
+			PopNode node = INCLUDEDTEMPLATEPOPS.get(pop);
+			
+			if(node.getBotTemplateMap().containsKey(name)) {
+				return node.getBotTemplateMap().get(name);
+			}
+			else if(node.getWSTemplateMap().containsKey(name)) {
+				return node.getWSTemplateMap().get(name);
+			}
+		}
+		
+		for(String pop : getImportedTemplatePops().keySet()) {
+			PopNode node = IMPORTEDTEMPLATEPOPS.get(pop);
+			
+			if(node.getBotTemplateMap().containsKey(name)) {
+				return node.getBotTemplateMap().get(name);
+			}
+			else if(node.getWSTemplateMap().containsKey(name)) {
+				return node.getWSTemplateMap().get(name);
+			}
+		}
+		return null;
 	}
 }

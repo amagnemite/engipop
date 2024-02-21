@@ -28,14 +28,14 @@ import javax.swing.JTextField;
 //todo: unjank this
 @SuppressWarnings("serial")
 public class SettingsWindow extends EngiWindow {
-	static File cfgFileName = new File("engiconfig.cfg");
+	private static File cfgFileName = new File("engiconfig.cfg");
 	private static final String tfPath = "TFPath";
 	
-	Map<String, String> modifiedConfig = new HashMap<String, String>();
-	Map<String, String> oldConfig = new HashMap<String, String>();
+	private Map<String, String> modifiedConfig = new HashMap<String, String>();
+	private Map<String, String> oldConfig = new HashMap<String, String>();
 	
-	JTextField itemsTxtBox = new JTextField(45);
-	MainWindow window;
+	private JTextField itemsTxtBox = new JTextField(45);
+	private MainWindow window;
 	
 	public SettingsWindow(MainWindow window) {
 		super("Settings");

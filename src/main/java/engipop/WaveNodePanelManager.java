@@ -113,17 +113,21 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				currentWaveNode = (WaveNode) popNode.getChildren().get(waveIndex);
 				wavePanel.updatePanel(currentWaveNode);
 				waveBLManager.changeButtonState(States.SELECTED);
-				wavePanel.setVisible(true);
+				wavePanel.getDisabledPanel().setEnabled(true);
 				
 				getWaveSpawnList();
 				
 				if(currentWaveNode.getChildren().size() > 0) {
 					waveSpawnList.setSelectedIndex(-1);
 					waveSpawnList.setSelectedIndex(0);
+					
+					if(wavebar != null) {
+						wavebar.rebuildWavebar(currentWaveNode);
+					}
 				}
 				else { //should only happen if user removes all wavespawns
-					//waveSpawnBLManager.changeButtonState(States.EMPTY);
-					waveSpawnList.setSelectedIndex(-1);
+					waveSpawnBLManager.changeButtonState(States.EMPTY);
+					//waveSpawnList.setSelectedIndex(-1);
 				}
 			}
 			else { 
@@ -132,35 +136,31 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			}
 		});
 		
-		addWave.addActionListener(new ActionListener () { //adds a new wave to end of list 
-			public void actionPerformed(ActionEvent a) {
-				mainWindow.setFeedback(" ");
-				
-				currentWaveNode = new WaveNode();
-				currentWaveNode.connectNodes(popNode);
-				
-				//remember that refreshing the list also causes index to be -1
-				waveListModel.addElement("Wave"); //TODO: add counter
-				
-				waveList.setSelectedIndex(waveListModel.getSize() - 1); //this also clears the ws list
-			} 
+		addWave.addActionListener(event -> { //adds a new wave to end of list 
+			mainWindow.setFeedback(" ");
+			
+			currentWaveNode = new WaveNode();
+			currentWaveNode.connectNodes(popNode);
+			
+			//remember that refreshing the list also causes index to be -1
+			waveListModel.addElement("Wave"); //TODO: add counter
+			
+			waveList.setSelectedIndex(waveListModel.getSize() - 1); //this also clears the ws list
 		});
 		
-		removeWave.addActionListener(new ActionListener () { //remove the selected wave 
-			public void actionPerformed(ActionEvent a) {
-				List<Node> list = popNode.getChildren();
-				mainWindow.setFeedback(" ");
-				
-				list.remove(waveList.getSelectedIndex()); 
-				waveListModel.remove(waveList.getSelectedIndex());	
-	
-				if(list.size() == 0) {
-					resetWaveState();
-					wavePanel.setVisible(false);
-				}
-				else {
-					waveList.setSelectedIndex(list.size() - 1);
-				}
+		removeWave.addActionListener(event -> { //remove the selected wave 
+			List<Node> list = popNode.getChildren();
+			mainWindow.setFeedback(" ");
+			
+			list.remove(waveList.getSelectedIndex()); 
+			waveListModel.remove(waveList.getSelectedIndex());	
+
+			if(list.size() == 0) {
+				resetWaveState();
+				wavePanel.getDisabledPanel().setEnabled(false);
+			}
+			else {
+				waveList.setSelectedIndex(list.size() - 1);
 			}
 		});
 		
@@ -181,7 +181,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			if(waveSpawnIndex != -1) {
 				currentWSNode = (WaveSpawnNode) currentWaveNode.getChildren().get(waveSpawnIndex);
 				//currentWSLabel.setText("Editing wavespawn " + waveSpawnListModel.get(waveSpawnIndex));
-				wsPanel.setVisible(true);
+				wsPanel.getDisabledPanel().setEnabled(true);
 				
 				waveSpawnBLManager.changeButtonState(States.SELECTED);
 				wsPanel.updatePanel(currentWSNode);
@@ -201,59 +201,53 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			}
 		});
 		
-		addWaveSpawn.addActionListener(new ActionListener() { //add button is clicked
-			public void actionPerformed(ActionEvent a) {
-				mainWindow.setFeedback(" ");
-				//System.out.println(currentWSNode);
-				
-				currentWSNode = new WaveSpawnNode();
-				currentWSNode.connectNodes(currentWaveNode);
-				
-				waveSpawnListModel.addElement("Wavespawn");
-				waveSpawnList.setSelectedIndex(waveSpawnListModel.size() - 1);
-				
-				//getWaveSpawnList();
-				//wsPanel.updatePanel(currentWSNode);
-				//spawnerInfo.setText(noSpawner);
+		addWaveSpawn.addActionListener(event -> { //add button is clicked
+			mainWindow.setFeedback(" ");
+			//System.out.println(currentWSNode);
+			
+			currentWSNode = new WaveSpawnNode();
+			currentWSNode.connectNodes(currentWaveNode);
+			
+			waveSpawnListModel.addElement("Wavespawn");
+			waveSpawnList.setSelectedIndex(waveSpawnListModel.size() - 1);
+			
+			//getWaveSpawnList();
+			//wsPanel.updatePanel(currentWSNode);
+			//spawnerInfo.setText(noSpawner);
 
-				//loadBot(true);
-				//tfbotBut.setSelected(true);
+			//loadBot(true);
+			//tfbotBut.setSelected(true);
+		});
+		
+		removeWaveSpawn.addActionListener(event -> { //remove button pressed
+			List<Node> list = currentWaveNode.getChildren();
+			mainWindow.setFeedback(" ");
+			
+			list.remove(waveSpawnList.getSelectedIndex());
+			waveSpawnListModel.remove(waveSpawnList.getSelectedIndex());
+			//botPanel.updatePanel(new TFBotNode()); //update panel so no dead references
+			resetSpawnerState();
+			//getWaveSpawnList();
+			
+			if(list.size() == 0) { //if no wavespawns again
+				resetWaveSpawnState(States.EMPTY);
+			} 
+			else {
+				waveSpawnList.setSelectedIndex(list.size() - 1);
 			}
 		});
 		
-		removeWaveSpawn.addActionListener(new ActionListener() { //remove button clicked
-			public void actionPerformed(ActionEvent a) {
-				List<Node> list = currentWaveNode.getChildren();
-				mainWindow.setFeedback(" ");
-				
-				list.remove(waveSpawnList.getSelectedIndex());
-				waveSpawnListModel.remove(waveSpawnList.getSelectedIndex());
-				//botPanel.updatePanel(new TFBotNode()); //update panel so no dead references
-				resetSpawnerState();
-				//getWaveSpawnList();
-				
-				if(list.size() == 0) { //if no wavespawns again
-					resetWaveSpawnState(States.EMPTY);
-				} 
-				else {
-					waveSpawnList.setSelectedIndex(list.size() - 1);
-				}
+		updateWaveSpawn.addActionListener(event -> { //update wavespawn button clicked
+			mainWindow.setFeedback(" ");
+			wsPanel.updateNode(currentWSNode);
+			
+			if(currentWSNode.getValue(WaveSpawnNode.NAME) != null) {
+				waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentWSNode.getValue(WaveSpawnNode.NAME));
 			}
-		});
-		
-		updateWaveSpawn.addActionListener(new ActionListener() { //update wavespawn button clicked
-			public void actionPerformed(ActionEvent a) {
-				mainWindow.setFeedback(" ");
-				wsPanel.updateNode(currentWSNode);
-				
-				if(currentWSNode.getValue(WaveSpawnNode.NAME) != null) {
-					waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentWSNode.getValue(WaveSpawnNode.NAME));
-				}
-				else { //fallback if name was added but then removed
-					waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), "Wavespawn");
-				}
-				//getWaveSpawnList();
+			else { //fallback if name was added but then removed
+				waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), "Wavespawn");
 			}
+			//getWaveSpawnList();
 		});
 	}
 	
@@ -264,7 +258,6 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		
 		for(int i = 0; i < length; i++) {
 			waveListModel.addElement("Wave " + Integer.toString(i + 1));
-			//waveListModel.addElement("Wave");
 		}
 		waveList.setSelectedIndex(0);
 	}
@@ -297,7 +290,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	}
 	
 	private void resetWaveSpawnState(States state) {
-		wsPanel.setVisible(false);
+		wsPanel.getDisabledPanel().setEnabled(false);
 		currentWSNode = new WaveSpawnNode();
 		wsPanel.updatePanel(currentWSNode);
 		waveSpawnListModel.clear();
