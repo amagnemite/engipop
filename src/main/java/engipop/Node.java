@@ -746,6 +746,32 @@ public class Node {
     	public static final String SECONDARYONLY = "SecondaryOnly";
     	public static final String MELEEONLY = "MeleeOnly";
     	
+    	public static final String REMOVEONDEATH = "RemoveOnDeath";
+    	public static final String AGGRESIVE = "Aggressive";
+    	public static final String SUPPRESSFIRE = "SuppressFire";
+    	public static final String DISABLEDODGE = "DisableDodge";
+    	public static final String BECOMESPECTATORONDEATH = "BecomeSpectatorOnDeath";
+    	public static final String RETAINBUILDINGS = "RetainBuildings";
+    	public static final String SPAWNWITHFULLCHARGE = "SpawnWithFullCharge";
+    	public static final String ALWAYSCRIT = "AlwaysCrit";
+    	public static final String IGNOREENEMIES = "IgnoreEnemies";
+    	public static final String HOLDFIREUNTILFULLRELOAD = "HoldFireUntilFullReload";
+    	public static final String ALWAYSFIREWEAPON = "AlwaysFireWeapon";
+    	public static final String MINIBOSS = "MiniBoss";
+    	public static final String USEBOSSHEALTHBAR = "UseBossHealthBar";
+    	public static final String IGNOREFLAG = "IgnoreFlag";
+    	public static final String AUTOJUMP = "AutoJump";
+    	public static final String AIRCHARGEONLY = "AirChargeOnly";
+    	public static final String VACCINATORBULLETS = "VaccinatorBullets";
+    	public static final String VACCINATORBLAST = "VaccinatorBlast";
+    	public static final String VACCINATORFIRE = "VaccinatorFire";
+    	public static final String BULLETIMMUNE = "BulletImmune";
+    	public static final String BLASTIMMUNE = "BlastImmune";
+    	public static final String FIREIMMUNE = "FireImmune";
+    	public static final String PARACHUTE = "Parachute";
+    	public static final String PROJECTILESHIELD = "ProjectileShield";
+    	public static final String TELEPORTTOHINT = "TeleportToHint";
+    	
     	private boolean isItemsSorted;
     	
     	//consider allowing template only 
@@ -776,7 +802,21 @@ public class Node {
     		
     		if(keyVals.containsKey(ATTRIBUTES)) {
     			List<Object> list = new ArrayList<Object>(keyVals.get(ATTRIBUTES));
-    			putKey(ATTRIBUTES, list);
+    			List<String> newList = new ArrayList<String>();
+    			
+    			Iterator<Object> iterator = list.iterator();
+    			List<String> attrList = getAttributesLowercaseList();
+    			
+    			while(iterator.hasNext()) {
+    				String attr = (String) iterator.next();
+    				
+    				if(attrList.contains(attr.toLowerCase())) {
+    					newList.add(attr);
+    					iterator.remove();
+    				}
+    			}
+    			list.addAll(newList);
+    			putKey(ATTRIBUTES, newList);
     		}
     		
     		if(keyVals.containsKey(ITEM)) {
@@ -836,6 +876,16 @@ public class Node {
     		return new ArrayList<String>(Arrays.asList(NAME, CLASSNAME, CLASSICON, TEMPLATE, SKILL, WEAPONRESTRICT, HEALTH, SCALE, ATTRIBUTES, TAGS,
     				CHARACTERATTRIBUTES, ITEM, ITEMATTRIBUTES, AUTOJUMPMIN, AUTOJUMPMAX, BEHAVIORMODIFIERS, MAXVISIONRANGE, TELEPORTWHERE,
     					EVENTCHANGEATTRIBUTES));
+    	}
+    	
+    	public static List<String> getAttributesLowercaseList() {
+    		return new ArrayList<String>(Arrays.asList(REMOVEONDEATH.toLowerCase(), AGGRESIVE.toLowerCase(), SUPPRESSFIRE.toLowerCase(), 
+    			DISABLEDODGE.toLowerCase(), BECOMESPECTATORONDEATH.toLowerCase(), RETAINBUILDINGS.toLowerCase(), SPAWNWITHFULLCHARGE.toLowerCase(), 
+    				ALWAYSCRIT.toLowerCase(), IGNOREENEMIES.toLowerCase(), HOLDFIREUNTILFULLRELOAD.toLowerCase(), ALWAYSFIREWEAPON.toLowerCase(),
+					MINIBOSS.toLowerCase(), USEBOSSHEALTHBAR.toLowerCase(), IGNOREFLAG.toLowerCase(), AUTOJUMP.toLowerCase(), 
+					AIRCHARGEONLY.toLowerCase(), VACCINATORBULLETS.toLowerCase(), VACCINATORBLAST.toLowerCase(), VACCINATORFIRE.toLowerCase(), 
+						BULLETIMMUNE.toLowerCase(), BLASTIMMUNE.toLowerCase(), FIREIMMUNE.toLowerCase(), PARACHUTE.toLowerCase(), 
+							PROJECTILESHIELD.toLowerCase(), TELEPORTTOHINT.toLowerCase()));
     	}
     }
     

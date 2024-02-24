@@ -35,7 +35,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	
 	String[] tags = {"bot_giant", "bot_squad_member"}; //potentially move bot_giant
 	
-	EngiPanel containingWindow;
 	MainWindow mainWindow;
 	EngiPanel attrPanel = new EngiPanel();
 	WherePanel teleWherePanel = new WherePanel();
@@ -120,7 +119,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JLabel maxVisionLabel = new JLabel("MaxVisionRange:");
 	JSpinner maxVisionSpinner = new JSpinner();
 	
-	public BotPanel(EngiPanel containingPanel, MainWindow mainWindow, PopulationPanel popPanel) {
+	public BotPanel(MainWindow mainWindow, PopulationPanel popPanel) {
 		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
 		JTextField cellEditor = new JTextField();
 		JButton addTagRow = new JButton("+");
@@ -131,7 +130,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		setBackground(new Color(192, 192, 192));
 		attrPanel.setOpaque(false);
 		
-		this.containingWindow = containingPanel;
 		this.mainWindow = mainWindow;
 		popPanel.addPropertyChangeListener(this);
 		mainWindow.addPropertyChangeListener(this);

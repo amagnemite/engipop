@@ -1,14 +1,9 @@
 package engipop;
 
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,7 +79,7 @@ public class WaveBarPanel extends EngiPanel {
 		}
 		
 		if(bot.getValue(TFBotNode.TEMPLATE) != null && (iconName == null || isCrit == false || type == null)) {
-			//need to go through the whole list if not miniboss/minicrits, 
+			//need to go through the whole list if not miniboss/minicrits
 			Node node = bot;
 			
 			while(node != null && node.getValue(TFBotNode.TEMPLATE) != null) {
@@ -112,15 +107,18 @@ public class WaveBarPanel extends EngiPanel {
 			}
 		}
 		
-		if(iconName == null && bot.getValue(TFBotNode.CLASSNAME) != Classes.None) {
-			String value = bot.getValue(TFBotNode.CLASSNAME).toString();
-			
-			iconName = getClassIconName(value);
+		if(iconName == null) {
+			if(bot.getValue(TFBotNode.CLASSNAME) != Classes.None) {
+				String value = bot.getValue(TFBotNode.CLASSNAME).toString();
+				
+				iconName = getClassIconName(value);
+			}
+			else {
+				//no class name, couldn't find template
+				iconName = "null";
+			}
 		}
-		else {
-			//no class name, couldn't find template
-			iconName = "null";
-		}
+		
 		if(type == null) {
 			type = BotType.COMMON;
 		}
@@ -226,7 +224,19 @@ public class WaveBarPanel extends EngiPanel {
 		if(iconNames.get(mapName).getCount() == 0) {
 			WaveBarIcon removedIcon = iconNames.remove(mapName);
 			iconArray.remove(removedIcon);
-			remove(removedIcon); //check if icons need to be shifted over
+			remove(removedIcon);
+			
+			switch(type) {
+				case GIANT:
+					giantIndex--;
+				case COMMON:
+					commonIndex--;
+				case SUPPORT:
+					supportIndex--;
+				case MISSION:
+					missionIndex--;
+					break;
+			}
 		}
 	}
 	
@@ -298,6 +308,10 @@ public class WaveBarPanel extends EngiPanel {
 				}
 			}
 		}
+		System.out.println(getSize());
+		//setPreferredSize(new Dimension(iconArray.size() * WaveBarIcon.WIDTH + (iconArray.size() - 1) * gbConstraints.ipadx, WaveBarIcon.HEIGHT));
+		validate();
+		repaint();
 	}
 	
 	public class WaveBarIcon extends JLayeredPane {
@@ -312,8 +326,8 @@ public class WaveBarPanel extends EngiPanel {
 		private boolean isCrit;
 		private BotType type;
 		
-		private static final int WIDTH = 32;
-		private static final int HEIGHT = 48;
+		public static final int WIDTH = 32;
+		public static final int HEIGHT = 48;
 		private static final URL REDURL = MainWindow.class.getResource("/redbg.png");
 		private static final URL WHITEURL = MainWindow.class.getResource("/whitebg.png");
 		private static final URL CRITURL = MainWindow.class.getResource("/crit.png");
@@ -455,12 +469,14 @@ public class WaveBarPanel extends EngiPanel {
 				return null;
 			}
 			if((data[0] & 0xFF) != 0x56 && (data[1] & 0xFF) != 0x54 && (data[2] & 0xFF) != 0x46) {
+				return null;
 				//error
 			}
 			int height = reader.getHeight(data);
 			int width = reader.getWidth(data);
 			int[] pixels = reader.readIcon(data);
 			if(pixels == null) {
+				return null;
 				//error
 			}
 			

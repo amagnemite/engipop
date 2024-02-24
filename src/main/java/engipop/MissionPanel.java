@@ -20,7 +20,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	MainWindow mainWindow;
 	EngiPanel componentPanel = new EngiPanel();
 	BotPanel botPanel;
-	TankPanel tankPanel;
+	//TankPanel tankPanel;
 	NodePanelManager spawnerListManager;
 	JPanel listPanel;
 	WherePanel wherePanel = new WherePanel();
@@ -50,7 +50,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	JSpinner runSpinner = new JSpinner();
 	JSpinner desiredSpinner = new JSpinner();
 	
-	public MissionPanel(MainWindow mainWindow, PopulationPanel secondaryWindow, WaveBarPanel wavebar) {
+	public MissionPanel(MainWindow mainWindow, PopulationPanel popPanel, WaveBarPanel wavebar) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		componentPanel.setLayout(componentPanel.gbLayout);
@@ -61,7 +61,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		int iMin = 0, botMax = 22;
 		double dMin = 0.0;
 		
-		secondaryWindow.addPropertyChangeListener("POPNODE", this);
+		popPanel.addPropertyChangeListener("POPNODE", this);
 		missionArray = Engipop.getPopNode().getListValue(PopNode.MISSION);
 		
 		SpinnerNumberModel initialCooldownModel = new SpinnerNumberModel(10.0, dMin, null, 1.0);
@@ -80,10 +80,11 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		JLabel desiredLabel = new JLabel("DesiredCount:");
 		
 		this.mainWindow = mainWindow;
-		botPanel = new BotPanel(this, mainWindow, secondaryWindow);
-		tankPanel = new TankPanel(secondaryWindow);
-		spawnerListManager = new NodePanelManager(mainWindow, botPanel, tankPanel, wavebar);
+		//botPanel = new BotPanel(mainWindow, popPanel);
+		//tankPanel = new TankPanel(popPanel);
+		spawnerListManager = new NodePanelManager(mainWindow, popPanel, wavebar);
 		listPanel = spawnerListManager.getListPanel();
+		botPanel = spawnerListManager.getBotPanel();
 		//spawnerPanel = spawnerListManager.getSpawnerPanel();
 		
 		initialCooldownSpinner.setModel(initialCooldownModel);
@@ -92,7 +93,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		runSpinner.setModel(runModel);
 		desiredSpinner.setModel(desiredModel);
 		
-		tankPanel.setVisible(false);
+		//tankPanel.setVisible(false);
 		missionList.setSelectionModel(new NoDeselectionModel());
 		missionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		missionList.setPrototypeCellValue("DestroySentries ");

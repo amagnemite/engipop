@@ -41,17 +41,16 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	ButtonListManager waveBLManager = new ButtonListManager(addWave, updateWave, removeWave);
 	ButtonListManager waveSpawnBLManager = new ButtonListManager(addWaveSpawn, updateWaveSpawn, removeWaveSpawn);
 	
-	
-	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, BotPanel botPanel, TankPanel tankPanel,
-			PopulationPanel secondaryWindow, WaveBarPanel wavebar) {
-		super(window, botPanel, tankPanel, wavebar);
+	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, PopulationPanel popPanel, 
+			WaveBarPanel wavebar) {
+		super(window, popPanel, wavebar);
 		initWaveListeners();
 		listPanel.removeAll(); //wavenode has a different layout than node, so need to set up here
 		
 		this.wavePanel = wavePanel;
 		this.wsPanel = wsPanel;
 		
-		secondaryWindow.addPropertyChangeListener("POPNODE", this);
+		popPanel.addPropertyChangeListener("POPNODE", this);
 		
 		waveList.setSelectionModel(new NoDeselectionModel());
 		waveSpawnList.setSelectionModel(new NoDeselectionModel());
@@ -120,14 +119,14 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				if(currentWaveNode.getChildren().size() > 0) {
 					waveSpawnList.setSelectedIndex(-1);
 					waveSpawnList.setSelectedIndex(0);
-					
-					if(wavebar != null) {
-						wavebar.rebuildWavebar(currentWaveNode);
-					}
 				}
 				else { //should only happen if user removes all wavespawns
 					waveSpawnBLManager.changeButtonState(States.EMPTY);
 					//waveSpawnList.setSelectedIndex(-1);
+				}
+				
+				if(wavebar != null) {
+					wavebar.rebuildWavebar(currentWaveNode);
 				}
 			}
 			else { 
@@ -247,6 +246,11 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			else { //fallback if name was added but then removed
 				waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), "Wavespawn");
 			}
+			
+			if(wavebar != null) {
+				wavebar.rebuildWavebar(currentWaveNode);
+			}
+			
 			//getWaveSpawnList();
 		});
 	}

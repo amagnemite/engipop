@@ -48,7 +48,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	WaveSpawnPanel wsPanel;
 	BotPanel botPanel;
 	EngiPanel templateButtonPanel = new EngiPanel();
-	TankPanel tankPanel;
+	//TankPanel tankPanel;
 	NodePanelManager spawnerListManager;
 	JPanel listPanel;
 	JPanel spawnerPanel;
@@ -96,13 +96,14 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		
 		popNode = Engipop.getPopNode();;
 		wsPanel = new WaveSpawnPanel(popPanel);
-		botPanel = new BotPanel(this, mainWindow, popPanel);
-		tankPanel = new TankPanel(popPanel);
-		spawnerListManager = new NodePanelManager(mainWindow, botPanel, tankPanel);
+		//botPanel = new BotPanel(mainWindow, popPanel);
+		//tankPanel = new TankPanel(popPanel);
+		spawnerListManager = new NodePanelManager(mainWindow, popPanel, null);
+		botPanel = spawnerListManager.getBotPanel();
 		spawnerPanel = spawnerListManager.getSpawnerPanel();
 		listPanel = spawnerListManager.getListPanel();
 		
-		tankPanel.setVisible(false);
+		//tankPanel.setVisible(false);
 		
 		modePanel.add(modeLabel);
 		modePanel.add(botModeButton);
@@ -153,8 +154,9 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		gbConstraints.gridwidth = 2;
 		addGB(wsPanel, 0, 2);
 		addGB(spawnerPanel, 0, 3);
-		addGB(botPanel, 0, 4);
-		addGB(tankPanel, 0, 4);
+		addGB(spawnerListManager.getBotTankPanel().getDisabledPanel(), 0, 4);
+		//addGB(botPanel, 0, 4);
+		//addGB(tankPanel, 0, 4);
 		
 		//addGB(botTemplatePanel, 1, 4);
 		gbConstraints.gridwidth = 1;
