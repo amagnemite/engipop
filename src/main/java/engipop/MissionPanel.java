@@ -68,7 +68,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		SpinnerNumberModel cooldownModel = new SpinnerNumberModel(10.0, dMin, null, 1.0);
 		SpinnerNumberModel beginModel = new SpinnerNumberModel(1, iMin, null, 1);
 		SpinnerNumberModel runModel = new SpinnerNumberModel(1, iMin, null, 1);
-		SpinnerNumberModel desiredModel = new SpinnerNumberModel(0, iMin, 22, 1); //TODO: remove 0 desired count from printing
+		SpinnerNumberModel desiredModel = new SpinnerNumberModel(0, iMin, botMax, 1); //TODO: remove 0 desired count from printing
 		
 		JScrollPane missionScroll = new JScrollPane(missionList);
 		JLabel whereLabel = new JLabel("Where:");

@@ -98,7 +98,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, populationPanel, wavebar);
 		templateTree = new TemplateTree(populationPanel);
 		JPanel listPanel = waveNodeManager.getListPanel();
-		JPanel spawnerPanel = waveNodeManager.getSpawnerPanel();
+		EngiPanel spawnerPanel = waveNodeManager.getSpawnerPanel();
 		EngiPanel populationFillerPanel = new EngiPanel();
 		JScrollPane templateTreePane = templateTree.getTreePane();
 		JScrollPane panelScroll = new JScrollPane(mainPanel);
@@ -138,7 +138,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		mainPanel.gbConstraints.gridwidth = 2;
 		mainPanel.addGB(wavePanel.getDisabledPanel(), 0, 2);
 		mainPanel.addGB(wsPanel.getDisabledPanel(), 0, 3);
-		mainPanel.addGB(spawnerPanel, 0, 4);
+		mainPanel.addGB(spawnerPanel.getDisabledPanel(), 0, 4);
 				
 		mainPanel.gbConstraints.gridheight = 2;
 		mainPanel.gbConstraints.weighty = 1;

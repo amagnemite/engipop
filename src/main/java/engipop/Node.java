@@ -556,9 +556,21 @@ public class Node {
     		if(!keyVals.containsKey(WAITBEFORESTARTING)) {
     			putKey(WAITBEFORESTARTING, 0.0);
     		}
+    		else {
+    			if(getValue(WAITBEFORESTARTING).getClass() == Integer.class) {
+    				putKey(WAITBEFORESTARTING, (Integer) getValue(WAITBEFORESTARTING) * 1.0);
+    			}
+    		}
+    		
     		if(!keyVals.containsKey(WAITBETWEENSPAWNS)) {
     			putKey(WAITBETWEENSPAWNS, 0.0);
     		}
+    		else {
+    			if(getValue(WAITBETWEENSPAWNS).getClass() == Integer.class) {
+    				putKey(WAITBETWEENSPAWNS, (Integer) getValue(WAITBETWEENSPAWNS) * 1.0);
+    			}
+    		}
+    		
     		if(!keyVals.containsKey(TOTALCURRENCY)) {
     			putKey(TOTALCURRENCY, 0);
     		}
@@ -889,41 +901,62 @@ public class Node {
     	}
     }
     
-    //these two are mostly convenience 
-    public static class SquadNode extends Node {
-    	public SquadNode() {
+    public static abstract class SquadRCNode extends Node {
+    	public SquadRCNode() {
     	}
     	
-    	public SquadNode(Map<String, List<Object>> map) {
+    	public SquadRCNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     		
-    		//may want to use generic spawners here
+    		if(map.containsKey(WaveSpawnNode.SQUAD)) {
+	    		for(Object bot : map.get(WaveSpawnNode.SQUAD)) {
+	    			SquadNode node = new SquadNode((Map<String, List<Object>>) bot);
+	    			node.connectNodes(this);
+	    		}
+	    		keyVals.remove(WaveSpawnNode.SQUAD);
+    		}
+    		if(map.containsKey(WaveSpawnNode.RANDOMCHOICE)) {
+	    		for(Object bot : map.get(WaveSpawnNode.RANDOMCHOICE)) {
+	    			RandomChoiceNode node = new RandomChoiceNode((Map<String, List<Object>>) bot);
+	    			node.connectNodes(this);
+	    		}
+	    		keyVals.remove(WaveSpawnNode.RANDOMCHOICE);
+    		}
     		if(map.containsKey(WaveSpawnNode.TFBOT)) {
-	    		for(Object key : map.get(WaveSpawnNode.TFBOT)) {
-	    			TFBotNode node = new TFBotNode((Map<String, List<Object>>) key);
+	    		for(Object bot : map.get(WaveSpawnNode.TFBOT)) {
+	    			TFBotNode node = new TFBotNode((Map<String, List<Object>>) bot);
 	    			node.connectNodes(this);
 	    		}
 	    		keyVals.remove(WaveSpawnNode.TFBOT);
     		}
     	}
+    	
+    	public boolean hasNestedSquadRC() {
+    		for(Node subnode : getChildren()) {
+    			if(subnode instanceof SquadRCNode) {
+    				return true;
+    			}
+    		}
+    		return false;
+    	}
     }
     
-    public static class RandomChoiceNode extends Node {
+    //these two are mostly convenience 
+    public static class SquadNode extends SquadRCNode {
+    	public SquadNode() {
+    	}
+    	
+    	public SquadNode(Map<String, List<Object>> map) {
+    		super(map);
+    	}
+    }
+    
+    public static class RandomChoiceNode extends SquadRCNode {
     	public RandomChoiceNode() {
     	}
     	
-    	public RandomChoiceNode(Map<String, List<Object>> map) { 
-    		keyVals.putAll(map);
-    		
-    		//may want to use generic spawners here
-    		if(map.containsKey(WaveSpawnNode.TFBOT)) {
-    			for(Object key : map.get(WaveSpawnNode.TFBOT)) {
-        			TFBotNode node = new TFBotNode((Map<String, List<Object>>) key);
-        			node.connectNodes(this);
-        		}
-        		keyVals.remove(WaveSpawnNode.TFBOT);
-    		}
+    	public RandomChoiceNode(Map<String, List<Object>> map) {
+    		super(map);
     	}
     }
-    
 }

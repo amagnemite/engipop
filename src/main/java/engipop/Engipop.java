@@ -178,6 +178,13 @@ public class Engipop {
 	}
 	
 	public static Node findTemplateNode(String name) {
+		if(getPopNode().getBotTemplateMap().containsKey(name)) {
+			return getPopNode().getBotTemplateMap().get(name);
+		}
+		else if(getPopNode().getWSTemplateMap().containsKey(name)) {
+			return getPopNode().getWSTemplateMap().get(name);
+		}
+		
 		for(String pop : getIncludedTemplatePops().keySet()) {
 			PopNode node = INCLUDEDTEMPLATEPOPS.get(pop);
 			

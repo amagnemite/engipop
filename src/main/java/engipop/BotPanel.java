@@ -398,7 +398,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		//itemAttributeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		itemAttributesListBox.setPrototypeDisplayValue("CHARACTER");
-		attrListPane.setMinimumSize(new Dimension(300, 200)); //this is arbitary but the preferred is giant
+		attrListPane.setPreferredSize(new Dimension(300, 200)); //this is arbitary but the preferred is giant
 		//itemAttributeTable.getPreferredScrollableViewportSize()
 		
 		attrPanel.addGB(addAttributeToListButton, 0, 1);
@@ -427,13 +427,19 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 			
 			public void editingStopped(ChangeEvent c) {
-				if(itemAttributeTable.getSelectedRow() == 0 && itemAttributeTable.getSelectedColumn() == 1) {
-					int index = attributesSlotsBox.getSelectedIndex();
-					attributesSlotsModel.insertElementAt((String) cellEditor.getCellEditorValue(), index);
-					attributesSlotsModel.removeElementAt(index + 1);
+				if(!attributesSlotsModel.getSelectedItem().equals(ItemSlot.CHARACTER.toString())) {
+					if(itemAttributeTable.getSelectedRow() == 0 && itemAttributeTable.getSelectedColumn() == 1) {
+						int index = attributesSlotsBox.getSelectedIndex();
+						currentAttributeMap.put(TFBotNode.ITEMNAME, (String) cellEditor.getCellEditorValue());
+						//this will trigger an attributes slots action
+						attributesSlotsModel.insertElementAt((String) cellEditor.getCellEditorValue(), index);
+						attributesSlotsModel.removeElementAt(index + 1);
+						return;
+					}
 				}
 				
 				if(((String) cellEditor.getCellEditorValue()).isBlank()) {
+					currentAttributeMap.remove((String) itemAttributesListBox.getSelectedItem());
 					mainWindow.setFeedback("No value to add to attribute");
 				}
 				else { //put attr - value pair in map
@@ -446,7 +452,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		addAttributeToListButton.addActionListener(event -> {
 			if(!currentAttributeMap.containsKey((String) itemAttributesListBox.getSelectedItem())) {
 				itemAttributeTableModel.addRow(new String[] {(String) itemAttributesListBox.getSelectedItem(), ""});
-				//currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), null);
+				currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), null);
 			}
 			else {
 				mainWindow.setFeedback("Attribute already in list");
@@ -686,8 +692,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			for(Object entry : list) {
 				Map<String, String> map = (Map<String, String>) entry;
 				
-				if(map.containsKey("ITEMNAME")) {
-					attributesSlotsBox.addItem(map.get("ITEMNAME"));
+				if(map.containsKey(TFBotNode.ITEMNAME)) {
+					attributesSlotsBox.addItem(map.get(TFBotNode.ITEMNAME));
 				}
 				
 				attributeMapsArray.add(map); //TODO: check this
@@ -787,11 +793,12 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		Iterator<Map <String, String>> iterator = attributeMapsArray.iterator();
 		while(iterator.hasNext()) {
 			Map<String, String> map = iterator.next();
-			if(map.get("ITEMNAME") == null || map.get("ITEMNAME").equals(ADDNEWATTR)) {
+			if(map.get(TFBotNode.ITEMNAME) == null || map.get(TFBotNode.ITEMNAME).equals(ADDNEWATTR)) {
 				iterator.remove();
 			}
 		}
 		
+		//TODO: this may not be necessary?
 		int emptyItemAttributes = 0;
 		for(Map<String, String> attributeMap : attributeMapsArray) {
 			if(attributeMap.isEmpty()) {
@@ -1049,7 +1056,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		else {
 			currentAttributeMap = null;
 			for(Map<String, String> entry : attributeMapsArray) {
-				if(item.equals(entry.get("ITEMNAME"))) {
+				if(item.equals(entry.get(TFBotNode.ITEMNAME))) {
 					currentAttributeMap = entry;
 					break;
 				}
@@ -1057,7 +1064,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			
 			if(currentAttributeMap == null) {
 				Map<String, String> newMap = new HashMap<String, String>();
-				newMap.put(item, null);
+				newMap.put(TFBotNode.ITEMNAME, item);
 				attributeMapsArray.add(newMap);
 				currentAttributeMap = newMap;
 			}

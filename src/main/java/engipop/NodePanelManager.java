@@ -166,8 +166,8 @@ public class NodePanelManager {
 		addSpawner.addActionListener(event -> {
 			mainWindow.setFeedback(" ");
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
-			botPanel.getDisabledPanel().setEnabled(true);
-			//spawnerPanel.setVisible(true);
+			botTankPanel.getDisabledPanel().setEnabled(true);
+			spawnerPanel.getDisabledPanel().setEnabled(true);
 			
 			switch (addSpawner.getText()) {
 				//TODO: get the current wsnode from whatever parent window
@@ -266,7 +266,8 @@ public class NodePanelManager {
 			}
 			
 			spawnerBLManager.changeButtonState(States.EMPTY);
-			botPanel.getDisabledPanel().setEnabled(false);
+			botTankPanel.getDisabledPanel().setEnabled(false);
+			//spawnerPanel.getDisabledPanel().setEnabled(false);
 		});
 		
 		addSquadRandomBot.addActionListener(event -> { //squad/rc specific button for adding bots to them
@@ -386,7 +387,7 @@ public class NodePanelManager {
 		
 		tfbotBut.addItemListener(event -> {
 			if(event.getStateChange() == ItemEvent.SELECTED) {
-				try { //indexoutofbounds if no spawner
+				//try { //indexoutofbounds if no spawner
 					Node node = currentWSNode.getSpawner();
 					
 					if(node == null) {
@@ -400,10 +401,10 @@ public class NodePanelManager {
 						spawnerBLManager.changeButtonState(States.REMOVEONLY);
 					}
 					
-				}
-				catch (IndexOutOfBoundsException e) {
-					loadBot(true);
-				}
+				//}
+				//catch (IndexOutOfBoundsException e) {
+				//	loadBot(true);
+				//}
 			}
 		});
 		tankBut.addItemListener(event -> {
@@ -617,7 +618,7 @@ public class NodePanelManager {
 			currentRCNode = (RandomChoiceNode) currentWSNode.getSpawner();
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			if(currentRCNode.hasChildren()) {
-				if(currentSquadNode.getChildren().get(0).getClass() == TFBotNode.class) {
+				if(currentRCNode.getChildren().get(0).getClass() == TFBotNode.class) {
 					loadBot(false, currentRCNode.getChildren().get(0));
 					getSquadRandomList();
 				}
@@ -637,10 +638,9 @@ public class NodePanelManager {
 		spawnerInfo.setText(noSpawner);
 		tfbotBut.setSelected(true);
 		spawnerBLManager.changeButtonState(States.DISABLE);
-		//botPanel.getDisabledPanel().setEnabled(false);
 		botTankPanel.getDisabledPanel().setEnabled(false);
-		//probably should hide spawner panel as well
-	}
+		spawnerPanel.getDisabledPanel().setEnabled(false);
+	}		
 	
 	//refresh entire squadrandom list
 	protected void getSquadRandomList() { //could be either a squadnode or randomchoicenode
@@ -711,7 +711,7 @@ public class NodePanelManager {
 		return this.listPanel;
 	}
 	
-	public JPanel getSpawnerPanel() {
+	public EngiPanel getSpawnerPanel() {
 		return this.spawnerPanel;
 	}
 	

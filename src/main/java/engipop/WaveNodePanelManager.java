@@ -3,8 +3,6 @@ package engipop;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
@@ -13,7 +11,6 @@ import javax.swing.*;
 
 import engipop.ButtonListManager.States;
 import engipop.EngiWindow.NoDeselectionModel;
-import engipop.Node.PopNode;
 import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
 
@@ -117,12 +114,11 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				getWaveSpawnList();
 				
 				if(currentWaveNode.getChildren().size() > 0) {
-					waveSpawnList.setSelectedIndex(-1);
+					//waveSpawnList.setSelectedIndex(-1);
 					waveSpawnList.setSelectedIndex(0);
 				}
 				else { //should only happen if user removes all wavespawns
-					waveSpawnBLManager.changeButtonState(States.EMPTY);
-					//waveSpawnList.setSelectedIndex(-1);
+					resetWaveSpawnState(States.EMPTY);
 				}
 				
 				if(wavebar != null) {
@@ -179,7 +175,6 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			//prevent fits if index is reset
 			if(waveSpawnIndex != -1) {
 				currentWSNode = (WaveSpawnNode) currentWaveNode.getChildren().get(waveSpawnIndex);
-				//currentWSLabel.setText("Editing wavespawn " + waveSpawnListModel.get(waveSpawnIndex));
 				wsPanel.getDisabledPanel().setEnabled(true);
 				
 				waveSpawnBLManager.changeButtonState(States.SELECTED);
@@ -224,9 +219,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			
 			list.remove(waveSpawnList.getSelectedIndex());
 			waveSpawnListModel.remove(waveSpawnList.getSelectedIndex());
-			//botPanel.updatePanel(new TFBotNode()); //update panel so no dead references
-			resetSpawnerState();
-			//getWaveSpawnList();
+			//TODO: remove icon
 			
 			if(list.size() == 0) { //if no wavespawns again
 				resetWaveSpawnState(States.EMPTY);

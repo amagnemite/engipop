@@ -448,21 +448,25 @@ public class TreeParse { //it is time to parse
 			}
 			mapCopy.remove(WaveSpawnNode.SPAWNCOUNT);
 		}
-		//if((double) node.getValueSingular(WaveSpawnNode.WAITBEFORESTARTING) > 0.0) {
+		//TODO: truncate decimals as needed
 		if(node.containsKey(WaveSpawnNode.WAITBEFORESTARTING)) {
-			indentPrintln(pw, "WaitBeforeStarting " + node.getValue(WaveSpawnNode.WAITBEFORESTARTING));
+			if((double) node.getValue(WaveSpawnNode.WAITBEFORESTARTING) > 0) {
+				indentPrintln(pw, WaveSpawnNode.WAITBEFORESTARTING + " " + node.getValue(WaveSpawnNode.WAITBEFORESTARTING));
+			}
 			mapCopy.remove(WaveSpawnNode.WAITBEFORESTARTING);
 		}
-		//if((double) node.getValueSingular(WaveSpawnNode.WAITBETWEENSPAWNS) > 0.0) {
-		if(node.containsKey(WaveSpawnNode.WAITBETWEENSPAWNS)) {
-			if(node.getBetweenDeaths()) { //boolean keys should also always be true or false
-				indentPrintln(pw, "WaitBetweenSpawnsAfterDeath " + node.getValue(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH));
-				mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH);
+		
+		if(node.getBetweenDeaths()) { //boolean keys should also always be true or false
+			if(node.containsKey(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH)) {
+				indentPrintln(pw, WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH + " " + node.getValue(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH));
 			}
-			else {
-				indentPrintln(pw, "WaitBetweenSpawns " + node.getValue(WaveSpawnNode.WAITBETWEENSPAWNS));
-				mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNS);
+			mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH);
+		}
+		else {
+			if(node.containsKey(WaveSpawnNode.WAITBETWEENSPAWNS) && (double) node.getValue(WaveSpawnNode.WAITBETWEENSPAWNS) > 0) {
+				indentPrintln(pw, WaveSpawnNode.WAITBETWEENSPAWNS + " " + node.getValue(WaveSpawnNode.WAITBETWEENSPAWNS));
 			}
+			mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNS);
 		}
 		
 		if(node.containsKey(WaveSpawnNode.TOTALCURRENCY)) {
@@ -594,12 +598,9 @@ public class TreeParse { //it is time to parse
 		}
 		
 		if(node.containsKey(TFBotNode.CHARACTERATTRIBUTES)) {
-			List<Object> mapList = mapCopy.remove(TFBotNode.CHARACTERATTRIBUTES);
+			Map<String, String> map = (Map<String, String>) mapCopy.remove(TFBotNode.CHARACTERATTRIBUTES).get(0);
 			
-			for(Object submap : mapList ) {
-				printAttr(pw, (Classes) node.getValue(TFBotNode.CLASSNAME), 
-						mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
-			}
+			printAttr(pw, TFBotNode.CHARACTERATTRIBUTES, map);
 		}
 		
 		//this trainwreck needs rewritten
@@ -608,8 +609,7 @@ public class TreeParse { //it is time to parse
 			
 			for(Object submap : mapList) {
 				if(!((Map<String, String>) submap).isEmpty()) {
-					printAttr(pw, (Classes) node.getValue(TFBotNode.CLASSNAME), 
-							mapList.indexOf((Map<String, String>) submap), node, (Map<String, String>) submap);
+					printAttr(pw, TFBotNode.ITEMATTRIBUTES, (Map<String, String>) submap);
 				}
 			}
 		}
@@ -662,15 +662,19 @@ public class TreeParse { //it is time to parse
 		System.out.println("printed tfbot");
 	}
 	
-	private void printAttr(PrintWriter pw, Classes tfClass, int slot, TFBotNode botNode, Map<String, String> attrNode) {
+	private void printAttr(PrintWriter pw, String type, Map<String, String> attrMap) {
 		Object itemName = null;
 		
-		if(slot == ItemSlot.CHARACTER.getSlot()) { //different subtree name
-			indentPrintln(pw, "CharacterAttributes");
+		if(attrMap.isEmpty()) {
+			return;
+		}
+		
+		if(type == TFBotNode.CHARACTERATTRIBUTES) { //different subtree name
+			indentPrintln(pw, TFBotNode.CHARACTERATTRIBUTES);
 		}
 		else {
-			indentPrintln(pw, "ItemAttributes");
-			itemName = attrNode.get(TFBotNode.ITEMNAME);
+			indentPrintln(pw, TFBotNode.ITEMATTRIBUTES);
+			itemName = attrMap.remove(TFBotNode.ITEMNAME);
 		}
 		indentPrintln(pw, "{");
 		indentCount++;
@@ -679,38 +683,17 @@ public class TreeParse { //it is time to parse
 			indentPrintln(pw, "ItemName \"" + itemName + "\"");
 		}
 		
-		/*
-		if(slot != ItemSlot.CHARACTER.getSlot()) {
-			if(botNode.getValueSingular(slot) == null || ((String) botNode.getValueSingular(slot)).isEmpty()) { //if the slot was stripped out by the precheck
-				switch (slot) {
-					case ItemSlot.PRIMARY.getSlot():
-						indentPrintln(pw, "ItemName \"" + tfClass.primary() + "\"");
-						break;
-					case SECONDARY:
-						indentPrintln(pw, "ItemName \"" + tfClass.secondary() + "\"");
-						break;
-					case MELEE:
-						indentPrintln(pw, "ItemName \"" + tfClass.melee() + "\"");
-						break;
-					case BUILDING:
-						indentPrintln(pw, "ItemName \"" + tfClass.building() + "\"");
-						break;
-					default:
-						break;
+		//fix this
+		attrMap.forEach((k, v) -> {
+			if(!k.equalsIgnoreCase(PETALTNAME)) {
+				if(v.contains(" ")) {
+					indentPrintln(pw, "\"" + k + "\" \"" + v + "\"");
+				}
+				else {
+					indentPrintln(pw, "\"" + k + "\"" + " " + v);
 				}
 			}
-			else {
-				indentPrintln(pw, "ItemName \"" + botNode.getValueSingular(slot) + "\"");
-			}
-		} */
-		
-		//fix this
-		attrNode.forEach((k, v) -> {
-			if(!k.equals(PETALTNAME) && 
-					!(((String) v).equalsIgnoreCase((String) attrNode.get(TFBotNode.ITEMNAME))) ) {
-				indentPrintln(pw, "\"" + k + "\"" + " " + v);
-			}
-			else if(k.equals(PETALTNAME)) { //super super long 
+			else { //super super long 
 				indentPrintln(pw, "\"counts as assister is some kind of pet this update is going to be awesome\" " + v);
 			}
 		}

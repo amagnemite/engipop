@@ -23,6 +23,7 @@ import javax.swing.JPanel;
 import engipop.Engipop.Classes;
 import engipop.Node.MissionNode;
 import engipop.Node.PopNode;
+import engipop.Node.RandomChoiceNode;
 import engipop.Node.TFBotNode;
 import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
@@ -85,6 +86,9 @@ public class WaveBarPanel extends EngiPanel {
 			while(node != null && node.getValue(TFBotNode.TEMPLATE) != null) {
 				node = Engipop.findTemplateNode((String) node.getValue(TFBotNode.TEMPLATE));
 				//if template isn't found it returns null so just terminate early
+				if(node == null) {
+					break;
+				}
 				
 				if(iconName == null) {
 					iconName = node != null ? (String) node.getValue(TFBotNode.CLASSICON) : null;
@@ -99,6 +103,7 @@ public class WaveBarPanel extends EngiPanel {
 					}
 				}
 			}
+			
 			
 			if(iconName == null) {
 				//if we reached the base template without finding a classicon, it probably
@@ -147,11 +152,15 @@ public class WaveBarPanel extends EngiPanel {
 		String mapName = iconName + "_" + type.toString();
 		int indexShift = 0;
 		
+		//support don't have counts + visible crits so just skip them
+		//TODO: make sure this doesn't cause odd things with the if
 		if(iconNames.containsKey(mapName)) {
-			if(isCrit && !iconNames.get(mapName).getCrit()) {
-				iconNames.get(mapName).setCrit(isCrit);
+			if(type != BotType.SUPPORT) {
+				if(isCrit && !iconNames.get(mapName).getCrit()) {
+					iconNames.get(mapName).setCrit(isCrit);
+				}
+				iconNames.get(mapName).addToCount(count);
 			}
-			iconNames.get(mapName).addToCount(count);
 		}
 		else {
 			iconNames.put(mapName, icon);
@@ -268,8 +277,10 @@ public class WaveBarPanel extends EngiPanel {
 					List<Node> spawners = ws.getSpawner().getChildren();
 					int childrenCount = spawners.size();
 					
-					for(int i = 0; i < batches; i++) {
-						modifyIcon((TFBotNode) (spawners.get(ThreadLocalRandom.current().nextInt(0, childrenCount))), spawnCount, type, true);
+					if(!((RandomChoiceNode) ws.getSpawner()).hasNestedSquadRC()) {
+						for(int i = 0; i < batches; i++) {
+							modifyIcon((TFBotNode) (spawners.get(ThreadLocalRandom.current().nextInt(0, childrenCount))), spawnCount, type, true);
+						}
 					}
 					break;
 				case SQUAD:
