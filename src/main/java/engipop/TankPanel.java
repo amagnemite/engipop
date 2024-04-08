@@ -26,11 +26,15 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	DefaultComboBoxModel<String> onKilledModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> onBombModel = new DefaultComboBoxModel<String>();
 	JComboBox<String> startingNode = new JComboBox<String>(pathTrackModel);
-	JComboBox<String> onKilledBox = new JComboBox<String>(onKilledModel);
-	JComboBox<String> onBombBox = new JComboBox<String>(onBombModel);
+	JComboBox<String> killedTargetBox = new JComboBox<String>(onKilledModel);
+	JComboBox<String> bombTargetBox = new JComboBox<String>(onBombModel);
+	JTextField killedActionField = new JTextField(13);
+	JTextField bombActionField = new JTextField(13);
 	
-	JLabel killedLabel = new JLabel("OnKilledOutput");
-	JLabel bombLabel = new JLabel("OnBombDroppedOutput");
+	JLabel killedTargetLabel = new JLabel("Target:");
+	JLabel bombTargetLabel = new JLabel("Target:");
+	JLabel killedActionLabel = new JLabel("Action:");
+	JLabel bombActionLabel = new JLabel("Action:");
 	
 	public TankPanel(PopulationPanel SecondaryWindow) {
 		setLayout(gbLayout);
@@ -48,15 +52,17 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		//name = new JTextField(Values.tankDefaultName, 20);
 		
 		startingNode.setEditable(true);
-		onKilledBox.setEditable(true);
-		onBombBox.setEditable(true);
+		killedTargetBox.setEditable(true);
+		bombTargetBox.setEditable(true);
 		
 		JLabel healthLabel = new JLabel("Health: ");
 		JLabel startLabel = new JLabel("StartingPathTrackNode: ");
 		
 		addListeners();
-		setBoxVisible(killedLabel, onKilledBox, false);
-		setBoxVisible(bombLabel, onBombBox, false);
+		setPairVisible(killedTargetLabel, killedTargetBox, false);
+		setPairVisible(killedActionLabel, killedActionField, false);
+		setPairVisible(bombTargetLabel, bombTargetBox, false);
+		setPairVisible(bombActionLabel, bombActionField, false);
 		
 		addGB(healthLabel, 0, 0);
 		addGB(health, 1, 0);
@@ -66,36 +72,32 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		addGB(startingNode, 1, 1);
 		
 		addGB(onKilledCheck, 0, 2);
-		addGB(killedLabel, 1, 2);
-		addGB(onKilledBox, 2, 2);
+		addGB(killedTargetLabel, 1, 2);
+		addGB(killedTargetBox, 2, 2);
+		addGB(killedActionLabel, 3, 2);
+		addGB(killedActionField, 4, 2);
 		
 		addGB(onBombCheck, 0, 3);
-		addGB(bombLabel, 1, 3);
-		addGB(onBombBox, 2, 3);
+		addGB(bombTargetLabel, 1, 3);
+		addGB(bombTargetBox, 2, 3);
+		addGB(bombActionLabel, 3, 3);
+		addGB(bombActionField, 4, 3);
 	}
 	
 	//currently just the relay checkboxes
 	private void addListeners() {
 		onKilledCheck.addItemListener(event -> {
-			if(onKilledCheck.isSelected()) {
-				setBoxVisible(killedLabel, onKilledBox, true);
-			}
-			else {
-				setBoxVisible(killedLabel, onKilledBox, false);
-			}
+			setPairVisible(killedTargetLabel, killedTargetBox, onKilledCheck.isSelected());
+			setPairVisible(killedActionLabel, killedActionField, onKilledCheck.isSelected());
 		});
 		onBombCheck.addItemListener(event -> {
-			if(onBombCheck.isSelected()) {
-				setBoxVisible(bombLabel, onBombBox, true);
-			}
-			else {
-				setBoxVisible(bombLabel, onBombBox, false);
-			}
+			setPairVisible(bombTargetLabel, bombTargetBox, onBombCheck.isSelected());
+			setPairVisible(bombActionLabel, bombActionField, onBombCheck.isSelected());
 		});
 	}
 	
 	//don't really think combobox needs parameter
-	private void setBoxVisible(JLabel label, JComboBox<String> box, boolean state) {
+	private void setPairVisible(JLabel label, JComponent box, boolean state) {
 		label.setVisible(state);
 		box.setVisible(state);
 	}
@@ -105,10 +107,16 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		finalTank.setSelected((boolean) node.getValue(TankNode.SKIN));
 		startingNode.setSelectedItem(node.getValue(TankNode.STARTINGPATHTRACKNODE));
 		if(node.getValue(TankNode.ONKILLEDOUTPUT) != null) {
-			onKilledBox.setSelectedItem(((RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT)).getValue(RelayNode.TARGET));
+			RelayNode relay = (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT);
+			
+			killedTargetBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
+			killedActionField.setText((String) relay.getValue(RelayNode.ACTION));
 		}
 		if(node.getValue(TankNode.ONBOMBDROPPEDOUTPUT) != null) {
-			onBombBox.setSelectedItem(((RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT)).getValue(RelayNode.TARGET));
+			RelayNode relay = (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT);
+			
+			bombTargetBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
+			bombActionField.setText((String) relay.getValue(RelayNode.ACTION));
 		}
 	}
 	
@@ -120,7 +128,10 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			if(node.getValue(TankNode.ONKILLEDOUTPUT) == null) { //make relay if data is entered and no relay exists
 				node.putKey(TankNode.ONKILLEDOUTPUT, new RelayNode());
 			}
-			((RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT)).putKey(RelayNode.TARGET, onBombBox.getSelectedItem());
+			RelayNode relay = (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT);
+			
+			relay.putKey(RelayNode.TARGET, killedTargetBox.getSelectedItem());
+			relay.putKey(RelayNode.ACTION, killedActionField.getText());
 		}
 		else { //if it isn't selected, throw out old data
 			node.removeKey(TankNode.ONKILLEDOUTPUT);
@@ -129,7 +140,10 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			if(node.getValue(TankNode.ONBOMBDROPPEDOUTPUT) == null) { //make relay if data is entered and no relay exists
 				node.putKey(TankNode.ONBOMBDROPPEDOUTPUT, new RelayNode());
 			}
-			((RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT)).putKey(RelayNode.TARGET, onKilledBox.getSelectedItem());
+			RelayNode relay = (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT);
+			
+			relay.putKey(RelayNode.TARGET, bombTargetBox.getSelectedItem());
+			relay.putKey(RelayNode.ACTION, bombActionField.getText());
 		}
 		else { //if it isn't selected, throw out old data
 			node.removeKey(TankNode.ONBOMBDROPPEDOUTPUT);

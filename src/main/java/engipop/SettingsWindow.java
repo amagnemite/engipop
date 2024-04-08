@@ -14,8 +14,11 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -29,12 +32,12 @@ import javax.swing.JTextField;
 @SuppressWarnings("serial")
 public class SettingsWindow extends EngiWindow {
 	private static File cfgFileName = new File("engiconfig.cfg");
-	private static final String tfPath = "TFPath";
+	private static final String TFPATH = "TFPath";
 	
 	private Map<String, String> modifiedConfig = new HashMap<String, String>();
 	private Map<String, String> oldConfig = new HashMap<String, String>();
 	
-	private JTextField itemsTxtBox = new JTextField(45);
+	private JTextField pathText = new JTextField(45);
 	private MainWindow window;
 	
 	public SettingsWindow(MainWindow window) {
@@ -44,47 +47,46 @@ public class SettingsWindow extends EngiWindow {
 		
 		this.window = window;
 		JLabel itemsTxtLabel = new JLabel("tf path: ");
-		itemsTxtBox.setEditable(false);
+		pathText.setEditable(false);
 		
-		readFromConfig();
+		readFromConfig(); //checks if config exists
+		initConfig(); //inits config if it doesn't
 		
-		if(modifiedConfig.isEmpty() || modifiedConfig.get(tfPath) == null) {
-			modifiedConfig.put(tfPath, null);
-		} //there may be other possibly null values, in which case it'd be better handle nulls generically
+		Path path = modifiedConfig.get(TFPATH) != null ? Paths.get(modifiedConfig.get(TFPATH)) : null;
+		setTFPath(path);
 		
-		if(modifiedConfig.get(tfPath) != null) {
-			itemsTxtBox.setText(modifiedConfig.get(tfPath));
-			Engipop.setTFPath(Paths.get(modifiedConfig.get(tfPath)));
-			//possibly fix length here
-		}
-		else {
-			itemsTxtBox.setText(" ");
-		}
+		oldConfig.putAll(modifiedConfig);
+		
+		//there may be other possibly null values, in which case it'd be better handle nulls generically
 		
 		//if new items_game is selected or nothing is selected
 		//update map
 		JButton updateItemsPath = new JButton("...");
 		updateItemsPath.addActionListener(event -> {
-			setTFPath(promptTFPath());
+			Path newPath = promptTFPath();
+			modifiedConfig.put(TFPATH, newPath.toString());
+			if(path != null) {
+				pathText.setText(newPath.toString());
+			}
+			else {
+				pathText.setText(" ");
+			}
+			validate();
 		});
 		
 		JButton updateConfig = new JButton("Update settings");
 		updateConfig.addActionListener(event -> {
 			writeToConfig();
 			
-			if(modifiedConfig.get(tfPath) != null) {
-				Engipop.setTFPath(Paths.get(modifiedConfig.get(tfPath)));
-				parseItems(Engipop.getItemSchemaPath().toFile());	
+			if(modifiedConfig.get(TFPATH) != null) {
+				setTFPath(Paths.get(modifiedConfig.get(TFPATH)));
 			}
-			
-			oldConfig.clear();
-			oldConfig.putAll(modifiedConfig);
 		});
 		
 		windowClosing();
 		
 		addGB(itemsTxtLabel, 0, 0);
-		addGB(itemsTxtBox, 1, 0);
+		addGB(pathText, 1, 0);
 		addGB(updateItemsPath, 2, 0);
 		
 		addGB(updateConfig, 2, 1);
@@ -103,7 +105,7 @@ public class SettingsWindow extends EngiWindow {
 					switch (op) {
 						case JOptionPane.YES_OPTION: 
 							writeToConfig();
-							if(modifiedConfig.get(tfPath) != null) {
+							if(modifiedConfig.get(TFPATH) != null) {
 								parseItems(Engipop.getItemSchemaPath().toFile());
 							}
 							oldConfig.clear();
@@ -128,21 +130,37 @@ public class SettingsWindow extends EngiWindow {
 	
 	public void setTFPath(Path path) {
 		if(path != null) {
-			modifiedConfig.put(tfPath, path.toString());
-			itemsTxtBox.setText(modifiedConfig.get(tfPath));
+			//modifiedConfig.put(tfPath, path.toString());
+			//itemsTxtBox.setText(modifiedConfig.get(tfPath));
+			pathText.setText(path.toString());
 			Engipop.setTFPath(path);
+			parseItems(Engipop.getItemSchemaPath().toFile());
 		}
 		else {
-			modifiedConfig.put(tfPath, null);
-			itemsTxtBox.setText(" ");
+			//modifiedConfig.put(tfPath, null);
+			pathText.setText(" ");
 		}
-		this.validate(); //updates textbox size
+		validate(); //updates textbox size
+	}
+	
+	public void updateWindow() { //reloads text to old if window was previously closed with unsaved changes
+		if(oldConfig.get(TFPATH) != null) {
+			pathText.setText(oldConfig.get(TFPATH));
+		}
+		else {
+			pathText.setText(" ");
+		}
+		validate(); //updates textbox size
+		modifiedConfig.clear();
+		modifiedConfig.putAll(oldConfig);
 	}
 	
 	//write map from config file
 	public void readFromConfig() {
 		Reader ir;
 		BufferedReader in;
+		Set<String> validCfg = new HashSet<String>(Arrays.asList(TFPATH));
+		Boolean updateConfig = false;
 		
 		try {
 			ir = new InputStreamReader(new FileInputStream(cfgFileName));
@@ -150,7 +168,14 @@ public class SettingsWindow extends EngiWindow {
 			String line;
 			try {
 				while((line = in.readLine()) != null) {
-					modifiedConfig.put((line.substring(0, line.indexOf('='))), line.substring(line.indexOf('=') + 1));
+					String key = line.substring(0, line.indexOf('='));
+					if(validCfg.contains(key)) {
+						modifiedConfig.put(key, line.substring(line.indexOf('=') + 1));
+					}
+					else {
+						updateConfig = true;
+					}
+					
 					//key = substring of length (where the = is) - 1 to 0
 					//value = substring starting at where the = is + 1
 				}
@@ -162,8 +187,12 @@ public class SettingsWindow extends EngiWindow {
 		catch (FileNotFoundException f) {
 			window.setFeedback("Engiconfig.cfg could not be found");
 		}
+		
+		if(updateConfig) {
+			writeToConfig();
+		}
 	}
-	
+		
 	//write config file from map
 	//ideally we would not write to file every time a var is changed, only when large amounts are
 	public void writeToConfig() {
@@ -175,7 +204,12 @@ public class SettingsWindow extends EngiWindow {
 			pw = new PrintWriter(fw, true);
 			
 			modifiedConfig.forEach((k, v) -> {
-				pw.println(k + "=" + v);
+				if(v == null) {
+					pw.println(k + "=");
+				}
+				else {
+					pw.println(k + "=" + v);
+				}
 			});
 			pw.close();
 			
@@ -187,37 +221,21 @@ public class SettingsWindow extends EngiWindow {
 		}
 	}
 	
-	public void updateWindow() {
-		if(modifiedConfig.get(tfPath) != null) {
-			itemsTxtBox.setText(modifiedConfig.get(tfPath));
-		}
-		else {
-			itemsTxtBox.setText(" ");
-		}
-		this.validate(); //updates textbox size
-		oldConfig.clear();
-		oldConfig.putAll(modifiedConfig);
-	}
-	
 	//check for itemstxtpath on load
 	public void initConfig() {
 		File cfg = new File("engiconfig.cfg");
 		try {
-			if(cfg.createNewFile() || Engipop.getTFPath() == null) { //if no cfg existed or cfg existed but has no path set
+			if(cfg.createNewFile() || modifiedConfig.get(TFPATH) == null) { //if no cfg existed or cfg existed but has no path set
 				int op = JOptionPane.showConfirmDialog(this, "The TF2 scripts path is currently unset. Set it?");
 				
 				if(op == JOptionPane.YES_OPTION) {
-					Path tfPath = promptTFPath(); //try to get item path, then parse
-					if(tfPath != null) {
-						setTFPath(tfPath);
+					Path path = promptTFPath(); //try to get item path, then parse
+					if(path != null) {
+						//setTFPath(tfPath);
+						modifiedConfig.put(TFPATH, path.toString());
 						writeToConfig();
-						//sw.updateWindow();
-						parseItems(Engipop.getItemSchemaPath().toFile());
 					}
 				}
-			}
-			else {
-				parseItems(Engipop.getItemSchemaPath().toFile());
 			}
 		}
 		catch (IOException io) {
@@ -241,7 +259,7 @@ public class SettingsWindow extends EngiWindow {
 		c.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		c.showOpenDialog(this);
 		File selection = c.getSelectedFile();
-		if (selection == null) {
+		if(selection == null) {
 			return null;
 		}
 		return c.getSelectedFile().toPath();

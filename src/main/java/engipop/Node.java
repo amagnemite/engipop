@@ -203,6 +203,7 @@ public class Node {
         	wave.connectNodes(this);
     		ws.connectNodes(wave);
     		bot.connectNodes(ws);
+    		//TODO: this scout isn't added to the wavebar 
         }
         
         //only constructor to use Object[] as opposed to List<Object>> since hasn't been processed yet
@@ -404,8 +405,8 @@ public class Node {
     	public static final String WAVESPAWN = "WaveSpawn";
     	
     	public WaveNode() {
-    		//putKey(STARTWAVEOUTPUT, new RelayNode());
-    		//putKey(DONEOUTPUT, new RelayNode());
+    		putKey(STARTWAVEOUTPUT, new RelayNode());
+    		putKey(DONEOUTPUT, new RelayNode());
     	}
     	
         public WaveNode(Map<String, List<Object>> map) { //readin node, key case should already be converted

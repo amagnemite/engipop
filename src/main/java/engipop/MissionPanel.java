@@ -20,6 +20,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	MainWindow mainWindow;
 	EngiPanel componentPanel = new EngiPanel();
 	BotPanel botPanel;
+	EngiPanel botTankPanel;
 	//TankPanel tankPanel;
 	NodePanelManager spawnerListManager;
 	JPanel listPanel;
@@ -80,11 +81,11 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		JLabel desiredLabel = new JLabel("DesiredCount:");
 		
 		this.mainWindow = mainWindow;
-		//botPanel = new BotPanel(mainWindow, popPanel);
 		//tankPanel = new TankPanel(popPanel);
-		spawnerListManager = new NodePanelManager(mainWindow, popPanel, wavebar);
+		spawnerListManager = new NodePanelManager(mainWindow, popPanel);
 		listPanel = spawnerListManager.getListPanel();
 		botPanel = spawnerListManager.getBotPanel();
+		botTankPanel = spawnerListManager.getBotTankPanel();
 		//spawnerPanel = spawnerListManager.getSpawnerPanel();
 		
 		initialCooldownSpinner.setModel(initialCooldownModel);
@@ -129,9 +130,9 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		
 		gbConstraints.gridwidth = 2;
 		gbConstraints.gridheight = 2;
-		addGB(componentPanel, 0, 1);
+		addGB(componentPanel.getDisabledPanel(), 0, 1);
 		//this.addGB(spawnerPanel, 0, 2);
-		addGB(botPanel, 0, 3);
+		addGB(botTankPanel.getDisabledPanel(), 0, 3);
 		//this.addGB(tankPanel, 0, 3);
 		
 		gbConstraints.gridwidth = 1;
@@ -141,6 +142,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		
 		initListeners();
 		missionBLManager.changeButtonState(States.EMPTY);
+		spawnerListManager.setButtonState(States.DISABLE);
 		//currentBotNode.connectNodes(currentMissionNode);
 		//missionArray.add(currentMissionNode);
 		//missionListModel.addElement(MissionNode.DESTROYSENTRIES);
@@ -156,19 +158,26 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 			if(index != -1) { 
 				//spawnerListManager.checkSpawner(missionArray.get(index));
 				currentMissionNode = (MissionNode) missionArray.get(index);
-				currentBotNode = (TFBotNode) currentMissionNode.getChildren().get(0);
+				
 				updatePanel(currentMissionNode);
 				
 				missionBLManager.changeButtonState(States.SELECTED);
-				spawnerListManager.setButtonState(States.FILLEDSLOT);
-				botPanel.setVisible(true);
-				componentPanel.setVisible(true);
+				componentPanel.getDisabledPanel().setEnabled(true);
+				
+				if(currentMissionNode.hasChildren()) {
+					currentBotNode = (TFBotNode) currentMissionNode.getChildren().get(0);
+					botTankPanel.getDisabledPanel().setEnabled(true);
+					spawnerListManager.setButtonState(States.FILLEDSLOT);
+				}
+				else {
+					spawnerListManager.setButtonState(States.EMPTY);
+				}
 			}
 			else { //only happens when no nodes
 				missionBLManager.changeButtonState(States.EMPTY);
 				spawnerListManager.setButtonState(States.DISABLE);
-				botPanel.setVisible(false);
-				componentPanel.setVisible(false);
+				botTankPanel.getDisabledPanel().setEnabled(false); //for some reason adding botPanel instead of botTank errors
+				componentPanel.getDisabledPanel().setEnabled(false);
 			}
 		});
 		
@@ -189,12 +198,10 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 			missionListModel.set(missionList.getSelectedIndex(), name);
 		});
 		removeMission.addActionListener(event -> {
-			if(missionList.getSelectedIndex() != -1) {
-				missionArray.remove(missionList.getSelectedIndex());
-				missionListModel.remove(missionList.getSelectedIndex());
-				
-				missionList.setSelectedIndex(missionArray.size() - 1);
-			}
+			missionArray.remove(missionList.getSelectedIndex());
+			missionListModel.remove(missionList.getSelectedIndex());
+			
+			missionList.setSelectedIndex(missionArray.size() - 1);
 		});
 	}
 	

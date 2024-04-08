@@ -18,7 +18,6 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import engipop.ButtonListManager.States;
-import engipop.Engipop.Classes;
 import engipop.EngiWindow.NoDeselectionModel;
 import engipop.Node.PopNode;
 import engipop.Node.RandomChoiceNode;
@@ -512,7 +511,6 @@ public class NodePanelManager {
 	}
 	
 	void checkSpawner(Node node) { //check what the wavespawn's spawner is
-		botPanel.setVisible(true);
 		if(node.getClass() == TFBotNode.class) {
 			tfbotBut.setSelected(true);
 			spawnerInfo.setText(botSpawner);

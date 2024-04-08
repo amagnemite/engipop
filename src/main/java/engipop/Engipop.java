@@ -158,7 +158,7 @@ public class Engipop {
 	//}
 
 	public static Path getItemSchemaPath() {
-		return Paths.get(TFPATH.toString(), "items", "items_game.txt");
+		return Paths.get(TFPATH.toString(), "scripts", "items", "items_game.txt");
 	}
 	
 	public static Path getIconPath() {

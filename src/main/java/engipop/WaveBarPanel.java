@@ -104,7 +104,6 @@ public class WaveBarPanel extends EngiPanel {
 				}
 			}
 			
-			
 			if(iconName == null) {
 				//if we reached the base template without finding a classicon, it probably
 				//uses the class one
@@ -153,7 +152,7 @@ public class WaveBarPanel extends EngiPanel {
 		int indexShift = 0;
 		
 		//support don't have counts + visible crits so just skip them
-		//TODO: make sure this doesn't cause odd things with the if
+		setPreferredSize(null);
 		if(iconNames.containsKey(mapName)) {
 			if(type != BotType.SUPPORT) {
 				if(isCrit && !iconNames.get(mapName).getCrit()) {
@@ -224,6 +223,37 @@ public class WaveBarPanel extends EngiPanel {
 		}
 	}
 	
+	public void removeIcon(WaveSpawnNode ws) {
+		int count = (int) ws.getValue(WaveSpawnNode.TOTALCOUNT);
+		BotType type = null;
+		if((boolean) ws.getValue(WaveSpawnNode.SUPPORT)) {
+			type = BotType.SUPPORT;
+		}
+		
+		switch(ws.getSpawnerType()) {
+			case RANDOMCHOICE:
+				rebuildWavebar((WaveNode) ws.getParent());
+				break;
+			case SQUAD:
+				int spawnCount = (int) ws.getValue(WaveSpawnNode.SPAWNCOUNT);
+				int batches = spawnCount != 0 ? count / spawnCount : spawnCount; //tank ws can have 0 spawncount
+				
+				for(Node bot : ws.getSpawner().getChildren()) {
+					modifyIcon((TFBotNode) bot, batches, type, false);
+				}
+				break;
+			case TFBOT:
+				modifyIcon((TFBotNode) ws.getSpawner(), count, type, false);
+				break;
+			case TANK:
+				if(type == null) {
+					type = BotType.GIANT;
+				}
+				removeIcon("tank", false, count, type);
+				break;
+		}
+	}
+	
 	public void removeIcon(String iconName, boolean isCrit, int count, BotType type) {
 		String mapName = null;
 		
@@ -246,7 +276,23 @@ public class WaveBarPanel extends EngiPanel {
 					missionIndex--;
 					break;
 			}
+			
+			if(iconArray.isEmpty()) {
+				setPreferredSize(new Dimension(100, 58));
+			}
 		}
+	}
+	
+	public void clearWavebar() {
+		iconArray.clear();
+		iconNames.clear();
+		removeAll();
+		
+		giantIndex = -1; //index of last giant icon
+		commonIndex = -1;
+		supportIndex = -1;
+		missionIndex = -1;
+		setPreferredSize(new Dimension(100, 58));
 	}
 	
 	public void rebuildWavebar(WaveNode wave) {
@@ -283,7 +329,7 @@ public class WaveBarPanel extends EngiPanel {
 						}
 					}
 					break;
-				case SQUAD:
+				case SQUAD: //TODO: make sure this doesn't trip over nesteds
 					for(Node bot : ws.getSpawner().getChildren()) {
 						modifyIcon((TFBotNode) bot, batches, type, true);
 					}
@@ -303,7 +349,7 @@ public class WaveBarPanel extends EngiPanel {
 					break;
 			}
 		}
-		if(Engipop.getPopNode().getListValue(PopNode.MISSION) != null) {
+		if(Engipop.getPopNode().containsKey(PopNode.MISSION)) {
 			int waveNum = Engipop.getPopNode().getChildren().indexOf(wave) + 1;
 			
 			for(Object node : Engipop.getPopNode().getListValue(PopNode.MISSION)) {
@@ -319,7 +365,9 @@ public class WaveBarPanel extends EngiPanel {
 				}
 			}
 		}
-		System.out.println(getSize());
+		if(iconArray.isEmpty()) {
+			setPreferredSize(new Dimension(100, 58));
+		}
 		//setPreferredSize(new Dimension(iconArray.size() * WaveBarIcon.WIDTH + (iconArray.size() - 1) * gbConstraints.ipadx, WaveBarIcon.HEIGHT));
 		validate();
 		repaint();

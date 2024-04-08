@@ -153,6 +153,9 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			if(list.size() == 0) {
 				resetWaveState();
 				wavePanel.getDisabledPanel().setEnabled(false);
+				if(wavebar != null) {
+					wavebar.clearWavebar();
+				}
 			}
 			else {
 				waveList.setSelectedIndex(list.size() - 1);
@@ -180,12 +183,16 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				waveSpawnBLManager.changeButtonState(States.SELECTED);
 				wsPanel.updatePanel(currentWSNode);
 				
+				//is there somewhere better i can put the disabled panel stuff
 				if(currentWSNode.hasChildren()) {
 					checkSpawner(currentWSNode.getSpawner());
+					botTankPanel.getDisabledPanel().setEnabled(true);
+					spawnerPanel.getDisabledPanel().setEnabled(true);
 				}
 				else {
-					//loadBot(true);
 					tfbotBut.setSelected(true);
+					botTankPanel.getDisabledPanel().setEnabled(false);
+					spawnerPanel.getDisabledPanel().setEnabled(true);
 				}
 			}
 			else { //disable updating when there is not a subwave explicitly selected
@@ -219,7 +226,10 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			
 			list.remove(waveSpawnList.getSelectedIndex());
 			waveSpawnListModel.remove(waveSpawnList.getSelectedIndex());
-			//TODO: remove icon
+			
+			if(wavebar != null && currentWSNode.hasChildren()) {
+				wavebar.removeIcon(currentWSNode);
+			}
 			
 			if(list.size() == 0) { //if no wavespawns again
 				resetWaveSpawnState(States.EMPTY);

@@ -152,13 +152,13 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	
 	public void updateNode(WaveNode wave) {
 		((RelayNode) wave.getValue(WaveNode.STARTWAVEOUTPUT)).updateNode((String) startNameBox.getSelectedItem(), startAction.getText());
-		((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).putKey(RelayNode.TARGET, (String) doneNameBox.getSelectedItem());
+		((RelayNode) wave.getValue(WaveNode.DONEOUTPUT)).updateNode((String) doneNameBox.getSelectedItem(), doneAction.getText());
 		
 		if(doInit.isSelected()) {
 			if(wave.getValue(WaveNode.INITWAVEOUTPUT) == null) { //make relay if data is entered and no relay exists
 				wave.putKey(WaveNode.INITWAVEOUTPUT, new RelayNode());
 			}
-			((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).putKey(RelayNode.TARGET, (String) initNameBox.getSelectedItem());
+			((RelayNode) wave.getValue(WaveNode.INITWAVEOUTPUT)).updateNode((String) initNameBox.getSelectedItem(), initAction.getText());
 		}
 		else { //if it isn't selected, throw out old data
 			wave.removeKey(WaveNode.INITWAVEOUTPUT);

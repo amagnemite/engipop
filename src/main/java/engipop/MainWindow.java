@@ -31,8 +31,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	
 	WavePanel wavePanel;
 	WaveSpawnPanel wsPanel;
-	//BotPanel botPanel;
-	//TankPanel tankPanel;
 	WaveNodePanelManager waveNodeManager;
 	TemplateTree templateTree;
 	
@@ -60,7 +58,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		TemplatePanel tempPanel = new TemplatePanel(this, populationPanel);
 		MissionPanel missionPanel = new MissionPanel(this, populationPanel, wavebar);
 			
-		settingsWindow.initConfig();
 		populationPanel.addPropertyChangeListener("POPNODE", this);
 		
 		settings.addActionListener(event -> {
@@ -90,10 +87,8 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		menuBar.add(utilitiesMenu);
 		setJMenuBar(menuBar);
 		
-		//botPanel = new BotPanel(this, populationPanel);
 		wsPanel = new WaveSpawnPanel(populationPanel);
 		wavePanel = new WavePanel(populationPanel);
-		//tankPanel = new TankPanel(populationPanel);
 		
 		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, populationPanel, wavebar);
 		templateTree = new TemplateTree(populationPanel);
@@ -106,8 +101,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		//templateTreePane.setMinimumSize(new Dimension(225, templateTreePane.getPreferredSize().height));
 		templateTreePane.setPreferredSize(new Dimension(225, templateTreePane.getPreferredSize().height));
 		//wavebar.setPreferredSize(new Dimension(WaveBarIcon.WIDTH, WaveBarIcon.HEIGHT));
-		//tankPanel.setVisible(false);
-		//tankPanel.setPreferredSize(botPanel.getPreferredSize());
 		
 		createPop.addActionListener(event -> { //potentially move this
 			String error = new TreeParse().treeCheck(popNode);
@@ -143,10 +136,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		mainPanel.gbConstraints.gridheight = 2;
 		mainPanel.gbConstraints.weighty = 1;
 		mainPanel.addGB(waveNodeManager.getBotTankPanel().getDisabledPanel(), 0, 5);
-		//mainPanel.addGB(botPanel.getDisabledPanel(), 0, 5);
-		//mainPanel.addGB(botPanel, 0, 5);
 		//add insets?
-		//mainPanel.addGB(tankPanel.getDisabledPanel(), 0, 5);
 		
 		mainPanel.gbConstraints.weighty = 0;
 		mainPanel.gbConstraints.gridheight = 4;
