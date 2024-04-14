@@ -38,6 +38,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	ButtonListManager waveBLManager = new ButtonListManager(addWave, updateWave, removeWave);
 	ButtonListManager waveSpawnBLManager = new ButtonListManager(addWaveSpawn, updateWaveSpawn, removeWaveSpawn);
 	
+	WaveSpawnNode currentParentNode = new WaveSpawnNode();
+	
 	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, PopulationPanel popPanel, 
 			WaveBarPanel wavebar) {
 		super(window, popPanel, wavebar);
@@ -177,15 +179,15 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			
 			//prevent fits if index is reset
 			if(waveSpawnIndex != -1) {
-				currentWSNode = (WaveSpawnNode) currentWaveNode.getChildren().get(waveSpawnIndex);
+				currentParentNode = (WaveSpawnNode) currentWaveNode.getChildren().get(waveSpawnIndex);
 				wsPanel.getDisabledPanel().setEnabled(true);
 				
 				waveSpawnBLManager.changeButtonState(States.SELECTED);
-				wsPanel.updatePanel(currentWSNode);
+				wsPanel.updatePanel(currentParentNode);
 				
 				//is there somewhere better i can put the disabled panel stuff
-				if(currentWSNode.hasChildren()) {
-					checkSpawner(currentWSNode.getSpawner());
+				if(currentParentNode.hasChildren()) {
+					checkSpawner(currentParentNode.getSpawner());
 					botTankPanel.getDisabledPanel().setEnabled(true);
 					spawnerPanel.getDisabledPanel().setEnabled(true);
 				}
@@ -206,8 +208,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			mainWindow.setFeedback(" ");
 			//System.out.println(currentWSNode);
 			
-			currentWSNode = new WaveSpawnNode();
-			currentWSNode.connectNodes(currentWaveNode);
+			currentParentNode = new WaveSpawnNode();
+			currentParentNode.connectNodes(currentWaveNode);
 			
 			waveSpawnListModel.addElement("Wavespawn");
 			waveSpawnList.setSelectedIndex(waveSpawnListModel.size() - 1);
@@ -227,8 +229,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			list.remove(waveSpawnList.getSelectedIndex());
 			waveSpawnListModel.remove(waveSpawnList.getSelectedIndex());
 			
-			if(wavebar != null && currentWSNode.hasChildren()) {
-				wavebar.removeIcon(currentWSNode);
+			if(wavebar != null && currentParentNode.hasChildren()) {
+				wavebar.removeIcon(currentParentNode);
 			}
 			
 			if(list.size() == 0) { //if no wavespawns again
@@ -241,10 +243,10 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		
 		updateWaveSpawn.addActionListener(event -> { //update wavespawn button clicked
 			mainWindow.setFeedback(" ");
-			wsPanel.updateNode(currentWSNode);
+			wsPanel.updateNode(currentParentNode);
 			
-			if(currentWSNode.getValue(WaveSpawnNode.NAME) != null) {
-				waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentWSNode.getValue(WaveSpawnNode.NAME));
+			if(currentParentNode.getValue(WaveSpawnNode.NAME) != null) {
+				waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentParentNode.getValue(WaveSpawnNode.NAME));
 			}
 			else { //fallback if name was added but then removed
 				waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), "Wavespawn");
@@ -298,8 +300,8 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	
 	private void resetWaveSpawnState(States state) {
 		wsPanel.getDisabledPanel().setEnabled(false);
-		currentWSNode = new WaveSpawnNode();
-		wsPanel.updatePanel(currentWSNode);
+		currentParentNode = new WaveSpawnNode();
+		wsPanel.updatePanel(currentParentNode);
 		waveSpawnListModel.clear();
 		waveSpawnBLManager.changeButtonState(state);
 		resetSpawnerState();

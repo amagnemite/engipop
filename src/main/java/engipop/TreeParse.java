@@ -305,24 +305,7 @@ public class TreeParse { //it is time to parse
 		if(root.containsKey(PopNode.MISSION)) {
 			for(Object obj : root.getListValue(PopNode.MISSION)) {
 				MissionNode mission = (MissionNode) obj;
-				Map<String, List<Object>> mapCopyM = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
-				mapCopyM.putAll(mission.getMap());
-				
-				indentPrintln(pw, "Mission");
-				indentPrintln(pw, "{");
-				indentCount++;
-				
-				for(String key : mission.getNodeKeyList()) {
-					if(mission.containsKey(key)) {
-						indentPrintln(pw, key + " " + mission.getValue(key));
-						mapCopyM.remove(key);
-					}
-				}
-				printGenericMap(pw, mapCopyM);
-				printTFBot(pw, (TFBotNode) mission.getChildren().get(0));
-				
-				indentCount--;
-				indentPrintln(pw, "}");
+				printMission(pw, mission);
 			}
 		}
 		mapCopy.remove(PopNode.MISSION);
@@ -332,17 +315,19 @@ public class TreeParse { //it is time to parse
 			indentPrintln(pw, "{");
 			indentCount++;
 			
-			for(Entry<String, Node> entry : root.getBotTemplateMap().entrySet()) {
-				indentPrintln(pw, entry.getKey());
-				indentPrintln(pw, "{");
-				indentCount++;
-				
-				printTFBot(pw, (TFBotNode) entry.getValue());
-				
-				indentCount--;
-				indentPrintln(pw, "}");
+			Iterator<Entry<String, Node>> iterator = root.getBotTemplateMap().entrySet().iterator();
+			while(iterator.hasNext()) {
+				Entry<String, Node> entry = iterator.next();
+				printTFBot(pw, (TFBotNode) entry.getValue(), entry.getKey());
+				if(iterator.hasNext()) {
+					indentPrintln(pw, "");
+				}
 			}
-			
+			/*
+			for(Entry<String, Node> entry : root.getBotTemplateMap().entrySet()) {	
+				printTFBot(pw, (TFBotNode) entry.getValue(), entry.getKey());
+			}
+			*/
 			for(Entry<String, Node> entry : root.getWSTemplateMap().entrySet()) {
 				indentPrintln(pw, entry.getKey());
 				indentPrintln(pw, "{");
@@ -353,6 +338,9 @@ public class TreeParse { //it is time to parse
 				indentCount--;
 				indentPrintln(pw, "}");
 			}
+			
+			indentCount--;
+			indentPrintln(pw, "}");
 		}
 		
 		printGenericMap(pw, mapCopy);
@@ -395,12 +383,47 @@ public class TreeParse { //it is time to parse
 	}
 	
 	private void printRelay(PrintWriter pw, String name, RelayNode node) {
+		if(!node.containsKey(RelayNode.TARGET)) {
+			return;
+		}
+		
 		indentPrintln(pw, name);
 		indentPrintln(pw, "{");
 		indentCount++;
 		
 		//this will lead to some very unhinged formatting for vscripts but that's a later problem
 		node.getMap().forEach((k, v) -> indentPrintln(pw, k + " " + "\"" + v.get(0) + "\""));
+		
+		indentCount--;
+		indentPrintln(pw, "}");
+	}
+	
+	private void printMission(PrintWriter pw, MissionNode node) {
+		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
+		mapCopy.putAll(node.getMap());
+		
+		indentPrintln(pw, "Mission");
+		indentPrintln(pw, "{");
+		indentCount++;
+		
+		for(String key : MissionNode.getNodeKeyList()) {
+			if(node.containsKey(key)) {
+			
+				if(key.equals(MissionNode.WHERE)) {
+					if(node.getSpawner() != null) { // spawner.getClass() != TankNode.class) { //no wheres for tanks
+						for(Object where : mapCopy.remove(WaveSpawnNode.WHERE)) {
+							indentPrintln(pw, "Where " + where);
+						}
+					}
+				}
+				else {
+					indentPrintln(pw, key + " " + node.getValue(key));
+				}
+				mapCopy.remove(key);
+			}
+		}
+		printGenericMap(pw, mapCopy);
+		printTFBot(pw, (TFBotNode) node.getSpawner(), WaveSpawnNode.TFBOT);
 		
 		indentCount--;
 		indentPrintln(pw, "}");
@@ -518,7 +541,7 @@ public class TreeParse { //it is time to parse
 		
 		if(spawner != null) {
 			if(spawner.getClass() == TFBotNode.class) {
-				printTFBot(pw, (TFBotNode) spawner);
+				printTFBot(pw, (TFBotNode) spawner, WaveSpawnNode.TFBOT);
 			}
 			else if(spawner.getClass() == TankNode.class) {
 				printTank(pw, (TankNode) spawner);
@@ -535,8 +558,8 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "}");
 	}
 	
-	private void printTFBot(PrintWriter pw, TFBotNode node) {
-		indentPrintln(pw, "TFBot");
+	private void printTFBot(PrintWriter pw, TFBotNode node, String header) {
+		indentPrintln(pw, header);
 		indentPrintln(pw, "{");
 		indentCount++;
 		
@@ -758,7 +781,7 @@ public class TreeParse { //it is time to parse
 		mapCopy.putAll(node.getMap());
 		
 		for(Node n : node.getChildren()) {
-			printTFBot(pw, (TFBotNode) n);
+			printTFBot(pw, (TFBotNode) n, WaveSpawnNode.TFBOT);
 		}
 		indentCount--;
 		indentPrintln(pw, "}");
@@ -774,7 +797,7 @@ public class TreeParse { //it is time to parse
 		mapCopy.putAll(node.getMap());
 		
 		for(Node n : node.getChildren()) {
-			printTFBot(pw, (TFBotNode) n);
+			printTFBot(pw, (TFBotNode) n, WaveSpawnNode.TFBOT);
 		}
 		indentCount--;
 		indentPrintln(pw, "}");

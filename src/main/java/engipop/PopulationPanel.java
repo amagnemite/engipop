@@ -220,7 +220,8 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 	}
 	
 	//wrapper
-	public void fireTemplateChange(String type, TemplateData oldData, TemplateData newData) {
+	//TODO: update whatever receives these changes to use bot/ws nodes instead of templatedata
+	public void fireTemplateChange(String type, Node oldData, Node newData) {
 		propertySupport.firePropertyChange(type, oldData, newData);
 	}
 	

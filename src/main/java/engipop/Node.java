@@ -11,7 +11,7 @@ import net.platinumdigitalgroup.jvdf.VDFNode;
 public class Node {
 	private transient Node parent;
 	private List<Node> children = new ArrayList<Node>();
-	protected Map<String, List<Object>> keyVals = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
+	Map<String, List<Object>> keyVals = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 	//children refers to waveschedule - wave - wavespawn - spawner connections
 	//side connections like relays are connected elsewhere
 	
@@ -182,8 +182,8 @@ public class Node {
     	public static final String TEMPLATE = "Templates";
     	
     	private int mapIndex = -1;
-    	private Map<String, Node> wsTemplateMap = new HashMap<String, Node>();
-    	private Map<String, Node> botTemplateMap = new HashMap<String, Node>();
+    	private Map<String, Node> wsTemplateMap = new TreeMap<String, Node>();
+    	private Map<String, Node> botTemplateMap = new TreeMap<String, Node>();
 
         public PopNode() {
         	putKey(STARTINGCURRENCY, 400);
@@ -336,21 +336,41 @@ public class Node {
         }
     }
     
-    /*
-    //node for template info
-    public static class TemplateNode extends Node {
-    	private Map<String, Node> templateMap = new TreeMap<String, Node>();
-    	
-    	public void putTemplate(String name, Node template) {
-    		templateMap.put(name, template);
+    public static abstract class NodeWithSpawner extends Node {
+    	public Node getSpawner() {
+    		if(getChildren().isEmpty()) {
+    			return null;
+    		}
+    		return getChildren().get(0);
     	}
     	
-    	public Map<String, Node> getMap() {
-    		return this.templateMap;
+    	//precheck spawner type
+    	//this assumes the child is valid
+    	public SpawnerType getSpawnerType() {
+    		Node node = getSpawner();
+    		SpawnerType type = null;
+    		
+    		if(node == null) {
+    			return null;
+    		}
+    		
+    		if(node.getClass() == TFBotNode.class) {
+    			type = SpawnerType.TFBOT;
+    		}
+    		else if(node.getClass() == TankNode.class) {
+    			type = SpawnerType.TANK;
+    		}
+    		else if(node.getClass() == SquadNode.class) {
+    			type = SpawnerType.SQUAD;
+    		}
+    		else if(node.getClass() == RandomChoiceNode.class) {
+    			type = SpawnerType.RANDOMCHOICE;
+    		}
+    		return type;
     	}
-    } */
+    }
     
-    public static class MissionNode extends Node {
+    public static class MissionNode extends NodeWithSpawner {
 		public static final String WHERE = "Where"; //string
     	public static final String OBJECTIVE = "Objective"; //string
     	public static final String INITIALCOOLDOWN = "InitialCooldown"; //float
@@ -388,7 +408,7 @@ public class Node {
     	}
     	
     	public static List<String> getNodeKeyList() {
-    		List<String> keyValList = new ArrayList<String>(Arrays.asList(WHERE, OBJECTIVE, INITIALCOOLDOWN, COOLDOWNTIME, BEGINATWAVE,
+    		List<String> keyValList = new ArrayList<String>(Arrays.asList(OBJECTIVE, WHERE, INITIALCOOLDOWN, COOLDOWNTIME, BEGINATWAVE,
     				RUNFORTHISMANYWAVES, DESIREDCOUNT));
     		
     		return keyValList;
@@ -496,7 +516,7 @@ public class Node {
     	*/
     }
     
-    public static class WaveSpawnNode extends Node { //node for wavespawns
+    public static class WaveSpawnNode extends NodeWithSpawner { //node for wavespawns
 		public static final String WHERE = "Where"; //string
     	public static final String TOTALCOUNT = "TotalCount"; //int
     	public static final String MAXACTIVE = "MaxActive"; //int
@@ -646,38 +666,6 @@ public class Node {
     		this.setParent(copyFrom.getParent()); //double check parent doesn't interfere with anything
     		this.setChildren(copyFrom.getChildren());
     		//this.getMap().putAll(copyFrom.getMap());
-    	}
-    	
-    	public Node getSpawner() {
-    		if(getChildren().isEmpty()) {
-    			return null;
-    		}
-    		return getChildren().get(0);
-    	}
-    	
-    	//precheck spawner type
-    	//this assumes the child is valid
-    	public SpawnerType getSpawnerType() {
-    		Node node = getSpawner();
-    		SpawnerType type = null;
-    		
-    		if(node == null) {
-    			return null;
-    		}
-    		
-    		if(node.getClass() == TFBotNode.class) {
-    			type = SpawnerType.TFBOT;
-    		}
-    		else if(node.getClass() == TankNode.class) {
-    			type = SpawnerType.TANK;
-    		}
-    		else if(node.getClass() == SquadNode.class) {
-    			type = SpawnerType.SQUAD;
-    		}
-    		else if(node.getClass() == RandomChoiceNode.class) {
-    			type = SpawnerType.RANDOMCHOICE;
-    		}
-    		return type;
     	}
     	
     	public static List<String> getNodeKeyList() {

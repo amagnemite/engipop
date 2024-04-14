@@ -1003,6 +1003,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	}
 	
 	//get info changes from secondarywindow
+	//TODO: this receives tfbot template events
 	public void propertyChange(PropertyChangeEvent evt) {
 		switch(evt.getPropertyName()) {
 			case PopulationPanel.TAGS:
