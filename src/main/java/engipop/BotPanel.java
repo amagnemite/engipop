@@ -9,6 +9,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -103,9 +104,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JButton removeAttributeFromList = new JButton("Remove attribute");
 	
 	JComboBox<String> itemAttributesListBox;
-	List<Map<String, String>> attributeMapsArray = new ArrayList<Map<String, String>>(TFBotNode.ITEMCOUNT); //contains all item attribute maps
-	Map<String, String> currentAttributeMap = new HashMap<String, String>();
-	Map<String, String> currentCharAttributeMap = new HashMap<String, String>();
+	List<Map<String, Object>> attributeMapsArray = new ArrayList<Map<String, Object>>(TFBotNode.ITEMCOUNT); //contains all item attribute maps
+	Map<String, Object> currentAttributeMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
+	Map<String, Object> currentCharAttributeMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
 	
 	//optional keyvals
 	JLabel healthLabel = new JLabel("Health:");
@@ -141,7 +142,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		initItemLists();
 		initAttributePanel();
 		
-		botAttributeList = new JList<String>(setAttributesList());
+		botAttributeList = new JList<String>(TFBotNode.getAttributesList().toArray(new String[TFBotNode.getAttributesList().size()]));
 		
 		iconBox.setPrototypeDisplayValue("heavyweapons_healonkill_giant");
 		//templateField.setPrototypeDisplayValue("Giant Rapid Fire Demo Chief (T_TFBot_Giant_Demo_Spammer_Reload_Chief)");
@@ -443,7 +444,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 					mainWindow.setFeedback("No value to add to attribute");
 				}
 				else { //put attr - value pair in map
-					currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), (String) cellEditor.getCellEditorValue());
+					currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), cellEditor.getCellEditorValue());
 					mainWindow.setFeedback("Attribute value added");
 				}
 			}
@@ -684,19 +685,21 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 		if(tf.containsKey(TFBotNode.ITEMATTRIBUTES)) {
 			List<Object> list = tf.getListValue(TFBotNode.ITEMATTRIBUTES);
-			attributeMapsArray = new ArrayList<Map<String, String>>(TFBotNode.ITEMCOUNT);
+			attributeMapsArray = new ArrayList<Map<String, Object>>(TFBotNode.ITEMCOUNT);
 			attributesSlotsBox.removeAllItems();
 			attributesSlotsBox.addItem(ItemSlot.NONE.toString());
 			attributesSlotsBox.addItem(ItemSlot.CHARACTER.toString());
 			
 			for(Object entry : list) {
-				Map<String, String> map = (Map<String, String>) entry;
+				Map<String, Object> map = (Map<String, Object>) entry;
+				Map<String, Object> mapCopy = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
+				mapCopy.putAll(map);
 				
 				if(map.containsKey(TFBotNode.ITEMNAME)) {
-					attributesSlotsBox.addItem(map.get(TFBotNode.ITEMNAME));
+					attributesSlotsBox.addItem((String) map.get(TFBotNode.ITEMNAME));
 				}
 				
-				attributeMapsArray.add(map); //TODO: check this
+				attributeMapsArray.add(mapCopy);
 			}
 			
 			if(attributesSlotsBox.getItemCount() < TFBotNode.ITEMCOUNT) {
@@ -706,7 +709,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			attributesSlotsBox.setSelectedIndex(0);
 		}
 		else {
-			attributeMapsArray = new ArrayList<Map<String, String>>(TFBotNode.ITEMCOUNT);
+			attributeMapsArray = new ArrayList<Map<String, Object>>(TFBotNode.ITEMCOUNT);
 			attributesSlotsBox.removeAllItems();
 			attributesSlotsBox.addItem(ItemSlot.NONE.toString());
 			attributesSlotsBox.addItem(ItemSlot.CHARACTER.toString());
@@ -717,10 +720,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 		
 		if(tf.containsKey(TFBotNode.CHARACTERATTRIBUTES)) {
-			currentCharAttributeMap = (Map<String, String>) tf.getValue(TFBotNode.CHARACTERATTRIBUTES);
+			currentCharAttributeMap = (Map<String, Object>) tf.getValue(TFBotNode.CHARACTERATTRIBUTES);
 		}
 		else {
-			currentCharAttributeMap = new HashMap<String, String>();
+			currentCharAttributeMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
 		}
 		attributesSlotsBox.setSelectedItem(ItemSlot.NONE);
 		
@@ -752,6 +755,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		tf.putKey(TFBotNode.ATTRIBUTES, botAttr);
 		
 		List<String> array = new ArrayList<String>(TFBotNode.ITEMCOUNT);
+		
 		//this sucks
 		if(primaryList.getSelectedItem() != null && !((String) primaryList.getSelectedItem()).isBlank()) {
 			array.add(ItemSlot.PRIMARY.getSlot(), (String) primaryList.getSelectedItem());
@@ -790,9 +794,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		//this likely also needs some validation
 		tf.putKey(TFBotNode.CHARACTERATTRIBUTES, currentCharAttributeMap);
 		
-		Iterator<Map <String, String>> iterator = attributeMapsArray.iterator();
+		Iterator<Map <String, Object>> iterator = attributeMapsArray.iterator();
 		while(iterator.hasNext()) {
-			Map<String, String> map = iterator.next();
+			Map<String, Object> map = iterator.next();
 			if(map.get(TFBotNode.ITEMNAME) == null || map.get(TFBotNode.ITEMNAME).equals(ADDNEWATTR)) {
 				iterator.remove();
 			}
@@ -800,7 +804,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		//TODO: this may not be necessary?
 		int emptyItemAttributes = 0;
-		for(Map<String, String> attributeMap : attributeMapsArray) {
+		for(Map<String, Object> attributeMap : attributeMapsArray) {
 			if(attributeMap.isEmpty()) {
 				emptyItemAttributes++;
 			}
@@ -981,27 +985,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 	}
 	
-	//no reason to hold this in memory since it gets put in attributeslist and is done with
-	public String[] setAttributesList() {
-		String[] attributes = {
-				"RemoveOnDeath", "Aggressive",
-				"SuppressFire", "DisableDodge",
-				"BecomeSpectatorOnDeath",
-				"RetainBuildings", "SpawnWithFullCharge",
-				"AlwaysCrit", "IgnoreEnemies",
-				"HoldFireUntilFullReload",
-				"AlwaysFireWeapon", "MiniBoss",
-				"UseBossHealthBar", "IgnoreFlag",
-				"AutoJump", "AirChargeOnly",
-				"VaccinatorBullets", "VaccinatorBlast",
-				"VaccinatorFire", "BulletImmune",
-				"BlastImmune", "FireImmune",
-				"Parachute", "ProjectileShield",
-				"TeleportToHint"
-		};	
-		return attributes;
-	}
-	
 	//get info changes from secondarywindow
 	//TODO: this receives tfbot template events
 	public void propertyChange(PropertyChangeEvent evt) {
@@ -1056,7 +1039,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 		else {
 			currentAttributeMap = null;
-			for(Map<String, String> entry : attributeMapsArray) {
+			for(Map<String, Object> entry : attributeMapsArray) {
 				if(item.equals(entry.get(TFBotNode.ITEMNAME))) {
 					currentAttributeMap = entry;
 					break;
@@ -1064,7 +1047,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 			
 			if(currentAttributeMap == null) {
-				Map<String, String> newMap = new HashMap<String, String>();
+				Map<String, Object> newMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
 				newMap.put(TFBotNode.ITEMNAME, item);
 				attributeMapsArray.add(newMap);
 				currentAttributeMap = newMap;
@@ -1079,7 +1062,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		currentAttributeMap.forEach((k, v) -> {
 			if(v != null && !v.equals(item)) {
-				itemAttributeTableModel.addRow(new String[] {k, v});
+				itemAttributeTableModel.addRow(new String[] {k, v.toString()});
 			}
 		});
 		checkListSize(); //force check in case list index never changes (stays at unselected)

@@ -241,7 +241,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 			type = "TFBot_";
 			TFBotNode botNode = (TFBotNode) node;
 			
-			body = botNode.getValue(TFBotNode.CLASSNAME).toString();
+			body = botNode.getValue(TFBotNode.CLASSNAME).toString(); 
 			
 			if((String) botNode.getValue(TFBotNode.NAME) != null) {
 				body = body + "_" + (String) botNode.getValue(TFBotNode.NAME) + "_";

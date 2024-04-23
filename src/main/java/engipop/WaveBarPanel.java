@@ -21,13 +21,7 @@ import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 
 import engipop.Engipop.Classes;
-import engipop.Node.MissionNode;
-import engipop.Node.PopNode;
-import engipop.Node.RandomChoiceNode;
-import engipop.Node.TFBotNode;
-import engipop.Node.WaveNode;
-import engipop.Node.WaveSpawnNode;
-
+import engipop.Node.*;
 @SuppressWarnings("serial")
 public class WaveBarPanel extends EngiPanel {
 	
@@ -74,7 +68,8 @@ public class WaveBarPanel extends EngiPanel {
 			if(bot.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit")) {
 				isCrit = true;
 			}
-			if(bot.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss")) {
+			if(type == null && bot.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss")) {
+				//stupid support giants
 				type = BotType.GIANT;
 			}
 		}
@@ -98,7 +93,7 @@ public class WaveBarPanel extends EngiPanel {
 					if(node.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit")) {
 						isCrit = true;
 					}
-					if(node.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss")) {
+					if(type == null && node.getListValue(TFBotNode.ATTRIBUTES).contains("MiniBoss")) {
 						type = BotType.GIANT;
 					}
 				}
@@ -201,6 +196,7 @@ public class WaveBarPanel extends EngiPanel {
 		}
 	}
 	
+	//TODO: this isn't currently used, probably update it
 	public void updateIcon(boolean oldCrit, Classes oldClass, BotType oldType, int oldCount, boolean isCrit, 
 			Classes cclass, BotType type, int count) {
 		
@@ -260,6 +256,7 @@ public class WaveBarPanel extends EngiPanel {
 		mapName = iconName + "_" + type.toString();
 		
 		iconNames.get(mapName).subtractFromCount(count);
+		
 		if(iconNames.get(mapName).getCount() == 0) {
 			WaveBarIcon removedIcon = iconNames.remove(mapName);
 			iconArray.remove(removedIcon);
@@ -329,9 +326,11 @@ public class WaveBarPanel extends EngiPanel {
 						}
 					}
 					break;
-				case SQUAD: //TODO: make sure this doesn't trip over nesteds
-					for(Node bot : ws.getSpawner().getChildren()) {
-						modifyIcon((TFBotNode) bot, batches, type, true);
+				case SQUAD:
+					if(!((SquadNode) ws.getSpawner()).hasNestedSquadRC()) {
+						for(Node bot : ws.getSpawner().getChildren()) {
+							modifyIcon((TFBotNode) bot, batches, type, true);
+						}
 					}
 					break;
 				case TANK:
@@ -489,7 +488,9 @@ public class WaveBarPanel extends EngiPanel {
 		
 		public void subtractFromCount(int difference) {
 			count -= difference;
-			countLabel.setText(Integer.toString(count));
+			if(countLabel != null) {
+				countLabel.setText(Integer.toString(count));
+			}
 		}
 		
 		public String getIconName() {

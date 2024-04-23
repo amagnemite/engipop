@@ -182,8 +182,8 @@ public class Node {
     	public static final String TEMPLATE = "Templates";
     	
     	private int mapIndex = -1;
-    	private Map<String, Node> wsTemplateMap = new TreeMap<String, Node>();
-    	private Map<String, Node> botTemplateMap = new TreeMap<String, Node>();
+    	private Map<String, Node> wsTemplateMap = new TreeMap<String, Node>(String.CASE_INSENSITIVE_ORDER);
+    	private Map<String, Node> botTemplateMap = new TreeMap<String, Node>(String.CASE_INSENSITIVE_ORDER);
 
         public PopNode() {
         	putKey(STARTINGCURRENCY, 400);
@@ -561,6 +561,18 @@ public class Node {
     	public WaveSpawnNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     		
+    		if(keyVals.containsKey(NAME) && getValue(NAME).getClass() == Integer.class) {
+    			putKey(NAME, getValue(NAME).toString());
+    		}
+    		
+    		if(keyVals.containsKey(WAITFORALLDEAD) && getValue(WAITFORALLDEAD).getClass() == Integer.class) {
+    			putKey(WAITFORALLDEAD, getValue(WAITFORALLDEAD).toString());
+    		}
+    		
+    		if(keyVals.containsKey(WAITFORALLSPAWNED) && getValue(WAITFORALLSPAWNED).getClass() == Integer.class) {
+    			putKey(WAITFORALLSPAWNED, getValue(WAITFORALLSPAWNED).toString());
+    		}
+    		
     		if(keyVals.containsKey(WAITBETWEENSPAWNSAFTERDEATH)) {
     			waitBetweenDeaths = true;
     		}
@@ -701,6 +713,10 @@ public class Node {
     			putKey(SKIN, false);
     		}
     		
+    		if(keyVals.containsKey(SPEED) && getValue(SPEED).getClass() == Integer.class) {
+    			putKey(SPEED, (Integer) getValue(SPEED) * 1.0);
+    		}
+    		
     		if(keyVals.containsKey(ONKILLEDOUTPUT)) {
     			putKey(ONKILLEDOUTPUT, new RelayNode((Map<String, List<Object>>) getValue(ONKILLEDOUTPUT)));
     		}
@@ -801,26 +817,29 @@ public class Node {
     			putKey(TAGS, list);
     		}
     		
+    		//this is awful, do something about it
+    		//TODO: probably store everything as lowercase and just link the visual/printing to actual
     		if(keyVals.containsKey(ATTRIBUTES)) {
-    			List<Object> list = new ArrayList<Object>(keyVals.get(ATTRIBUTES));
     			List<String> newList = new ArrayList<String>();
     			
-    			Iterator<Object> iterator = list.iterator();
-    			List<String> attrList = getAttributesLowercaseList();
+    			Iterator<Object> iterator = keyVals.get(ATTRIBUTES).iterator();
+    			List<String> lowerAttrList = getAttributesLowercaseList();
+    			List<String> attrList = getAttributesList();
     			
     			while(iterator.hasNext()) {
     				String attr = (String) iterator.next();
+    				//boolean containsSearchStr = lowerAttrList.stream().anyMatch(attr::equalsIgnoreCase);
     				
-    				if(attrList.contains(attr.toLowerCase())) {
-    					newList.add(attr);
-    					iterator.remove();
+    				if(lowerAttrList.contains(attr.toLowerCase())) {
+    					int index = lowerAttrList.indexOf(attr.toLowerCase());
+    					newList.add(attrList.get(index));
     				}
     			}
-    			list.addAll(newList);
     			putKey(ATTRIBUTES, newList);
     		}
     		
     		if(keyVals.containsKey(ITEM)) {
+    			isItemsSorted = false;
     			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
     			list.addAll(keyVals.get(ITEM));
     			putKey(ITEM, list);
@@ -831,13 +850,12 @@ public class Node {
     		//so need to copy into an arraylist of map<string, string>
     		if(keyVals.containsKey(ITEMATTRIBUTES)) {
     			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
-    			for(Object value : keyVals.get(ITEMATTRIBUTES)) {
+    			for(Object value : keyVals.get(ITEMATTRIBUTES)) { //for each map in itemattributes
     				Map<String, List<Object>> attrMap = (Map<String, List<Object>>) value;
-    				Map<String, String> newMap = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    				Map<String, Object> newMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
     				
     				for(Entry<String, List<Object>> entry : attrMap.entrySet()) {
-    					//also post int/double conversion so need to reconvert
-    					newMap.put(entry.getKey(), entry.getValue().get(0).toString());	
+    					newMap.put(entry.getKey(), entry.getValue().get(0));	
     				}
     				list.add(newMap);
     			}
@@ -848,7 +866,7 @@ public class Node {
     			List<Object> list = new ArrayList<Object>(1);
 				Map<String, String> newMap = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 				
-				for(Entry<String, List<Object>> entry : ((Map <String, List<Object>>) this.getValue(CHARACTERATTRIBUTES)).entrySet()) {
+				for(Entry<String, List<Object>> entry : ((Map <String, List<Object>>) getValue(CHARACTERATTRIBUTES)).entrySet()) {
 					//also post int/double conversion so need to reconvert
 					newMap.put(entry.getKey(), entry.getValue().get(0).toString());	
 				}
@@ -877,6 +895,16 @@ public class Node {
     		return new ArrayList<String>(Arrays.asList(NAME, CLASSNAME, CLASSICON, TEMPLATE, SKILL, WEAPONRESTRICT, HEALTH, SCALE, ATTRIBUTES, TAGS,
     				CHARACTERATTRIBUTES, ITEM, ITEMATTRIBUTES, AUTOJUMPMIN, AUTOJUMPMAX, BEHAVIORMODIFIERS, MAXVISIONRANGE, TELEPORTWHERE,
     					EVENTCHANGEATTRIBUTES));
+    	}
+    	
+    	public static List<String> getAttributesList() {
+    		return new ArrayList<String>(Arrays.asList(REMOVEONDEATH, AGGRESIVE, SUPPRESSFIRE, 
+    			DISABLEDODGE, BECOMESPECTATORONDEATH, RETAINBUILDINGS, SPAWNWITHFULLCHARGE, 
+    				ALWAYSCRIT, IGNOREENEMIES, HOLDFIREUNTILFULLRELOAD, ALWAYSFIREWEAPON,
+					MINIBOSS, USEBOSSHEALTHBAR, IGNOREFLAG, AUTOJUMP, 
+					AIRCHARGEONLY, VACCINATORBULLETS, VACCINATORBLAST, VACCINATORFIRE, 
+						BULLETIMMUNE, BLASTIMMUNE, FIREIMMUNE, PARACHUTE, 
+							PROJECTILESHIELD, TELEPORTTOHINT));
     	}
     	
     	public static List<String> getAttributesLowercaseList() {

@@ -58,6 +58,7 @@ public class PopulationParser { //parse .pop
 			return null;
 		}
 		
+		//TODO: this should probably also be done for templates
 		if(root.containsKey("#base")) {
 			includes = root.get(root.firstKey());
 			

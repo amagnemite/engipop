@@ -109,14 +109,22 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		if(node.getValue(TankNode.ONKILLEDOUTPUT) != null) {
 			RelayNode relay = (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT);
 			
+			onKilledCheck.setSelected(true);
 			killedTargetBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
 			killedActionField.setText((String) relay.getValue(RelayNode.ACTION));
+		}
+		else {
+			onKilledCheck.setSelected(false);
 		}
 		if(node.getValue(TankNode.ONBOMBDROPPEDOUTPUT) != null) {
 			RelayNode relay = (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT);
 			
+			onBombCheck.setSelected(true);
 			bombTargetBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
 			bombActionField.setText((String) relay.getValue(RelayNode.ACTION));
+		}
+		else {
+			onBombCheck.setSelected(false);
 		}
 	}
 	

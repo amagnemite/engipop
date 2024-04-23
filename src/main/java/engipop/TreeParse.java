@@ -171,10 +171,17 @@ public class TreeParse { //it is time to parse
 		}
 		else {
 			for(Node node : squadRandom.getChildren()) {
-				checkBot((TFBotNode) node);
+				if(node.getClass() == TFBotNode.class) {
+					checkBot((TFBotNode) node);
+				}
+				else if(node.getClass() == TankNode.class) {
+					//checkTank((TankNode) node);
+				}
+				else if(node.getClass() == SquadRCNode.class) {
+					checkSquadRandom(node);
+				}
 			}
 		}
-		
 		return stopCheck;
 	}
 	
@@ -229,16 +236,18 @@ public class TreeParse { //it is time to parse
 					indentPrintln(pw, "}");
 				}
 				else {
-					if(subentry instanceof String) {
-						String string = "";
-						
-						if(entry.getKey().contains(" ")) {
-							string = "\"" + entry.getKey() + "\" ";
-						}
-						else {
-							string = entry.getKey() + " ";
-						}
-						
+					/*
+					String string = "";
+					
+					if(entry.getKey().contains(" ")) { //basically an itemattributes check
+						string = "\"" + entry.getKey() + "\" ";
+					}
+					else {
+						string = entry.getKey() + " ";
+					}
+					
+					
+					if(subentry.getClass() == String.class) {
 						if(((String) subentry).contains(" ") || ((String) subentry).contains(",") || 
 							((String) subentry).contains("/")) {
 							string = string + "\"" + subentry + "\"";
@@ -247,11 +256,13 @@ public class TreeParse { //it is time to parse
 							string = string + subentry;
 						}
 						
-						indentPrintln(pw, string);
+						indentPrintln(pw, entry.getKey(), subentry);
 					}
 					else {
-						indentPrintln(pw, entry.getKey() + " " + subentry);
+						indentPrintln(pw, string + subentry);
 					}
+					*/
+					indentPrintln(pw, entry.getKey(), subentry);
 				}
 			}
 		}
@@ -262,13 +273,13 @@ public class TreeParse { //it is time to parse
 		mapCopy.putAll(root.getMap()); //do this to prevent case issues
 		
 		if(root.containsKey(PopNode.STARTINGCURRENCY)) {
-			indentPrintln(pw, "StartingCurrency " + root.getValue(PopNode.STARTINGCURRENCY));
+			indentPrintln(pw, PopNode.STARTINGCURRENCY, root.getValue(PopNode.STARTINGCURRENCY));
 			mapCopy.remove(PopNode.STARTINGCURRENCY);
 		}
 		
 		if(root.containsKey(PopNode.RESPAWNWAVETIME)) {
 			if((int) root.getValue(PopNode.RESPAWNWAVETIME) != 10 && (int) root.getValue(PopNode.RESPAWNWAVETIME) != 0) {
-				indentPrintln(pw, "RespawnWaveTime " + root.getValue(PopNode.RESPAWNWAVETIME));
+				indentPrintln(pw, PopNode.RESPAWNWAVETIME, root.getValue(PopNode.RESPAWNWAVETIME));
 			}
 			mapCopy.remove(PopNode.RESPAWNWAVETIME);
 		}
@@ -285,14 +296,14 @@ public class TreeParse { //it is time to parse
 		
 		if(root.containsKey(PopNode.BUSTERDAMAGE)) {
 			if((int) root.getValue(PopNode.BUSTERDAMAGE) != Engipop.BUSTERDEFAULTDMG) {
-				indentPrintln(pw, "AddSentryBusterWhenDamageDealtExceeds " + root.getValue(PopNode.BUSTERDAMAGE));
+				indentPrintln(pw, PopNode.BUSTERDAMAGE, root.getValue(PopNode.BUSTERDAMAGE));
 			}
 			mapCopy.remove(PopNode.BUSTERDAMAGE);
 		}
 		
 		if(root.containsKey(PopNode.BUSTERKILLS)) {
 			if((int) root.getValue(PopNode.BUSTERKILLS) != Engipop.BUSTERDEFAULTKILLS) {
-				indentPrintln(pw, "AddSentryBusterWhenKillCountExceeds " + root.getValue(PopNode.BUSTERKILLS));
+				indentPrintln(pw, PopNode.BUSTERKILLS, root.getValue(PopNode.BUSTERKILLS));
 			}
 			mapCopy.remove(PopNode.BUSTERKILLS);
 		}
@@ -323,11 +334,7 @@ public class TreeParse { //it is time to parse
 					indentPrintln(pw, "");
 				}
 			}
-			/*
-			for(Entry<String, Node> entry : root.getBotTemplateMap().entrySet()) {	
-				printTFBot(pw, (TFBotNode) entry.getValue(), entry.getKey());
-			}
-			*/
+
 			for(Entry<String, Node> entry : root.getWSTemplateMap().entrySet()) {
 				indentPrintln(pw, entry.getKey());
 				indentPrintln(pw, "{");
@@ -342,10 +349,8 @@ public class TreeParse { //it is time to parse
 			indentCount--;
 			indentPrintln(pw, "}");
 		}
-		
+	
 		printGenericMap(pw, mapCopy);
-		
-		System.out.println("printed pop");
 	}
 	
 	private void printWave(PrintWriter pw, WaveNode node) { //a wave
@@ -357,17 +362,17 @@ public class TreeParse { //it is time to parse
 		indentCount++;
 		
 		if(node.containsKey(WaveNode.STARTWAVEOUTPUT)) {
-			printRelay(pw, "StartWaveOutput", (RelayNode) node.getValue(WaveNode.STARTWAVEOUTPUT));
+			printRelay(pw, WaveNode.STARTWAVEOUTPUT, (RelayNode) node.getValue(WaveNode.STARTWAVEOUTPUT));
 			mapCopy.remove(WaveNode.STARTWAVEOUTPUT);
 		}
 		
 		if(node.containsKey(WaveNode.DONEOUTPUT)) {
-			printRelay(pw, "DoneOutput", (RelayNode) node.getValue(WaveNode.DONEOUTPUT));
+			printRelay(pw, WaveNode.DONEOUTPUT, (RelayNode) node.getValue(WaveNode.DONEOUTPUT));
 			mapCopy.remove(WaveNode.DONEOUTPUT);
 		} //since tree was already validated upstream, only final wave should pass this case
 		
 		if(node.containsKey(WaveNode.INITWAVEOUTPUT)) {
-			printRelay(pw, "InitWaveOutput", (RelayNode) node.getValue(WaveNode.INITWAVEOUTPUT));
+			printRelay(pw, WaveNode.INITWAVEOUTPUT, (RelayNode) node.getValue(WaveNode.INITWAVEOUTPUT));
 			mapCopy.remove(WaveNode.INITWAVEOUTPUT);
 		}
 		
@@ -379,7 +384,6 @@ public class TreeParse { //it is time to parse
 		
 		indentCount--;
 		indentPrintln(pw, "}");
-		System.out.println("printed wave");
 	}
 	
 	private void printRelay(PrintWriter pw, String name, RelayNode node) {
@@ -391,8 +395,19 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "{");
 		indentCount++;
 		
+		indentPrintln(pw, RelayNode.TARGET, node.getValue(RelayNode.TARGET));
+		indentPrintln(pw, RelayNode.ACTION, node.getValue(RelayNode.ACTION));
+		
+		if(node.containsKey(RelayNode.PARAM)) {
+			indentPrintln(pw, RelayNode.PARAM, node.getValue(RelayNode.PARAM));
+		}
+		
+		if(node.containsKey(RelayNode.DELAY)) {
+			indentPrintln(pw, RelayNode.DELAY, node.getValue(RelayNode.DELAY));
+		}
+		
 		//this will lead to some very unhinged formatting for vscripts but that's a later problem
-		node.getMap().forEach((k, v) -> indentPrintln(pw, k + " " + "\"" + v.get(0) + "\""));
+		//node.getMap().forEach((k, v) -> indentPrintln(pw, k + " " + "\"" + v.get(0) + "\""));
 		
 		indentCount--;
 		indentPrintln(pw, "}");
@@ -412,12 +427,12 @@ public class TreeParse { //it is time to parse
 				if(key.equals(MissionNode.WHERE)) {
 					if(node.getSpawner() != null) { // spawner.getClass() != TankNode.class) { //no wheres for tanks
 						for(Object where : mapCopy.remove(WaveSpawnNode.WHERE)) {
-							indentPrintln(pw, "Where " + where);
+							indentPrintln(pw, MissionNode.WHERE, where);
 						}
 					}
 				}
 				else {
-					indentPrintln(pw, key + " " + node.getValue(key));
+					indentPrintln(pw, key, node.getValue(key));
 				}
 				mapCopy.remove(key);
 			}
@@ -441,13 +456,13 @@ public class TreeParse { //it is time to parse
 		indentCount++;
 		
 		if(node.containsKey(WaveSpawnNode.NAME)) {
-			indentPrintln(pw, "Name \"" + node.getValue(WaveSpawnNode.NAME) + "\"");
+			indentPrintln(pw, WaveSpawnNode.NAME, node.getValue(WaveSpawnNode.NAME));
 			mapCopy.remove(WaveSpawnNode.NAME);
 		}
 		if(node.containsKey(WaveSpawnNode.WHERE)) { //somewhat redundant check 
 			if(spawner != null && spawner.getClass() != TankNode.class) { //no wheres for tanks
 				for(Object where : mapCopy.remove(WaveSpawnNode.WHERE)) {
-					indentPrintln(pw, "Where " + where);
+					indentPrintln(pw, WaveSpawnNode.WHERE, where);
 				}
 			} //way this is written now is spawnerless wavespawns don't get wheres
 		} //which may or may not be irrelevant
@@ -455,59 +470,59 @@ public class TreeParse { //it is time to parse
 		//spinners don't allow empty values
 		if(node.containsKey(WaveSpawnNode.TOTALCOUNT)) {
 			if((int) node.getValue(WaveSpawnNode.TOTALCOUNT) > 0) {
-				indentPrintln(pw, "TotalCount " + node.getValue(WaveSpawnNode.TOTALCOUNT));
+				indentPrintln(pw, WaveSpawnNode.TOTALCOUNT, node.getValue(WaveSpawnNode.TOTALCOUNT));
 			}
 			mapCopy.remove(WaveSpawnNode.TOTALCOUNT);
 		}
 		if(node.containsKey(WaveSpawnNode.MAXACTIVE)) {
 			if((int) node.getValue(WaveSpawnNode.MAXACTIVE) > 0) {
-				indentPrintln(pw, "MaxActive " + node.getValue(WaveSpawnNode.MAXACTIVE));
+				indentPrintln(pw, WaveSpawnNode.MAXACTIVE, node.getValue(WaveSpawnNode.MAXACTIVE));
 			}
 			mapCopy.remove(WaveSpawnNode.MAXACTIVE);
 		}
 		if(node.containsKey(WaveSpawnNode.SPAWNCOUNT)) {
-			if((int) node.getValue(WaveSpawnNode.SPAWNCOUNT) > 1) {
-				indentPrintln(pw, "SpawnCount " + node.getValue(WaveSpawnNode.SPAWNCOUNT));
+			if((int) node.getValue(WaveSpawnNode.SPAWNCOUNT) > 0) {
+				indentPrintln(pw, WaveSpawnNode.SPAWNCOUNT, node.getValue(WaveSpawnNode.SPAWNCOUNT));
 			}
 			mapCopy.remove(WaveSpawnNode.SPAWNCOUNT);
 		}
 		//TODO: truncate decimals as needed
 		if(node.containsKey(WaveSpawnNode.WAITBEFORESTARTING)) {
 			if((double) node.getValue(WaveSpawnNode.WAITBEFORESTARTING) > 0) {
-				indentPrintln(pw, WaveSpawnNode.WAITBEFORESTARTING + " " + node.getValue(WaveSpawnNode.WAITBEFORESTARTING));
+				indentPrintln(pw, WaveSpawnNode.WAITBEFORESTARTING, node.getValue(WaveSpawnNode.WAITBEFORESTARTING));
 			}
 			mapCopy.remove(WaveSpawnNode.WAITBEFORESTARTING);
 		}
 		
 		if(node.getBetweenDeaths()) { //boolean keys should also always be true or false
 			if(node.containsKey(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH)) {
-				indentPrintln(pw, WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH + " " + node.getValue(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH));
+				indentPrintln(pw, WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH, node.getValue(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH));
 			}
 			mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH);
 		}
 		else {
 			if(node.containsKey(WaveSpawnNode.WAITBETWEENSPAWNS) && (double) node.getValue(WaveSpawnNode.WAITBETWEENSPAWNS) > 0) {
-				indentPrintln(pw, WaveSpawnNode.WAITBETWEENSPAWNS + " " + node.getValue(WaveSpawnNode.WAITBETWEENSPAWNS));
+				indentPrintln(pw, WaveSpawnNode.WAITBETWEENSPAWNS, node.getValue(WaveSpawnNode.WAITBETWEENSPAWNS));
 			}
 			mapCopy.remove(WaveSpawnNode.WAITBETWEENSPAWNS);
 		}
 		
 		if(node.containsKey(WaveSpawnNode.TOTALCURRENCY)) {
 			if((int) node.getValue(WaveSpawnNode.TOTALCURRENCY) > 0) {
-				indentPrintln(pw, "TotalCurrency " + node.getValue(WaveSpawnNode.TOTALCURRENCY));
+				indentPrintln(pw, WaveSpawnNode.TOTALCURRENCY, node.getValue(WaveSpawnNode.TOTALCURRENCY));
 			}
 			mapCopy.remove(WaveSpawnNode.TOTALCURRENCY);
 		}
 		if(node.containsKey(WaveSpawnNode.WAITFORALLSPAWNED)) {
-			indentPrintln(pw, "WaitForAllSpawned \"" + node.getValue(WaveSpawnNode.WAITFORALLSPAWNED) + "\"");
+			indentPrintln(pw, WaveSpawnNode.WAITFORALLSPAWNED, node.getValue(WaveSpawnNode.WAITFORALLSPAWNED));
 			mapCopy.remove(WaveSpawnNode.WAITFORALLSPAWNED);
 		}
 		if(node.containsKey(WaveSpawnNode.WAITFORALLDEAD)) {
-			indentPrintln(pw, "WaitForAllDead \"" + node.getValue(WaveSpawnNode.WAITFORALLDEAD) + "\"");
+			indentPrintln(pw, WaveSpawnNode.WAITFORALLDEAD, node.getValue(WaveSpawnNode.WAITFORALLDEAD));
 			mapCopy.remove(WaveSpawnNode.WAITFORALLDEAD);
 		}
 		
-		if(((Boolean) node.getValue(WaveSpawnNode.SUPPORT)) == true) {
+		if((Boolean) node.getValue(WaveSpawnNode.SUPPORT)) {
 			if(node.getSupportLimited()) {
 				indentPrintln(pw, "Support Limited");
 			}
@@ -518,26 +533,24 @@ public class TreeParse { //it is time to parse
 		mapCopy.remove(WaveSpawnNode.SUPPORT);
 		
 		if(node.containsKey(WaveSpawnNode.STARTWAVEOUTPUT)) {
-			printRelay(pw, "StartWaveOutput", (RelayNode) node.getValue(WaveSpawnNode.STARTWAVEOUTPUT));
+			printRelay(pw, WaveSpawnNode.STARTWAVEOUTPUT, (RelayNode) node.getValue(WaveSpawnNode.STARTWAVEOUTPUT));
 			mapCopy.remove(WaveSpawnNode.STARTWAVEOUTPUT);
 		}
 		
 		if(mapCopy.containsKey(WaveSpawnNode.FIRSTSPAWNOUTPUT)) {
-			printRelay(pw, "FirstSpawnOutput", (RelayNode) node.getValue(WaveSpawnNode.FIRSTSPAWNOUTPUT));
+			printRelay(pw, WaveSpawnNode.FIRSTSPAWNOUTPUT, (RelayNode) node.getValue(WaveSpawnNode.FIRSTSPAWNOUTPUT));
 			mapCopy.remove(WaveSpawnNode.FIRSTSPAWNOUTPUT);
 		}	
 		if(mapCopy.containsKey(WaveSpawnNode.LASTSPAWNOUTPUT)) {
-			printRelay(pw, "LastSpawnOutput", (RelayNode) node.getValue(WaveSpawnNode.LASTSPAWNOUTPUT));
+			printRelay(pw, WaveSpawnNode.LASTSPAWNOUTPUT, (RelayNode) node.getValue(WaveSpawnNode.LASTSPAWNOUTPUT));
 			mapCopy.remove(WaveSpawnNode.LASTSPAWNOUTPUT);
 		}
 		if(mapCopy.containsKey(WaveSpawnNode.DONEOUTPUT)) {
-			printRelay(pw, "DoneOutput", (RelayNode) node.getValue(WaveSpawnNode.DONEOUTPUT));
+			printRelay(pw, WaveSpawnNode.DONEOUTPUT, (RelayNode) node.getValue(WaveSpawnNode.DONEOUTPUT));
 			mapCopy.remove(WaveSpawnNode.DONEOUTPUT);
 		}
 		
 		printGenericMap(pw, mapCopy);
-		
-		System.out.println("printed wavespawn");
 		
 		if(spawner != null) {
 			if(spawner.getClass() == TFBotNode.class) {
@@ -547,10 +560,10 @@ public class TreeParse { //it is time to parse
 				printTank(pw, (TankNode) spawner);
 			}
 			else if(spawner.getClass() == SquadNode.class) {
-				printSquad(pw, (SquadNode) spawner);
+				printSquadRC(pw, (SquadNode) spawner, WaveSpawnNode.SQUAD);
 			}
 			else if(spawner.getClass() == RandomChoiceNode.class) {
-				printRandom(pw, (RandomChoiceNode) spawner);
+				printSquadRC(pw, (RandomChoiceNode) spawner, WaveSpawnNode.RANDOMCHOICE);
 			}
 		}	
 		
@@ -571,7 +584,7 @@ public class TreeParse { //it is time to parse
 		
 		if(node.containsKey(TFBotNode.CLASSNAME)) {
 			if(node.getValue(TFBotNode.CLASSNAME) != Classes.None) {
-				indentPrintln(pw, "Class " + node.getValue(TFBotNode.CLASSNAME));
+				indentPrintln(pw, TFBotNode.CLASSNAME, node.getValue(TFBotNode.CLASSNAME));
 			}
 			mapCopy.remove(TFBotNode.CLASSNAME);
 		}
@@ -580,15 +593,15 @@ public class TreeParse { //it is time to parse
 			String value = (String) node.getValue(TFBotNode.CLASSICON);
 			if(!(value.equalsIgnoreCase(node.getValue(TFBotNode.CLASSNAME).toString()))) {
 				//if classicon is not equal to the string version of its classname
-				if(!value.equals("heavy")) { //dumb workaround to heavyweapons != heavy
-					indentPrintln(pw, "ClassIcon " + value);
+				if(!value.equals("heavy") || !value.equals("demo")) { //dumb workaround to heavyweapons != heavy
+					indentPrintln(pw, TFBotNode.CLASSICON, value);
 				}	
 			}
 			mapCopy.remove(TFBotNode.CLASSICON);
 		}
 		
 		if(node.containsKey(TFBotNode.NAME)) { 
-			indentPrintln(pw, "Name \"" + node.getValue(TFBotNode.NAME) + "\"");
+			indentPrintln(pw, TFBotNode.NAME, node.getValue(TFBotNode.NAME));
 			mapCopy.remove(TFBotNode.NAME);
 		}
 		
@@ -596,27 +609,27 @@ public class TreeParse { //it is time to parse
 			String skill = (String) node.getValue(TFBotNode.SKILL);
 			//if(!skill.equals(TFBotNode.NOSKILL) && !skill.equals(TFBotNode.EASY)) {
 			if(!skill.equals(TFBotNode.NOSKILL)) {
-				indentPrintln(pw, "Skill " + skill);
+				indentPrintln(pw, TFBotNode.SKILL, skill);
 			}
 			mapCopy.remove(TFBotNode.SKILL);
 		}
 		
 		if(node.containsKey(TFBotNode.WEAPONRESTRICT)) {
 			if(!node.getValue(TFBotNode.WEAPONRESTRICT).equals(TFBotNode.ANY)) {
-				indentPrintln(pw, "WeaponRestrictions " + node.getValue(TFBotNode.WEAPONRESTRICT));
+				indentPrintln(pw, TFBotNode.WEAPONRESTRICT, node.getValue(TFBotNode.WEAPONRESTRICT));
 			}
 			mapCopy.remove(TFBotNode.WEAPONRESTRICT);
 		}	
 		
 		if(node.containsKey(TFBotNode.ITEM)) {
 			for(Object item : (List<Object>) mapCopy.remove(TFBotNode.ITEM)) {
-				indentPrintln(pw, "Item \"" + item + "\"");
+				indentPrintln(pw, TFBotNode.ITEM, item);
 			}
 		}
 		
 		if(node.containsKey(TFBotNode.TAGS)) {
 			for(Object tag : (List<Object>) mapCopy.remove(TFBotNode.TAGS)) {
-				indentPrintln(pw, "Tag " + tag);
+				indentPrintln(pw, TFBotNode.TAGS, tag);
 			}
 		}
 		
@@ -631,7 +644,7 @@ public class TreeParse { //it is time to parse
 			List<Object> mapList = mapCopy.remove(TFBotNode.ITEMATTRIBUTES);
 			
 			for(Object submap : mapList) {
-				if(!((Map<String, String>) submap).isEmpty()) {
+				if(!((Map<String, Object>) submap).isEmpty()) {
 					printAttr(pw, TFBotNode.ITEMATTRIBUTES, (Map<String, String>) submap);
 				}
 			}
@@ -640,49 +653,8 @@ public class TreeParse { //it is time to parse
 		//TODO: eventchangeattributes
 		
 		printGenericMap(pw, mapCopy);
-		
-		/*
-		if(node.containsKey(TFBotNode.ITEMATTRIBUTES)) {
-			Iterator<String> itemIterator = ((Map<String, Object[]>) mapCopy.remove(TFBotNode.ITEMATTRIBUTES)[0]).keySet().iterator();
-			
-			while(itemIterator.hasNext()) {
-				EngiPanel.ItemSlot slot = itemIterator.next();
-				Map<String, String> attrNode = node.getItemAttributeList().get(slot);
-				switch(slot) {
-					case PRIMARY:
-						printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), TFBotNode.PRIMARY, node, attrNode);
-						break;
-					case SECONDARY:
-						printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), TFBotNode.SECONDARY, node, attrNode);
-						break;
-					case MELEE:
-						printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), TFBotNode.MELEE, node, attrNode);
-						break;
-					case BUILDING:
-						printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), TFBotNode.BUILDING, node, attrNode);
-						break;	
-					case CHARACTER:
-						printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), TFBotNode.CHARACTER, node, attrNode);
-						break;
-					case HAT1:
-						printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), TFBotNode.HAT1, node, attrNode);
-						break;
-					case HAT2:
-						printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), TFBotNode.HAT2, node, attrNode);
-						break;
-					case HAT3:
-						printAttr(pw, (EngiPanel.Classes) node.getValueSingular(TFBotNode.CLASSNAME), TFBotNode.HAT3, node, attrNode);
-						break;			
-					case NONE: //shouldn't have this in actual node
-					default:
-						break;				
-				}
-			}
-		} */
-		
 		indentCount--;
 		indentPrintln(pw, "}");
-		System.out.println("printed tfbot");
 	}
 	
 	private void printAttr(PrintWriter pw, String type, Map<String, String> attrMap) {
@@ -703,25 +675,18 @@ public class TreeParse { //it is time to parse
 		indentCount++;
 		
 		if(itemName != null) {
-			indentPrintln(pw, "ItemName \"" + itemName + "\"");
+			indentPrintln(pw, TFBotNode.ITEMNAME, itemName);
 		}
 		
 		//fix this
 		attrMap.forEach((k, v) -> {
 			if(!k.equalsIgnoreCase(PETALTNAME)) {
-				if(v.contains(" ")) {
-					indentPrintln(pw, "\"" + k + "\" \"" + v + "\"");
-				}
-				else {
-					indentPrintln(pw, "\"" + k + "\"" + " " + v);
-				}
+				indentPrintln(pw, k, v);
 			}
 			else { //super super long 
-				indentPrintln(pw, "\"counts as assister is some kind of pet this update is going to be awesome\" " + v);
+				indentPrintln(pw, "counts as assister is some kind of pet this update is going to be awesome", v);
 			}
-		}
-			
-		);
+		});
 		//todo: paint conversions
 		
 		indentCount--;
@@ -737,21 +702,26 @@ public class TreeParse { //it is time to parse
 		mapCopy.putAll(node.getMap());
 		
 		if(node.containsKey(TankNode.NAME)) {
-			indentPrintln(pw, TankNode.NAME + " " + node.getValue(TankNode.NAME));
+			indentPrintln(pw, TankNode.NAME, node.getValue(TankNode.NAME));
 			mapCopy.remove(TankNode.NAME);
 		}
 		
 		if(node.containsKey(TankNode.HEALTH)) {
-			indentPrintln(pw, TankNode.HEALTH + " " + node.getValue(TankNode.HEALTH));
+			indentPrintln(pw, TankNode.HEALTH, node.getValue(TankNode.HEALTH));
 			mapCopy.remove(TankNode.HEALTH);
 		}
-		if((boolean) node.containsKey(TankNode.SKIN)) {
+		if((boolean) node.getValue(TankNode.SKIN)) {
 			indentPrintln(pw, "Skin 1");
 		}
 		mapCopy.remove(TankNode.SKIN);
 		
+		if(node.containsKey(TankNode.SPEED) && (double) node.getValue(TankNode.SPEED) != Engipop.TANKDEFAULTSPEED) {
+			indentPrintln(pw, TankNode.SPEED, node.getValue(TankNode.SPEED));
+		}
+		mapCopy.remove(TankNode.SPEED);
+		
 		if(node.containsKey(TankNode.STARTINGPATHTRACKNODE)) {
-			indentPrintln(pw, TankNode.STARTINGPATHTRACKNODE + " \"" + node.getValue(TankNode.STARTINGPATHTRACKNODE) + "\"");
+			indentPrintln(pw, TankNode.STARTINGPATHTRACKNODE, node.getValue(TankNode.STARTINGPATHTRACKNODE));
 			mapCopy.remove(TankNode.STARTINGPATHTRACKNODE);
 		}
 		
@@ -769,53 +739,66 @@ public class TreeParse { //it is time to parse
 		
 		indentCount--;
 		indentPrintln(pw, "}");
-		System.out.println("printed tank");
 	}
 	
-	private void printSquad(PrintWriter pw, SquadNode node) {
-		indentPrintln(pw, "Squad");
+	private void printSquadRC(PrintWriter pw, Node node, String type) {
+		indentPrintln(pw, type);
 		indentPrintln(pw, "{");
 		indentCount++;
 		
 		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		mapCopy.putAll(node.getMap());
 		
-		for(Node n : node.getChildren()) {
-			printTFBot(pw, (TFBotNode) n, WaveSpawnNode.TFBOT);
+		for(Node spawner : node.getChildren()) {
+			if(spawner.getClass() == TFBotNode.class) {
+				printTFBot(pw, (TFBotNode) spawner, WaveSpawnNode.TFBOT);
+			}
+			else if(spawner.getClass() == TankNode.class) {
+				printTank(pw, (TankNode) spawner);
+			}
+			else if(spawner.getClass() == SquadNode.class) {
+				printSquadRC(pw, (SquadNode) spawner, WaveSpawnNode.SQUAD);
+			}
+			else if(spawner.getClass() == RandomChoiceNode.class) {
+				printSquadRC(pw, (RandomChoiceNode) spawner, WaveSpawnNode.RANDOMCHOICE);
+			}
 		}
+		printGenericMap(pw, mapCopy);
+		
 		indentCount--;
 		indentPrintln(pw, "}");
-		System.out.println("printed squad");
-	}
-	
-	private void printRandom(PrintWriter pw, RandomChoiceNode node) {
-		indentPrintln(pw, "RandomChoice");
-		indentPrintln(pw, "{");
-		indentCount++;
-		
-		Map<String, List<Object>> mapCopy = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
-		mapCopy.putAll(node.getMap());
-		
-		for(Node n : node.getChildren()) {
-			printTFBot(pw, (TFBotNode) n, WaveSpawnNode.TFBOT);
-		}
-		indentCount--;
-		indentPrintln(pw, "}");
-		System.out.println("printed random");
-	}
-	
-	private void indentPrint(PrintWriter pw, String text) {
-		pw.print(indent.substring(0, indentCount + 1) + text);
-		if(pw.checkError()) {
-			System.out.println(text);
-			pw.println("//an error occured!");
-		}
 	}
 	
 	private void indentPrintln(PrintWriter pw, String text) {
 		pw.println(indent.substring(0, indentCount + 1) + text);
 		if(pw.checkError()) {
 			System.out.println(text);
+			pw.println("//an error occured!");
+		}
+	}
+	
+	private void indentPrintln(PrintWriter pw, String key, Object value) {
+		//text.replace("\\", "/");
+		String text = key.contains(" ") ? "\"" + key + "\" " : key + " ";
+		
+		if(value.getClass() == Double.class) { 
+			if((Double) value % 1 != 0) {
+				pw.println(indent.substring(0, indentCount + 1) + String.format(text + "%f", value));
+			}
+			else { //don't give whole numbers decimals
+				pw.println(indent.substring(0, indentCount + 1) + text + ((Double) value).intValue());
+			}
+		}
+		else if(value.getClass() == String.class && (((String) value).contains(" ") || ((String) value).contains(",") || 
+				((String) value).contains("/"))) {
+			pw.println(indent.substring(0, indentCount + 1) + text + "\"" + value + "\"");
+		}
+		else {
+			pw.println(indent.substring(0, indentCount + 1) + text + value);
+		}
+		
+		if(pw.checkError()) {
+			//System.out.println(text);
 			pw.println("//an error occured!");
 		}
 	}

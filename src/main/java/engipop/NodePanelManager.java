@@ -227,14 +227,17 @@ public class NodePanelManager {
 		
 		removeSpawner.addActionListener(event -> { //remove current spawner from wavespawn
 			if(wavebar != null) {
+				//TODO: this may be in the wrong place
 				int count = (Integer) currentParentNode.getValue(WaveSpawnNode.TOTALCOUNT);
+				boolean support = (boolean) currentParentNode.getValue(WaveSpawnNode.SUPPORT);
+				BotType type = support == true ? BotType.SUPPORT : null;
 				
 				if(tfbotBut.isSelected()) {
-					wavebar.modifyIcon(currentBotNode, count, null, false);
+					
+					wavebar.modifyIcon(currentBotNode, count, type, false);
 				}
 				else if(tankBut.isSelected()) {
-					boolean support = (boolean) currentParentNode.getValue(WaveSpawnNode.SUPPORT);
-					BotType type = support == true ? BotType.COMMON : BotType.GIANT;
+					type = support == true ? BotType.SUPPORT : BotType.GIANT;
 					wavebar.removeIcon("tank", false, count, type);
 				}
 				else if(squadBut.isSelected()) {
@@ -244,7 +247,7 @@ public class NodePanelManager {
 					for(Node node : currentSquadNode.getChildren()) {
 						TFBotNode bot = (TFBotNode) node;
 						
-						wavebar.modifyIcon(bot, batches, null, false);
+						wavebar.modifyIcon(bot, batches, type, false);
 					}
 				}
 			}
@@ -588,6 +591,7 @@ public class NodePanelManager {
 				}
 				else {
 					mainWindow.setFeedback("Possible nested randomchoice/squad! Unable to load");
+					loadSquad(true);
 				}
 				squadRandomBLManager.changeButtonState(States.SELECTED);
 			}
@@ -617,8 +621,9 @@ public class NodePanelManager {
 				}
 				else {
 					mainWindow.setFeedback("Possible nested randomchoice/squad! Unable to load");
+					loadRandom(true);
 				}
-				squadRandomBLManager.changeButtonState(States.NOSELECTION);
+				squadRandomBLManager.changeButtonState(States.SELECTED);
 			}
 			else {
 				loadBot(true);

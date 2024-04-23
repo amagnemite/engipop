@@ -28,9 +28,9 @@ public class TemplateTree implements PropertyChangeListener {
 	private DefaultMutableTreeNode wsNode = new DefaultMutableTreeNode("WaveSpawn templates");
 	private DefaultMutableTreeNode otherNode = new DefaultMutableTreeNode("Non bot/WS templates");
 	
-	private DefaultMutableTreeNode internalBotNode = new DefaultMutableTreeNode("Created TFBot templates");
-	private DefaultMutableTreeNode includedBotNode = new DefaultMutableTreeNode("Included TFBot templates");
-	private DefaultMutableTreeNode importedBotNode = new DefaultMutableTreeNode("Imported TFBot templates");
+	private DefaultMutableTreeNode internalBotNode = new DefaultMutableTreeNode("Created");
+	private DefaultMutableTreeNode includedBotNode = new DefaultMutableTreeNode("Included");
+	private DefaultMutableTreeNode importedBotNode = new DefaultMutableTreeNode("Imported");
 	
 	private DefaultMutableTreeNode noClassNode = new DefaultMutableTreeNode("No class");
 	private DefaultMutableTreeNode scoutNode = new DefaultMutableTreeNode("Scout");
@@ -43,9 +43,9 @@ public class TemplateTree implements PropertyChangeListener {
 	private DefaultMutableTreeNode sniperNode = new DefaultMutableTreeNode("Sniper");
 	private DefaultMutableTreeNode spyNode = new DefaultMutableTreeNode("Spy");
 	
-	private DefaultMutableTreeNode internalWSNode = new DefaultMutableTreeNode("Created WaveSpawn templates");
-	private DefaultMutableTreeNode includedWSNode = new DefaultMutableTreeNode("Included WaveSpawn templates");
-	private DefaultMutableTreeNode importedWSNode = new DefaultMutableTreeNode("Imported WaveSpawn templates");
+	private DefaultMutableTreeNode internalWSNode = new DefaultMutableTreeNode("Created");
+	private DefaultMutableTreeNode includedWSNode = new DefaultMutableTreeNode("Included");
+	private DefaultMutableTreeNode importedWSNode = new DefaultMutableTreeNode("Imported");
 	
 	private DefaultMutableTreeNode includedOtherNode = new DefaultMutableTreeNode("Included non bot/WS templates");
 	private DefaultMutableTreeNode importedOtherNode = new DefaultMutableTreeNode("Imported non bot/WS templates");
@@ -146,6 +146,7 @@ public class TemplateTree implements PropertyChangeListener {
 		}
 	}
 	
+	//this is for entire lists of templates
 	private void addNonInternalTemplates(Map<String, List<TemplateData>> map, String category) {
 		DefaultMutableTreeNode parentBotNode;
 		DefaultMutableTreeNode parentWSNode;

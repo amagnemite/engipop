@@ -46,7 +46,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		super("Engipop main");
 		//this.setBackground(new Color(193, 161, 138));
 		
-		setLayout(gbLayout);
+		setLayout(new BorderLayout());
 		
 		popNode = Engipop.getPopNode();
 		setSize(1200, 850);
@@ -161,8 +161,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		tabbedPane.addTab("Templates", tempPanel);
 		tabbedPane.addTab("Missions", missionPanel);
 		
-		gbConstraints.weightx = 1;
-		addGB(tabbedPane, 0, 0);
+		add(tabbedPane, BorderLayout.CENTER);
 		
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

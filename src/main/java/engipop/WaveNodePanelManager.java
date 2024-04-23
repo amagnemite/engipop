@@ -13,6 +13,7 @@ import engipop.ButtonListManager.States;
 import engipop.EngiWindow.NoDeselectionModel;
 import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
+import engipop.Node.NodeWithSpawner;
 
 //also manages lists for wave/wavespawns
 public class WaveNodePanelManager extends NodePanelManager implements PropertyChangeListener {
@@ -38,7 +39,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	ButtonListManager waveBLManager = new ButtonListManager(addWave, updateWave, removeWave);
 	ButtonListManager waveSpawnBLManager = new ButtonListManager(addWaveSpawn, updateWaveSpawn, removeWaveSpawn);
 	
-	WaveSpawnNode currentParentNode = new WaveSpawnNode();
+	//NodeWithSpawner currentParentNode = new WaveSpawnNode();
 	
 	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, PopulationPanel popPanel, 
 			WaveBarPanel wavebar) {
@@ -183,7 +184,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				wsPanel.getDisabledPanel().setEnabled(true);
 				
 				waveSpawnBLManager.changeButtonState(States.SELECTED);
-				wsPanel.updatePanel(currentParentNode);
+				wsPanel.updatePanel((WaveSpawnNode) currentParentNode);
 				
 				//is there somewhere better i can put the disabled panel stuff
 				if(currentParentNode.hasChildren()) {
@@ -192,6 +193,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 					spawnerPanel.getDisabledPanel().setEnabled(true);
 				}
 				else {
+					spawnerInfo.setText(noSpawner);
 					tfbotBut.setSelected(true);
 					botTankPanel.getDisabledPanel().setEnabled(false);
 					spawnerPanel.getDisabledPanel().setEnabled(true);
@@ -230,7 +232,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			waveSpawnListModel.remove(waveSpawnList.getSelectedIndex());
 			
 			if(wavebar != null && currentParentNode.hasChildren()) {
-				wavebar.removeIcon(currentParentNode);
+				wavebar.removeIcon((WaveSpawnNode) currentParentNode);
 			}
 			
 			if(list.size() == 0) { //if no wavespawns again
@@ -243,7 +245,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		
 		updateWaveSpawn.addActionListener(event -> { //update wavespawn button clicked
 			mainWindow.setFeedback(" ");
-			wsPanel.updateNode(currentParentNode);
+			wsPanel.updateNode((WaveSpawnNode) currentParentNode);
 			
 			if(currentParentNode.getValue(WaveSpawnNode.NAME) != null) {
 				waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentParentNode.getValue(WaveSpawnNode.NAME));
@@ -301,7 +303,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	private void resetWaveSpawnState(States state) {
 		wsPanel.getDisabledPanel().setEnabled(false);
 		currentParentNode = new WaveSpawnNode();
-		wsPanel.updatePanel(currentParentNode);
+		wsPanel.updatePanel((WaveSpawnNode) currentParentNode);
 		waveSpawnListModel.clear();
 		waveSpawnBLManager.changeButtonState(state);
 		resetSpawnerState();
