@@ -1,23 +1,16 @@
 package engipop;
 
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.swing.*;
 
 import engipop.Node.PopNode;
-import engipop.PopulationParser.TemplateData;
 
 @SuppressWarnings("serial")
-public class PopulationPanel extends EngiPanel { //window for less important/one off deals
+public class PopulationPanel extends EngiPanel { //population keyvals
 	
 	public static final String WAVERELAY = "waverelay";
 	public static final String WAVESPAWNRELAY = "wavespawnrelay";
@@ -98,6 +91,7 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 		}
 		maps.setModel(mapsModel);
 		
+		addGB(mapLabel, 0, 1);
 		addGB(maps, 1, 1);
 		
 		addGB(loadPop, 2, 1);
@@ -121,24 +115,6 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 	}
 	
 	private void initListeners() {
-		/*
-		this.addMouseListener(new MouseListener() { //this is wonky, fix
-			public void mousePressed(MouseEvent e) {
-				clearFeedback();
-			}
-			public void mouseEntered(MouseEvent e) {
-				//clearFeedback();
-			}
-			public void mouseClicked(MouseEvent e) {
-				clearFeedback();
-			}
-			public void mouseReleased(MouseEvent e) {
-			}
-			public void mouseExited(MouseEvent e) {
-				clearFeedback();
-			}
-		}); */
-		
 		updatePop.addActionListener(event -> {
 			updateNode();
 			mainWindow.setFeedback("Population settings updated");
@@ -216,6 +192,7 @@ public class PopulationPanel extends EngiPanel { //window for less important/one
 		busterDmgSpinner.setValue(popNode.getValue(PopNode.BUSTERDAMAGE));
 		busterKillSpinner.setValue(popNode.getValue(PopNode.BUSTERKILLS));
 		atkSpawnBox.setSelected((boolean) popNode.getValue(PopNode.BOTSATKINSPAWN));
+		maps.setSelectedItem(""); //TODO: resolve maps eventually
 		//advancedBox.setSelected((boolean) popNode.getValueSingular(PopNode.ADVANCED));
 	}
 	

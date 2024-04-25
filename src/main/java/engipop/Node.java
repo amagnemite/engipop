@@ -123,7 +123,8 @@ public class Node {
 	//converts vdfnodes (<string, object[]>) into treemaps <string, list<object>>
 	public Map<String, List<Object>> copyVDFNode(Map<String, Object[]> map) {
 		Set<String> stringSet = new HashSet<String>(
-				Arrays.asList(WaveSpawnNode.NAME, WaveSpawnNode.WAITFORALLDEAD, WaveSpawnNode.WAITFORALLSPAWNED));
+				Arrays.asList(WaveSpawnNode.NAME.toLowerCase(), WaveSpawnNode.WAITFORALLDEAD.toLowerCase(), 
+						WaveSpawnNode.WAITFORALLSPAWNED.toLowerCase()));
 		final String Digits = "(\\p{Digit}+)"; //decimal digit one or more times
 		final String fpRegex =
 				("-?(" + //- 0 or 1 times
@@ -141,7 +142,7 @@ public class Node {
                     //subMap.putAll((VDFNode) entry.getValue()[i]);
                     array.add(copyVDFNode((VDFNode) arrayEntry));
                 }
-                else if(!stringSet.contains(entry.getKey())) { //convert string numbers into ints/doubles
+                else if(!stringSet.contains(entry.getKey().toLowerCase())) { //convert string numbers into ints/doubles
                     String str = (String) arrayEntry;
                     if(str.contains(".") && Pattern.matches(fpRegex, str)) {
                         array.add(Double.valueOf(str));
@@ -561,6 +562,7 @@ public class Node {
     	public WaveSpawnNode(Map<String, List<Object>> map) {
     		keyVals.putAll(map);
     		
+    		/*
     		if(keyVals.containsKey(NAME) && getValue(NAME).getClass() == Integer.class) {
     			putKey(NAME, getValue(NAME).toString());
     		}
@@ -572,6 +574,7 @@ public class Node {
     		if(keyVals.containsKey(WAITFORALLSPAWNED) && getValue(WAITFORALLSPAWNED).getClass() == Integer.class) {
     			putKey(WAITFORALLSPAWNED, getValue(WAITFORALLSPAWNED).toString());
     		}
+    		*/
     		
     		if(keyVals.containsKey(WAITBETWEENSPAWNSAFTERDEATH)) {
     			waitBetweenDeaths = true;
@@ -797,6 +800,7 @@ public class Node {
     		putKey(CLASSICON, "scout");
     		putKey(SKILL, EASY);
     		putKey(WEAPONRESTRICT, ANY);
+    		//putKey(ITEM, new String[ITEMCOUNT]);
     		//putKey(ITEMATTRIBUTES, new ArrayList<Map<String, String>>(Arrays.asList(null, null, null, null, null, null, null)));
     		isItemsSorted = true;
     	}
@@ -840,9 +844,14 @@ public class Node {
     		
     		if(keyVals.containsKey(ITEM)) {
     			isItemsSorted = false;
-    			List<Object> list = new ArrayList<Object>(ITEMCOUNT);
-    			list.addAll(keyVals.get(ITEM));
-    			putKey(ITEM, list);
+    			String[] items = new String[ITEMCOUNT];
+    			
+    			for(int i = 0; i < keyVals.get(ITEM).size(); i++) {
+    				//lowercase for later sorting
+    				items[i] = ((String) keyVals.get(ITEM).get(i)).toLowerCase();
+    			}
+    			
+    			putKey(ITEM, items);
     		}
     		
     		//this is sorted in botpanel, maybe shouldn't be

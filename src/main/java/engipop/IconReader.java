@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -86,8 +88,31 @@ public class IconReader {
 		return imageData;
 	}
 	
+	public byte[] getImageData(URL url) {
+		byte[] imageData = null;
+		try {
+			imageData = openStream(url); //it may be better to combine openstream with this?
+		} 
+		catch (FileNotFoundException e) {
+			return null;
+		}
+		catch (IOException e) {
+			return null;
+		}
+		return imageData;
+	}
+	
 	private byte[] openStream(File file) throws FileNotFoundException, IOException {
 		FileInputStream input = new FileInputStream(file);
+		return openStream(input);
+	}
+	
+	private byte[] openStream(URL url) throws FileNotFoundException, IOException {
+		InputStream input = url.openStream();
+		return openStream(input);
+	}
+	
+	private byte[] openStream(InputStream input) throws FileNotFoundException, IOException {
 		byte[] buffer = new byte[input.available()];
 		input.read(buffer);
 		input.close();

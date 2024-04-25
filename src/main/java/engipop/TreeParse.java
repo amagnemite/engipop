@@ -137,13 +137,15 @@ public class TreeParse { //it is time to parse
 	private void checkBot(TFBotNode bot) {
 		Classes botClass = (Classes) bot.getValue(TFBotNode.CLASSNAME);
 		
+		/*
 		if(bot.containsKey(TFBotNode.ITEM)) {
-			List<Object> itemList = bot.getListValue(TFBotNode.ITEM);
+			String[] itemList = (String[]) bot.getValue(TFBotNode.ITEM);
 			
 			itemList.remove(botClass.primary());
 			itemList.remove(botClass.secondary());
 			itemList.remove(botClass.melee());
 		}
+		*/
 		//might need to strip building here
 	} 
 	
@@ -622,9 +624,12 @@ public class TreeParse { //it is time to parse
 		}	
 		
 		if(node.containsKey(TFBotNode.ITEM)) {
-			for(Object item : (List<Object>) mapCopy.remove(TFBotNode.ITEM)) {
-				indentPrintln(pw, TFBotNode.ITEM, item);
+			for(String item : (String[]) node.getValue(TFBotNode.ITEM)) {
+				if(item != null) {
+					indentPrintln(pw, TFBotNode.ITEM, item);
+				}
 			}
+			mapCopy.remove(TFBotNode.ITEM);
 		}
 		
 		if(node.containsKey(TFBotNode.TAGS)) {
@@ -634,7 +639,7 @@ public class TreeParse { //it is time to parse
 		}
 		
 		if(node.containsKey(TFBotNode.CHARACTERATTRIBUTES)) {
-			Map<String, String> map = (Map<String, String>) mapCopy.remove(TFBotNode.CHARACTERATTRIBUTES).get(0);
+			Map<String, Object> map = (Map<String, Object>) mapCopy.remove(TFBotNode.CHARACTERATTRIBUTES).get(0);
 			
 			printAttr(pw, TFBotNode.CHARACTERATTRIBUTES, map);
 		}
@@ -645,7 +650,7 @@ public class TreeParse { //it is time to parse
 			
 			for(Object submap : mapList) {
 				if(!((Map<String, Object>) submap).isEmpty()) {
-					printAttr(pw, TFBotNode.ITEMATTRIBUTES, (Map<String, String>) submap);
+					printAttr(pw, TFBotNode.ITEMATTRIBUTES, (Map<String, Object>) submap);
 				}
 			}
 		}
@@ -657,7 +662,7 @@ public class TreeParse { //it is time to parse
 		indentPrintln(pw, "}");
 	}
 	
-	private void printAttr(PrintWriter pw, String type, Map<String, String> attrMap) {
+	private void printAttr(PrintWriter pw, String type, Map<String, Object> attrMap) {
 		Object itemName = null;
 		
 		if(attrMap.isEmpty()) {

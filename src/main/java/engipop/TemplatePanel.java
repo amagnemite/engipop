@@ -115,6 +115,10 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		templateComboBox.setMinimumSize(templateNameField.getPreferredSize());
 		
 		wsModeButton.addItemListener(event -> {
+			wsPanel.setVisible(wsModeButton.isSelected());
+			spawnerPanel.setVisible(wsModeButton.isSelected());
+			listPanel.setVisible(wsModeButton.isSelected());
+			
 			if(wsModeButton.isSelected()) {
 				addTemplateButton.setText(ADDWS);
 				updateTemplateButton.setText(UPDATEWS);
@@ -126,10 +130,6 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 				addGB(spawnerListManager.getBotTankPanel().getDisabledPanel(), 0, 3);
 				
 				gbConstraints.weighty = 0;
-				
-				wsPanel.setVisible(true);
-				spawnerPanel.setVisible(true);
-				listPanel.setVisible(true);
 			}
 			else { //if botmode
 				addTemplateButton.setText(ADDBOT);
@@ -143,9 +143,6 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 				
 				gbConstraints.weighty = 0;
 				
-				wsPanel.setVisible(false);
-				spawnerPanel.setVisible(false);
-				listPanel.setVisible(false);
 				spawnerListManager.setSelectedButton(SpawnerType.TFBOT);
 			}
 		});

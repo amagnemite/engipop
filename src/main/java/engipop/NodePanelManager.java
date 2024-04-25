@@ -169,8 +169,10 @@ public class NodePanelManager {
 					//botPanel.updateNode(currentBotNode);
 					currentBotNode = new TFBotNode();
 					currentBotNode.connectNodes(currentParentNode);
+					
 					spawnerInfo.setText(botSpawner);
 					//window.feedback.setText("Bot successfully created");
+					
 					if(wavebar != null) {
 						int count = (Integer) currentParentNode.getValue(WaveSpawnNode.TOTALCOUNT);
 						wavebar.modifyIcon(currentBotNode, count, BotType.COMMON, true); //by default new tfbots are just scouts
@@ -180,6 +182,7 @@ public class NodePanelManager {
 					//tankPanel.updateNode(currentTankNode);
 					currentTankNode = new TankNode();
 					currentTankNode.connectNodes(currentParentNode);
+					
 					spawnerInfo.setText(tankSpawner);
 					
 					if(wavebar != null) {
@@ -213,11 +216,11 @@ public class NodePanelManager {
 		updateSpawner.addActionListener(event -> { //update current spawner
 			if(tankBut.isSelected()) {
 				tankPanel.updateNode(currentTankNode);
-				mainWindow.setFeedback("Tank successfully updated");
+				//mainWindow.setFeedback("Tank successfully updated");
 			}
 			else {
 				botPanel.updateNode(currentBotNode);
-				mainWindow.setFeedback("Bot successfully updated");
+				//mainWindow.setFeedback("Bot successfully updated");
 				
 				if(wavebar != null) {
 					wavebar.rebuildWavebar((WaveNode) currentParentNode.getParent());
@@ -394,8 +397,18 @@ public class NodePanelManager {
 						//if currentWSNode has a tfbot, show it
 						loadBot(false, node);
 					}
-					else {	
-						spawnerBLManager.changeButtonState(States.REMOVEONLY);
+					else {
+						if(spawnerInfo.getText() != noSpawner) {
+							currentParentNode.getChildren().clear();
+							currentBotNode = new TFBotNode();
+							currentBotNode.connectNodes(currentParentNode);
+							loadBot(false, currentBotNode);
+							
+							if(wavebar != null) {
+								//if previous spawner was overwritten, just rebuild the whole thing
+								wavebar.rebuildWavebar((WaveNode) currentParentNode.getParent());
+							}
+						}
 					}
 					
 				//}
@@ -420,7 +433,17 @@ public class NodePanelManager {
 						loadTank(false);
 					}
 					else {
-						spawnerBLManager.changeButtonState(States.REMOVEONLY);
+						if(spawnerInfo.getText() != noSpawner) {
+							currentParentNode.getChildren().clear();
+							currentTankNode = new TankNode();
+							currentTankNode.connectNodes(currentParentNode);
+							loadTank(false);
+							
+							if(wavebar != null) {
+								//if previous spawner was overwritten, just rebuild the whole thing
+								wavebar.rebuildWavebar((WaveNode) currentParentNode.getParent());
+							}
+						}
 					}
 				}
 				catch (IndexOutOfBoundsException e) {
@@ -451,8 +474,17 @@ public class NodePanelManager {
 						loadSquad(false);
 					}
 					else {
-						spawnerBLManager.changeButtonState(States.REMOVEONLY); //allow squad node removal only, disable subnode tfbot editing
-						squadRandomBLManager.changeButtonState(States.DISABLE);
+						if(spawnerInfo.getText() != noSpawner) {
+							currentParentNode.getChildren().clear();
+							currentSquadNode = new SquadNode();
+							currentSquadNode.connectNodes(currentParentNode);
+							loadSquad(false);
+							
+							if(wavebar != null) {
+								//if previous spawner was overwritten, just rebuild the whole thing
+								wavebar.rebuildWavebar((WaveNode) currentParentNode.getParent());
+							}
+						}
 					}
 				}
 				catch (IndexOutOfBoundsException e) {
@@ -488,8 +520,17 @@ public class NodePanelManager {
 						loadRandom(false);
 					}
 					else {
-						spawnerBLManager.changeButtonState(States.REMOVEONLY); //allow squad node removal only, disable subnode tfbot editing
-						squadRandomBLManager.changeButtonState(States.DISABLE);
+						if(spawnerInfo.getText() != noSpawner) {
+							currentParentNode.getChildren().clear();
+							currentRCNode = new RandomChoiceNode();
+							currentRCNode.connectNodes(currentParentNode);
+							loadRandom(false);
+							
+							if(wavebar != null) {
+								//if previous spawner was overwritten, just rebuild the whole thing
+								wavebar.rebuildWavebar((WaveNode) currentParentNode.getParent());
+							}
+						}
 					}
 				}
 				catch (IndexOutOfBoundsException e) {
@@ -511,19 +552,19 @@ public class NodePanelManager {
 	void checkSpawner(Node node) { //check what the wavespawn's spawner is
 		if(node.getClass() == TFBotNode.class) {
 			tfbotBut.setSelected(true);
-			spawnerInfo.setText(botSpawner);
+			//spawnerInfo.setText(botSpawner);
 		}
 		else if(node.getClass() == TankNode.class) {
 			tankBut.setSelected(true);
-			spawnerInfo.setText(tankSpawner);
+			//spawnerInfo.setText(tankSpawner);
 		}
 		else if(node.getClass() == SquadNode.class) {
 			squadBut.setSelected(true);
-			spawnerInfo.setText(squadSpawner);
+			//spawnerInfo.setText(squadSpawner);
 		}
 		else if(node.getClass() == RandomChoiceNode.class) {
 			randomBut.setSelected(true);
-			spawnerInfo.setText(randomSpawner);
+			//spawnerInfo.setText(randomSpawner);
 		}
 	}
 	
@@ -543,6 +584,7 @@ public class NodePanelManager {
 		else { //load input tfbot
 			currentBotNode = (TFBotNode) node;
 			if(tfbotBut.isSelected()) {
+				spawnerInfo.setText(botSpawner);
 				spawnerBLManager.changeButtonState(States.FILLEDSLOT);
 			}
 		}
@@ -565,6 +607,7 @@ public class NodePanelManager {
 		else {
 			currentTankNode = (TankNode) currentParentNode.getSpawner();
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
+			spawnerInfo.setText(tankSpawner);
 		}
 		tankPanel.updatePanel(currentTankNode);
 	}
@@ -583,6 +626,7 @@ public class NodePanelManager {
 		else {
 			currentSquadNode = (SquadNode) currentParentNode.getSpawner();
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
+			spawnerInfo.setText(squadSpawner);
 			if(currentSquadNode.hasChildren()) {
 				if(currentSquadNode.getChildren().get(0).getClass() == TFBotNode.class) {
 					//indexoutbounds?
@@ -614,6 +658,7 @@ public class NodePanelManager {
 		else {
 			currentRCNode = (RandomChoiceNode) currentParentNode.getSpawner();
 			spawnerBLManager.changeButtonState(States.FILLEDSLOT);
+			spawnerInfo.setText(randomSpawner);
 			if(currentRCNode.hasChildren()) {
 				if(currentRCNode.getChildren().get(0).getClass() == TFBotNode.class) {
 					loadBot(false, currentRCNode.getChildren().get(0));

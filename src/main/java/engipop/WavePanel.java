@@ -68,23 +68,12 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		initAction.setVisible(false);
 		
 		initNameBox.setVisible(false);
-		doInit.addItemListener(new ItemListener() { 
-			public void itemStateChanged(ItemEvent e) {
-				if(doInit.isSelected()) {
-					initLabel.setVisible(true);
-					initTargetLabel.setVisible(true);
-					initNameBox.setVisible(true);
-					initActionLabel.setVisible(true);
-					initAction.setVisible(true);
-				}
-				else {
-					initLabel.setVisible(false);
-					initTargetLabel.setVisible(false);
-					initNameBox.setVisible(false);
-					initActionLabel.setVisible(false);
-					initAction.setVisible(false);
-				}
-			}
+		doInit.addItemListener(event -> { 
+				initLabel.setVisible(doInit.isSelected());
+				initTargetLabel.setVisible(doInit.isSelected());
+				initNameBox.setVisible(doInit.isSelected());
+				initActionLabel.setVisible(doInit.isSelected());
+				initAction.setVisible(doInit.isSelected());
 		});
 		
 		addGB(waveLabel, 0, 0);

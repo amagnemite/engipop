@@ -7,6 +7,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 import engipop.Node.*;
 import engipop.WaveBarPanel.WaveBarIcon;
@@ -18,7 +21,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	
 	JMenuBar menuBar = new JMenuBar();
 	JMenu optionsMenu = new JMenu("Options");
-	JMenu editorsMenu = new JMenu("Editors");
 	JMenu utilitiesMenu = new JMenu("Utilities");
 	
 	JTabbedPane tabbedPane = new JTabbedPane();
@@ -62,6 +64,14 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 			
 		populationPanel.addPropertyChangeListener("POPNODE", this);
 		
+		String[] valvePops = {"robot_standard.pop", "robot_giant.pop", "robot_gatebot.pop"};
+		for(String pop : valvePops) {
+			URL popURL = MainWindow.class.getResource("/" + pop);
+			PopulationParser popParser = new PopulationParser(this, settingsWindow);
+			
+			popParser.parseTemplates(pop, popURL, PopulationPanel.IMPORTED);
+		}
+		
 		settings.addActionListener(event -> {
 			if(!settingsWindow.isVisible()) {
 				settingsWindow.updateWindow();
@@ -85,8 +95,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		optionsMenu.add(settings);
 		utilitiesMenu.add(timeline);
 		menuBar.add(optionsMenu);
-		menuBar.add(editorsMenu);
-		menuBar.add(utilitiesMenu);
+		//menuBar.add(utilitiesMenu);
 		setJMenuBar(menuBar);
 		
 		wsPanel = new WaveSpawnPanel(populationPanel);

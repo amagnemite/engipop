@@ -320,7 +320,7 @@ public class WaveBarPanel extends EngiPanel {
 					List<Node> spawners = ws.getSpawner().getChildren();
 					int childrenCount = spawners.size();
 					
-					if(!((RandomChoiceNode) ws.getSpawner()).hasNestedSquadRC()) {
+					if(!((RandomChoiceNode) ws.getSpawner()).hasNestedSquadRC() && childrenCount > 0) {
 						for(int i = 0; i < batches; i++) {
 							modifyIcon((TFBotNode) (spawners.get(ThreadLocalRandom.current().nextInt(0, childrenCount))), spawnCount, type, true);
 						}
@@ -399,10 +399,11 @@ public class WaveBarPanel extends EngiPanel {
 			type = botType;
 			String fullIconName = "leaderboard_class_" + iconName + ".vtf";
 			File iconFile = null;
+			URL iconURL = null;
 			
 			if(valveIcons.contains(iconName.toLowerCase())) {
 				fullIconName = "/" + fullIconName;
-				iconFile = new File(MainWindow.class.getResource(fullIconName).getFile());
+				iconURL = MainWindow.class.getResource(fullIconName);
 			}
 			else {
 				iconFile = Engipop.getIconPath().resolve(fullIconName).toFile();
@@ -421,8 +422,11 @@ public class WaveBarPanel extends EngiPanel {
 				bg = new JLabel(new ImageIcon(WHITEURL));
 			}
 			
-			if(iconFile.exists()) {
+			if(iconFile != null && iconFile.exists()) {
 				icon = parseIcon(iconFile);
+			}
+			else if(iconURL != null) {
+				icon = parseIcon(iconURL);
 			}
 			else {
 				icon = new JLabel(new ImageIcon(MISSINGURL));
@@ -521,9 +525,21 @@ public class WaveBarPanel extends EngiPanel {
 			return type;
 		}
 		
+		private JLabel parseIcon(URL icon) {
+			IconReader reader = new IconReader();
+			byte[] data = reader.getImageData(icon);
+			
+			return parseIcon(reader, data);
+		}
+		
 		private JLabel parseIcon(File icon) {
 			IconReader reader = new IconReader();
 			byte[] data = reader.getImageData(icon);
+			
+			return parseIcon(reader, data);
+		}
+		
+		private JLabel parseIcon(IconReader reader, byte[] data) {
 			if(data == null) {
 				System.out.println("bad input");
 				return null;

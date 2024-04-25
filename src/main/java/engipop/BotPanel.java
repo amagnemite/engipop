@@ -139,7 +139,14 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		attrPanel.setVisible(false);
 		removeTagRow.setEnabled(false);
 		
-		initItemLists();
+		itemLists.add(primaryList);
+		itemLists.add(secList);
+		itemLists.add(meleeList);
+		itemLists.add(hat1List);
+		itemLists.add(hat2List);
+		itemLists.add(hat3List);
+		itemLists.add(buildingList);
+		
 		initAttributePanel();
 		
 		botAttributeList = new JList<String>(TFBotNode.getAttributesList().toArray(new String[TFBotNode.getAttributesList().size()]));
@@ -366,16 +373,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		maxVisionSpinner.setVisible(false);
 	}
 	
-	private void initItemLists() { //add boxes to the list of lists
-		itemLists.add(primaryList);
-		itemLists.add(secList);
-		itemLists.add(meleeList);
-		itemLists.add(hat1List);
-		itemLists.add(hat2List);
-		itemLists.add(hat3List);
-		itemLists.add(buildingList);
-	}
-
 	private void initAttributePanel() {
 		attrPanel.setLayout(gbLayout);
 		attrPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
@@ -578,111 +575,53 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		templateField.setText((String) tf.getValue(TFBotNode.TEMPLATE));
 		
-		//sort items here if bot isn't sorted already
-		//skip if we don't have a class to compare to
-		/*
-		if(!tf.isItemsSorted() && tf.containsKey(TFBotNode.ITEM)) {
-			Classes cclass = (Classes) tf.getValue(TFBotNode.CLASSNAME);
+		if(!tf.isItemsSorted() && tf.containsKey(TFBotNode.ITEM) && (Classes) tf.getValue(TFBotNode.CLASSNAME) != Classes.None) {
+			String[] oldBotItems = (String[]) tf.getValue(TFBotNode.ITEM);
+			String newBotItems[] = new String[TFBotNode.ITEMCOUNT];
+			List<ItemData> classList = parser.getClassList((Classes) tf.getValue(TFBotNode.CLASSNAME));
+			List<String> asList = Arrays.asList(oldBotItems);
 			
-			
-			if(cclass == Classes.None) {
+			for(ItemData item : classList) {
+				String itemName = item.toString();
 				
-			}
-			
-			List<String> newItemsList = new ArrayList<String>(TFBotNode.ITEMCOUNT);
-			 
-			List<Object> itemsList = tf.getListValue(TFBotNode.ITEM);
-			
-			//this for is somewhat unclear
-			for(int slot = ItemSlot.PRIMARY.getSlot(); slot < ItemSlot.COSMETIC3.getSlot() + 1; slot++) {
-				try {
-					//List<String> sublist = parser.checkIfItemInSlot(itemsList, cclass, slot);
-					//check what happens if itemslist is empty
-					
-					if(!sublist.isEmpty()) { //if not empty, something matched the list
-						if(slot == ItemSlot.COSMETIC1.getSlot()) {
-							switch(sublist.size()) { 
-								case 3: //flow down
-									newItemsList.add(ItemSlot.COSMETIC3.getSlot(), sublist.get(2));
-								case 2:
-									newItemsList.add(ItemSlot.COSMETIC2.getSlot(), sublist.get(1));
-								case 1:
-									newItemsList.add(ItemSlot.COSMETIC1.getSlot(), sublist.get(0));
-									break;
-								default:
-									break;
-									//4 hats or something silly
-							}
+				if(asList.contains(itemName.toLowerCase())) {
+					if(item.getSlot() == ItemSlot.COSMETIC1) {
+						if(newBotItems[ItemSlot.COSMETIC1.getSlot()] == null) {
+							newBotItems[ItemSlot.COSMETIC1.getSlot()] = itemName;
 						}
-						else if(slot != ItemSlot.COSMETIC2.getSlot() && slot != ItemSlot.COSMETIC1.getSlot()) { //handle cosmetics all in one go
-							itemsList.removeAll(sublist);
-							newItemsList.add(slot, sublist.get(0));
-							//should not have multiple primary/secondary/melees/buildings, so should be 1 length array
+						else if(newBotItems[ItemSlot.COSMETIC2.getSlot()] == null) {
+							newBotItems[ItemSlot.COSMETIC2.getSlot()] = itemName;
+						}
+						else {
+							newBotItems[ItemSlot.COSMETIC3.getSlot()] = itemName;
 						}
 					}
 					else {
-						newItemsList.add(null);
+						newBotItems[item.getSlot().getSlot()] = itemName;
 					}
+					oldBotItems[asList.indexOf(itemName.toLowerCase())] = null;
 				}
-				catch (IndexOutOfBoundsException i) {
-					//thrown if not spy hits building check
-					//since we're done then, do nothing
+				if(asList.isEmpty()) {
+					break;
 				}
 			}
-			tf.setItemsSorted(true);
-			tf.putKey(TFBotNode.ITEM, newItemsList);
-		}
-		*/
-		
-		hat1List.setSelectedItem(null);
-		hat2List.setSelectedItem(null);
-		hat3List.setSelectedItem(null);
-		
-		if(tf.containsKey(TFBotNode.ITEM) && (Classes) tf.getValue(TFBotNode.CLASSNAME) != Classes.None) {
-			List<Object> array = new ArrayList<Object>(tf.getListValue(TFBotNode.ITEM));
 			
-			for(ItemData item : parser.getClassList((Classes) tf.getValue(TFBotNode.CLASSNAME))) {
-				String itemName = item.toString();
-				
-				if(array.contains(itemName)) {
-					switch(item.getSlot()) {
-						case PRIMARY:
-							primaryList.setSelectedItem(itemName);
-							break;
-						case SECONDARY:
-							secList.setSelectedItem(itemName);
-							break;
-						case MELEE:
-							meleeList.setSelectedItem(itemName);
-							break;
-						case BUILDING:
-							buildingList.setSelectedItem(itemName);
-							break;
-						case COSMETIC1:
-							if(hat1List.getSelectedItem() == null) {
-								hat1List.setSelectedItem(itemName);
-							}
-							else if(hat2List.getSelectedItem() == null) {
-								hat2List.setSelectedItem(itemName);
-							}
-							else {
-								hat3List.setSelectedItem(itemName);
-							}
-							break;
-						default:
-							break;
-							
-					}
-					array.remove(item);
-				}
-			}
+			tf.putKey(TFBotNode.ITEM, newBotItems);
+			tf.setItemsSorted(true);
 		}
-		else {
-			primaryList.setSelectedItem(null);
-			secList.setSelectedItem(null);
-			meleeList.setSelectedItem(null);
-			buildingList.setSelectedItem(null);
+		
+		if(tf.isItemsSorted() && tf.containsKey(TFBotNode.ITEM)) {
+			String[] items = (String[]) tf.getValue(TFBotNode.ITEM);
+			
+			primaryList.setSelectedItem(items[ItemSlot.PRIMARY.getSlot()]);
+			secList.setSelectedItem(items[ItemSlot.SECONDARY.getSlot()]);
+			meleeList.setSelectedItem(items[ItemSlot.MELEE.getSlot()]);
+			buildingList.setSelectedItem(items[ItemSlot.BUILDING.getSlot()]);
+			hat1List.setSelectedItem(items[ItemSlot.COSMETIC1.getSlot()]);
+			hat2List.setSelectedItem(items[ItemSlot.COSMETIC2.getSlot()]);
+			hat3List.setSelectedItem(items[ItemSlot.COSMETIC3.getSlot()]);
 		}
+
 		if(tf.containsKey(TFBotNode.ITEMATTRIBUTES)) {
 			List<Object> list = tf.getListValue(TFBotNode.ITEMATTRIBUTES);
 			attributeMapsArray = new ArrayList<Map<String, Object>>(TFBotNode.ITEMCOUNT);
@@ -754,40 +693,69 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		botAttr.addAll(botAttributeList.getSelectedValuesList());
 		tf.putKey(TFBotNode.ATTRIBUTES, botAttr);
 		
-		List<String> array = new ArrayList<String>(TFBotNode.ITEMCOUNT);
-		
 		//this sucks
+		String[] array = new String[TFBotNode.ITEMCOUNT];
+		
 		if(primaryList.getSelectedItem() != null && !((String) primaryList.getSelectedItem()).isBlank()) {
-			array.add(ItemSlot.PRIMARY.getSlot(), (String) primaryList.getSelectedItem());
+			array[ItemSlot.PRIMARY.getSlot()] = (String) primaryList.getSelectedItem();
 		}
+		else { //if null or is blank
+			array[ItemSlot.PRIMARY.getSlot()] = null;
+		}
+		
 		if(secList.getSelectedItem() != null && !((String) secList.getSelectedItem()).isBlank()) {
-			array.add(ItemSlot.SECONDARY.getSlot(), (String) secList.getSelectedItem());
+			array[ItemSlot.SECONDARY.getSlot()] = (String) secList.getSelectedItem();
 		}
+		else { //if null or is blank
+			array[ItemSlot.SECONDARY.getSlot()] = null;
+		}
+		
 		if(meleeList.getSelectedItem() != null && !((String) meleeList.getSelectedItem()).isBlank()) {
-			array.add(ItemSlot.MELEE.getSlot(), (String) meleeList.getSelectedItem());
+			array[ItemSlot.MELEE.getSlot()] = (String) meleeList.getSelectedItem();
+		}
+		else { //if null or is blank
+			array[ItemSlot.MELEE.getSlot()] = null;
 		}
 		
 		if(classBox.getSelectedItem() == Classes.Spy) {
+			//TODO: need to clear out buildings for not spy classes probably
 			if(buildingList.getSelectedItem() != null && !((String) buildingList.getSelectedItem()).isBlank()) {
-				array.add(ItemSlot.BUILDING.getSlot(), (String) buildingList.getSelectedItem());
+				array[ItemSlot.BUILDING.getSlot()] = (String) buildingList.getSelectedItem();
+			}
+			else { //if null or is blank
+				array[ItemSlot.BUILDING.getSlot()] = null;
 			}
 		}
-		//else {
-		//	array.add(ItemSlot.BUILDING.getSlot(), null);
-		//}
+		else {
+			array[ItemSlot.BUILDING.getSlot()] = null;
+		}
 		
 		if(hat1List.getSelectedItem() != null && !((String) hat1List.getSelectedItem()).isBlank()) {
-			array.add(ItemSlot.COSMETIC1.getSlot(), (String) hat1List.getSelectedItem());
+			array[ItemSlot.COSMETIC1.getSlot()] = (String) hat1List.getSelectedItem();
 		}
-		if(hat2List.getSelectedItem() != null && !((String) hat2List.getSelectedItem()).isBlank()) {
-			array.add(ItemSlot.COSMETIC2.getSlot(), (String) hat2List.getSelectedItem());
+		else { //if null or is blank
+			array[ItemSlot.COSMETIC1.getSlot()] = null;
 		}
-		if(hat3List.getSelectedItem() != null && !((String) hat3List.getSelectedItem()).isBlank()) {
-			array.add(ItemSlot.COSMETIC3.getSlot(), (String) hat3List.getSelectedItem());
-		}
-		//item attributes are added separately
 		
-		if(!array.isEmpty()) {
+		if(hat2List.getSelectedItem() != null && !((String) hat2List.getSelectedItem()).isBlank()) {
+			array[ItemSlot.COSMETIC2.getSlot()] = (String) hat2List.getSelectedItem();
+		}
+		else { //if null or is blank
+			array[ItemSlot.COSMETIC2.getSlot()] = null;
+		}
+		
+		if(hat3List.getSelectedItem() != null && !((String) hat3List.getSelectedItem()).isBlank()) {
+			array[ItemSlot.COSMETIC3.getSlot()] = (String) hat3List.getSelectedItem();
+		}
+		else { //if null or is blank
+			array[ItemSlot.COSMETIC3.getSlot()] = null;
+		}
+		
+		//item attributes are added separatelY
+		if(Arrays.asList(array).isEmpty()) {
+			tf.removeKey(TFBotNode.ITEM);
+		}
+		else {
 			tf.putKey(TFBotNode.ITEM, array);
 		}
 		
@@ -1022,7 +990,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	}
 		
 	private void checkListSize() {
-		if(itemAttributeTableModel.getRowCount() - 1 == ATTRMAX) { //only allow as many attributes that can be fit
+		if(itemAttributeTableModel.getRowCount() == ATTRMAX) { //only allow as many attributes that can be fit
 			addAttributeToListButton.setEnabled(false);
 			removeAttributeFromList.setEnabled(true);
 		}
@@ -1057,7 +1025,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		itemAttributeTableModel.setRowCount(0);
 		
 		if(!item.equals(ItemSlot.CHARACTER.toString())) {
-			itemAttributeTableModel.addRow(new Object[] {"ItemName", item});
+			itemAttributeTableModel.addRow(new Object[] {TFBotNode.ITEMNAME, item});
 		}
 		
 		currentAttributeMap.forEach((k, v) -> {

@@ -2,6 +2,7 @@ package engipop;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -58,7 +59,6 @@ public class PopulationParser { //parse .pop
 			return null;
 		}
 		
-		//TODO: this should probably also be done for templates
 		if(root.containsKey("#base")) {
 			includes = root.get(root.firstKey());
 			
@@ -78,8 +78,7 @@ public class PopulationParser { //parse .pop
 		File file = null;
 		
 		if(defaultTemplates.contains(filename)) {
-			URL popURL = MainWindow.class.getResource("/" + filename);
-			file = new File(popURL.getFile());
+			return;
 		}
 		else {
 			file = Engipop.getPopulationPath().resolve(filename).toFile();
@@ -93,33 +92,67 @@ public class PopulationParser { //parse .pop
 			return;
 		}
 		
-		parseTemplates(file, location);
+		if(!Engipop.getImportedTemplatePops().containsKey(file.getName()) && 
+				!Engipop.getIncludedTemplatePops().containsKey(file.getName())) {
+			parseTemplates(file, location);
+		}
+	}
+	
+	public void parseTemplates(String name, URL url, String location) {
+		InputStream stream;
+		byte[] bytes = null;
+		
+		try {
+			stream = url.openStream();
+			bytes = stream.readAllBytes();
+			stream.close();
+		}
+		catch (IOException e) {
+			return;
+		}
+		parseTemplates(name, new String(bytes, StandardCharsets.US_ASCII), location);
 	}
 	
 	public void parseTemplates(File file, String location) {
-		VDFNode root = null;
-		
+		String string = null;
 		try {
-			root = new VDFParser().parse(ItemParser.readFile(file.toPath(), StandardCharsets.US_ASCII));
-			//only two possible keyvals at root, include which is always first and waveschedule
+			string = ItemParser.readFile(file.toPath(), StandardCharsets.US_ASCII);
 		}
-		catch (IOException i) {
+		catch (IOException e) {
 			mainWindow.setFeedback(file.getName() + " was not found");
 			return;
 		}
+		parseTemplates(file.getName(), string, location);
+	}
+	
+	private void parseTemplates(String filename, String data, String location) {
+		VDFNode root = null;
+		Object[] includes;
+		
+		root = new VDFParser().parse(data);
+		//only two possible keyvals at root, include which is always first and waveschedule
 		root = root.getSubNode(root.lastKey());
+		
+		if(root.containsKey("#base")) {
+			includes = root.get(root.firstKey());
+			
+			for(Object includedPop : includes) {
+				parseTemplates((String) includedPop, location);
+			}
+		}
 		
 		if(root.containsKey("Templates")) {
 			if(location == PopulationPanel.IMPORTED) {
-				Engipop.getImportedTemplatePops().put(file.getName(), new PopNode(root));
+				Engipop.getImportedTemplatePops().put(filename, new PopNode(root));
 			}
 			else if(location == PopulationPanel.INCLUDED) {
-				Engipop.getIncludedTemplatePops().put(file.getName(), new PopNode(root));
+				Engipop.getIncludedTemplatePops().put(filename, new PopNode(root));
 			}
 		}
 		else {
 			mainWindow.setFeedback("No templates to process");
 		}
+		System.out.println("parsed " + filename);
 	}
 	
 	public static class TemplateData {
