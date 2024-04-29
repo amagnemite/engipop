@@ -70,11 +70,10 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	
 	//consider using shorter strings
 	JButton addTemplateButton = new JButton(ADDBOT);
-	JButton updateTemplateButton = new JButton(UPDATEBOT);
+	//JButton updateTemplateButton = new JButton(UPDATEBOT);
 	JButton removeTemplateButton = new JButton(REMOVEBOT);
 	
-	ButtonListManager templateBLManager = new ButtonListManager(addTemplateButton,
-			updateTemplateButton, removeTemplateButton);
+	ButtonListManager templateBLManager = new ButtonListManager(addTemplateButton, removeTemplateButton);
 	
 	JLabel templateNameLabel = new JLabel("Template name: ");
 	JTextField templateNameField = new JTextField("", 10);
@@ -93,8 +92,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		popPanel.addPropertyChangeListener("POPNODE", this);
 		
 		PopNode popNode = Engipop.getPopNode();
-		this.wsTemplateMap = popNode.getWSTemplateMap();
-    	this.botTemplateMap = popNode.getBotTemplateMap();
+		wsTemplateMap = popNode.getWSTemplateMap();
+    	botTemplateMap = popNode.getBotTemplateMap();
 		
 		wsPanel = new WaveSpawnPanel(popPanel);
 		spawnerListManager = new NodePanelManager(mainWindow, popPanel, null);
@@ -121,7 +120,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 			
 			if(wsModeButton.isSelected()) {
 				addTemplateButton.setText(ADDWS);
-				updateTemplateButton.setText(UPDATEWS);
+				//updateTemplateButton.setText(UPDATEWS);
 				removeTemplateButton.setText(REMOVEWS);
 				
 				updateTemplateComboBox(popNode.getWSTemplateMap());
@@ -133,7 +132,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 			}
 			else { //if botmode
 				addTemplateButton.setText(ADDBOT);
-				updateTemplateButton.setText(UPDATEBOT);
+				//updateTemplateButton.setText(UPDATEBOT);
 				removeTemplateButton.setText(REMOVEBOT);
 				
 				updateTemplateComboBox(popNode.getBotTemplateMap());
@@ -174,8 +173,6 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		
 		templateBLManager.changeButtonState(States.EMPTY);
 		
-		//updateWSTemplate.setToolTipText("The currently loaded spawner will also be included in the template");
-		
 		templateNameField.setMinimumSize(templateNameField.getPreferredSize());
 		
 		initTemplateListeners();
@@ -183,7 +180,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		templateButtonPanel.addGB(templateNameLabel, 0, 0);
 		templateButtonPanel.addGB(templateNameField, 1, 0);
 		templateButtonPanel.addGB(addTemplateButton, 0 , 2);
-		templateButtonPanel.addGB(updateTemplateButton, 0 , 3);
+		//templateButtonPanel.addGB(updateTemplateButton, 0 , 3);
 		templateButtonPanel.addGB(removeTemplateButton, 0 , 4);
 		
 		//templateButtonPanel.gbConstraints.gridheight = 3;
@@ -361,6 +358,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		});
 		
 		//update currently selected template
+		/*
 		updateTemplateButton.addActionListener(event -> {
 			boolean overwrite = false;
 			boolean sameName = false;
@@ -437,6 +435,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 				mainWindow.setFeedback("Failed to update template; name must be not be blank");
 			}
 		});
+		*/
 		
 		removeTemplateButton.addActionListener(event -> {
 			String removed = (String) templateComboBox.getSelectedItem();

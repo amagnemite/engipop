@@ -19,6 +19,7 @@ public class WherePanel extends EngiPanel {
 	private DefaultTableModel whereModel = new DefaultTableModel(0, 1);
 	private JTable whereTable = new JTable(whereModel);
 	private static List<Object> whereList = new ArrayList<Object>();
+	private boolean reset = false;
 	
 	public WherePanel() {
 		JButton addWhereRow = new JButton("+");
@@ -68,11 +69,12 @@ public class WherePanel extends EngiPanel {
 	}
 	
 	public void updateWhere(List<Object> wheres) {
-		
 		List<Object> list = new ArrayList<Object>();
 		list.addAll(wheres);
 		
+		reset = true;
 		whereTable.clearSelection();
+		reset = false;
 		
 		//select all the wheres already in model
 		for(int i = 0; i < whereModel.getRowCount(); i++) {
@@ -90,9 +92,17 @@ public class WherePanel extends EngiPanel {
 	}
 	
 	public List<String> updateNode() {
+		if(reset) {
+			return null;
+		}
+		
 		List<String> wheres = new ArrayList<String>(4);
 		for(int row : whereTable.getSelectedRows()) {
-			wheres.add((String) whereTable.getValueAt(row, 0));
+			String where = (String) whereTable.getValueAt(row, 0);
+			
+			if(!where.isBlank()) {
+				wheres.add(where);
+			}
 		}
 		return wheres;
 	}
@@ -106,6 +116,12 @@ public class WherePanel extends EngiPanel {
 	}
 	
 	public void clearSelection() {
+		reset = true;
 		whereTable.clearSelection();
+		reset = false;
+	}
+	
+	public JTable getTable() {
+		return whereTable;
 	}
 }

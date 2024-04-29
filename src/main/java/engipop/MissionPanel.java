@@ -24,7 +24,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	EngiPanel botTankPanel;
 	//TankPanel tankPanel;
 	NodePanelManager spawnerListManager;
-	JPanel listPanel;
+	//JPanel listPanel;
 	WherePanel wherePanel = new WherePanel();
 	//JPanel spawnerPanel; for now only do bots
 	
@@ -36,11 +36,10 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	//RandomChoiceNode currentRCNode = new RandomChoiceNode();
 	
 	JButton addMission = new JButton("Add mission");
-	JButton updateMission = new JButton("Update mission");
+	//JButton updateMission = new JButton("Update mission");
 	JButton removeMission = new JButton("Remove mission");
 	
-	ButtonListManager missionBLManager = new ButtonListManager(addMission,
-			updateMission, removeMission);
+	ButtonListManager missionBLManager = new ButtonListManager(addMission, removeMission);
 	
 	DefaultListModel<String> missionListModel = new DefaultListModel<String>();
 
@@ -85,7 +84,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		this.mainWindow = mainWindow;
 		//tankPanel = new TankPanel(popPanel);
 		spawnerListManager = new NodePanelManager(mainWindow, popPanel);
-		listPanel = spawnerListManager.getListPanel();
+		//listPanel = spawnerListManager.getListPanel();
 		botPanel = spawnerListManager.getBotPanel();
 		botTankPanel = spawnerListManager.getBotTankPanel();
 		//spawnerPanel = spawnerListManager.getSpawnerPanel();
@@ -106,7 +105,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		
 		EngiPanel buttonPanel = new EngiPanel();
 		buttonPanel.setLayout(buttonPanel.gbLayout);
-		buttonPanel.setBackground(listPanel.getBackground());
+		buttonPanel.setBackground(new Color(240, 129, 73));
 		buttonPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
 		missionComponentPanel.gbConstraints.ipady = 1;
@@ -125,8 +124,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		
 		missionComponentPanel.gbConstraints.gridheight = 2;
 		missionComponentPanel.addGB(wherePanel, 3, 0);
-		
-		
+			
 		missionComponentPanel.gbConstraints.gridheight = 1;
 		missionComponentPanel.gbConstraints.ipadx = 9;
 		missionComponentPanel.addGB(initialCooldownSpinner, 1, 2);
@@ -135,7 +133,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		missionComponentPanel.addGB(runSpinner, 3, 3);
 		
 		buttonPanel.addGB(addMission, 1, 0);
-		buttonPanel.addGB(updateMission, 1, 1);
+		//buttonPanel.addGB(updateMission, 1, 1);
 		buttonPanel.addGB(removeMission, 1, 2);
 		buttonPanel.gbConstraints.gridheight = 3;
 		buttonPanel.addGB(missionScroll, 0, 0);
@@ -151,7 +149,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		gbConstraints.weightx = 0.25;
 		gbConstraints.gridwidth = 1;
 		addGB(buttonPanel, 2, 0);
-		addGB(listPanel, 2, 1);
+		//addGB(listPanel, 2, 1);
 		
 		initListeners();
 		missionBLManager.changeButtonState(States.EMPTY);
@@ -177,10 +175,11 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 					botTankPanel.getDisabledPanel().setEnabled(true);
 				}
 				else {
+					currentBotNode = new TFBotNode();
 					botTankPanel.getDisabledPanel().setEnabled(false);
 				}
 				
-				updatePanel(currentMissionNode);
+				updatePanel();
 			}
 			else { //only happens when no nodes
 				missionBLManager.changeButtonState(States.EMPTY);
@@ -200,6 +199,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 			missionList.setSelectedIndex(missionListModel.getSize() - 1);
 			spawnerListManager.setParentNode(currentMissionNode);
 		});
+		/*
 		updateMission.addActionListener(event -> {
 			updateNode(currentMissionNode);
 			
@@ -207,46 +207,67 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 					currentMissionNode.getValue(MissionNode.BEGINATWAVE).toString();
 			missionListModel.set(missionList.getSelectedIndex(), name);
 		});
+		*/
 		removeMission.addActionListener(event -> {
 			missionArray.remove(missionList.getSelectedIndex());
 			missionListModel.remove(missionList.getSelectedIndex());
 			
 			missionList.setSelectedIndex(missionArray.size() - 1);
 		});
+		
+		wherePanel.getTable().getSelectionModel().addListSelectionListener(event -> {
+			List<String> wheres = wherePanel.updateNode();
+			if(wheres != null) {
+				currentMissionNode.putKey(WaveSpawnNode.WHERE, wherePanel.updateNode());
+			}
+		});
+		
+		objectiveBox.addActionListener(event -> {
+			currentMissionNode.putKey(MissionNode.OBJECTIVE, objectiveBox.getSelectedItem());
+		});
+		
+		initialCooldownSpinner.addChangeListener(event -> {
+			currentMissionNode.putKey(MissionNode.INITIALCOOLDOWN, initialCooldownSpinner.getValue());
+		});
+		
+		cooldownSpinner.addChangeListener(event -> {
+			currentMissionNode.putKey(MissionNode.COOLDOWNTIME, cooldownSpinner.getValue());
+		});
+		
+		beginSpinner.addChangeListener(event -> {
+			currentMissionNode.putKey(MissionNode.BEGINATWAVE, beginSpinner.getValue());
+		});
+		
+		runSpinner.addChangeListener(event -> {
+			currentMissionNode.putKey(MissionNode.RUNFORTHISMANYWAVES, runSpinner.getValue());
+		});
+		
+		desiredSpinner.addChangeListener(event -> {
+			currentMissionNode.putKey(MissionNode.DESIREDCOUNT, desiredSpinner.getValue());
+		});
 	}
 	
-	private void updatePanel(MissionNode mission) {
-		wherePanel.updateWhere(mission.getListValue(MissionNode.WHERE));
-		objectiveBox.setSelectedItem(mission.getValue(MissionNode.OBJECTIVE));
-		initialCooldownSpinner.setValue(mission.getValue(MissionNode.INITIALCOOLDOWN));
-		cooldownSpinner.setValue(mission.getValue(MissionNode.COOLDOWNTIME));
-		beginSpinner.setValue(mission.getValue(MissionNode.BEGINATWAVE));
-		runSpinner.setValue(mission.getValue(MissionNode.RUNFORTHISMANYWAVES));
-		if(mission.containsKey(MissionNode.DESIREDCOUNT)) {
-			desiredSpinner.setValue(mission.getValue(MissionNode.DESIREDCOUNT));
+	private void updatePanel() {
+		if(currentMissionNode.containsKey(WaveSpawnNode.WHERE)) {
+			wherePanel.updateWhere(currentMissionNode.getListValue(MissionNode.WHERE));
+		}
+		else {
+			wherePanel.clearSelection();
+		}
+		
+		objectiveBox.setSelectedItem(currentMissionNode.getValue(MissionNode.OBJECTIVE));
+		initialCooldownSpinner.setValue(currentMissionNode.getValue(MissionNode.INITIALCOOLDOWN));
+		cooldownSpinner.setValue(currentMissionNode.getValue(MissionNode.COOLDOWNTIME));
+		beginSpinner.setValue(currentMissionNode.getValue(MissionNode.BEGINATWAVE));
+		runSpinner.setValue(currentMissionNode.getValue(MissionNode.RUNFORTHISMANYWAVES));
+		if(currentMissionNode.containsKey(MissionNode.DESIREDCOUNT)) {
+			desiredSpinner.setValue(currentMissionNode.getValue(MissionNode.DESIREDCOUNT));
 		}
 		else {
 			desiredSpinner.setValue(0);
 		}
 		
-		if(mission.hasChildren()) {
-			spawnerListManager.loadBot(false, currentBotNode);
-		}
-		else {
-			spawnerListManager.loadBot(true);
-		}
-	}
-	
-	private void updateNode(MissionNode mission) {
-		mission.putKey(MissionNode.WHERE, wherePanel.updateNode());
-		mission.putKey(MissionNode.OBJECTIVE, objectiveBox.getSelectedItem());
-		mission.putKey(MissionNode.INITIALCOOLDOWN, initialCooldownSpinner.getValue());
-		mission.putKey(MissionNode.COOLDOWNTIME, cooldownSpinner.getValue());
-		mission.putKey(MissionNode.BEGINATWAVE, beginSpinner.getValue());
-		mission.putKey(MissionNode.RUNFORTHISMANYWAVES, runSpinner.getValue());
-		mission.putKey(MissionNode.DESIREDCOUNT, desiredSpinner.getValue());
-		
-		botPanel.updateNode(currentBotNode);
+		spawnerListManager.loadBot(false, currentBotNode);
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {

@@ -185,6 +185,7 @@ public class Node {
     	private int mapIndex = -1;
     	private Map<String, Node> wsTemplateMap = new TreeMap<String, Node>(String.CASE_INSENSITIVE_ORDER);
     	private Map<String, Node> botTemplateMap = new TreeMap<String, Node>(String.CASE_INSENSITIVE_ORDER);
+    	private List<String> usedTemplates = new ArrayList<String>();
 
         public PopNode() {
         	putKey(STARTINGCURRENCY, 400);
@@ -328,6 +329,14 @@ public class Node {
         public Map<String, Node> getBotTemplateMap() {
         	return botTemplateMap;
         }
+        
+        public void addTemplate(String template) {
+        	usedTemplates.add(template);
+        }
+        
+        public List<String> getUsedTemplates() {
+        	return usedTemplates;
+        }
     
         public static List<String> getNodeKeyList() {
         	List<String> list = new ArrayList<String>(Arrays.asList(STARTINGCURRENCY, RESPAWNWAVETIME, FIXEDRESPAWNWAVETIME,
@@ -402,9 +411,13 @@ public class Node {
     		keyVals.putAll(map);
     		
     		if(map.containsKey("TFBOT")) {
-    			TFBotNode botNode = new TFBotNode((Map<String, List<Object>>) this.getValue("TFBOT"));
+    			TFBotNode botNode = new TFBotNode((Map<String, List<Object>>) getValue("TFBOT"));
     			botNode.connectNodes(this);
         		this.removeKey("TFBOT");
+    		}
+    		else {
+    			TFBotNode botNode = new TFBotNode();
+    			botNode.connectNodes(this);
     		}
     	}
     	
@@ -433,7 +446,7 @@ public class Node {
         public WaveNode(Map<String, List<Object>> map) { //readin node, key case should already be converted
         	keyVals.putAll(map);
         	
-        	if(this.containsKey("WaveSpawn")) {
+        	if(containsKey("WaveSpawn")) {
         		for(Object wavespawn : keyVals.get("WaveSpawn")) {
         			WaveSpawnNode waveSpawnNode = new WaveSpawnNode((Map<String, List<Object>>) wavespawn);
 					waveSpawnNode.connectNodes(this);
@@ -441,18 +454,18 @@ public class Node {
         		keyVals.remove("WaveSpawn");
         	}
         	
-        	if(this.containsKey(STARTWAVEOUTPUT)) {
-        		RelayNode start = new RelayNode((Map<String, List<Object>>) this.getValue(STARTWAVEOUTPUT));
+        	if(containsKey(STARTWAVEOUTPUT)) {
+        		RelayNode start = new RelayNode((Map<String, List<Object>>) getValue(STARTWAVEOUTPUT));
         		putKey(STARTWAVEOUTPUT, start);
         	}
         	
         	if(keyVals.containsKey(DONEOUTPUT)) {
-        		RelayNode done = new RelayNode((Map<String, List<Object>>) this.getValue(DONEOUTPUT));
+        		RelayNode done = new RelayNode((Map<String, List<Object>>) getValue(DONEOUTPUT));
         		putKey(DONEOUTPUT, done);
         	}
         	
         	if(keyVals.containsKey(INITWAVEOUTPUT)) {
-        		RelayNode init = new RelayNode((Map<String, List<Object>>) this.getValue(INITWAVEOUTPUT));
+        		RelayNode init = new RelayNode((Map<String, List<Object>>) getValue(INITWAVEOUTPUT));
         		putKey(INITWAVEOUTPUT, init);
         	}
         }
@@ -800,8 +813,9 @@ public class Node {
     		putKey(CLASSICON, "scout");
     		putKey(SKILL, EASY);
     		putKey(WEAPONRESTRICT, ANY);
-    		//putKey(ITEM, new String[ITEMCOUNT]);
-    		//putKey(ITEMATTRIBUTES, new ArrayList<Map<String, String>>(Arrays.asList(null, null, null, null, null, null, null)));
+    		putKey(ITEM, new String[ITEMCOUNT]);
+    		putKey(ITEMATTRIBUTES, new ArrayList<Map<String, Object>>());
+    		putKey(CHARACTERATTRIBUTES, new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER));
     		isItemsSorted = true;
     	}
     	 
@@ -853,6 +867,9 @@ public class Node {
     			
     			putKey(ITEM, items);
     		}
+    		else {
+    			putKey(ITEM, new String[ITEMCOUNT]);
+    		}
     		
     		//this is sorted in botpanel, maybe shouldn't be
     		//post copyvdfnode = arraylist of map<string, arraylist<object>>s
@@ -870,6 +887,9 @@ public class Node {
     			}
     			putKey(ITEMATTRIBUTES, list);
     		}
+    		else {
+    			putKey(ITEMATTRIBUTES, new ArrayList<Map<String, Object>>());
+    		}
     		
     		if(keyVals.containsKey(CHARACTERATTRIBUTES)) {
     			List<Object> list = new ArrayList<Object>(1);
@@ -881,6 +901,9 @@ public class Node {
 				}
 				list.add(newMap);
     			putKey(CHARACTERATTRIBUTES, list);
+    		}
+    		else {
+    			putKey(CHARACTERATTRIBUTES, new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER));
     		}
     		
     		if(!keyVals.containsKey(SKILL)) {

@@ -9,6 +9,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import disabledpanel.DisabledPanel;
+import engipop.Node.RelayNode;
+import engipop.Node.WaveNode;
 
 @SuppressWarnings("serial")
 public class EngiPanel extends JPanel {
@@ -32,5 +34,16 @@ public class EngiPanel extends JPanel {
 	
 	public DisabledPanel getDisabledPanel() {
 		return disabledpanel;
+	}
+	
+	public void updateRelayKey(String relayName, String value, String relayKey, Node parent, RelayNode relay) {
+		if(!parent.containsKey(relayName) && (value == null || value.isBlank())) {
+			return;
+		}
+		
+		if(!parent.containsKey(relayName)) {
+			parent.putKey(relayName, relay);
+		}
+		relay.putKey(relayKey, value);
 	}
 }

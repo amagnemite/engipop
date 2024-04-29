@@ -7,25 +7,28 @@ import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import engipop.Node.RelayNode;
 import engipop.Node.TankNode;
+import engipop.Node.WaveNode;
 
 //panel for tank
 @SuppressWarnings("serial")
 public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	
-	JSpinner health; 
+	JSpinner healthSpinner; 
 	JSpinner speed;
 	JTextField name;
-	JCheckBox finalTank = new JCheckBox("Final tank?");
+	JCheckBox finalTankCheck = new JCheckBox("Final tank?");
 	JCheckBox onKilledCheck = new JCheckBox("OnKilledOutput?");
 	JCheckBox onBombCheck = new JCheckBox("OnBombDroppedOutput?");
 	
 	DefaultComboBoxModel<String> pathTrackModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> onKilledModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> onBombModel = new DefaultComboBoxModel<String>();
-	JComboBox<String> startingNode = new JComboBox<String>(pathTrackModel);
+	JComboBox<String> startingNodeCombo = new JComboBox<String>(pathTrackModel);
 	JComboBox<String> killedTargetBox = new JComboBox<String>(onKilledModel);
 	JComboBox<String> bombTargetBox = new JComboBox<String>(onBombModel);
 	JTextField killedActionField = new JTextField(13);
@@ -35,6 +38,10 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	JLabel bombTargetLabel = new JLabel("Target:");
 	JLabel killedActionLabel = new JLabel("Action:");
 	JLabel bombActionLabel = new JLabel("Action:");
+	
+	TankNode tankNode;
+	RelayNode killedNode;
+	RelayNode bombNode;
 	
 	public TankPanel(PopulationPanel SecondaryWindow) {
 		setLayout(gbLayout);
@@ -47,29 +54,29 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		SpinnerNumberModel healthModel = new SpinnerNumberModel(tankInit, min, tankMax, tankIncr);
 		//SpinnerNumberModel speedModel = new SpinnerNumberModel(speedInit, dMin, speedMax, speedIncr);
 		
-		health = new JSpinner(healthModel);
+		healthSpinner = new JSpinner(healthModel);
 		//speed = new JSpinner(speedModel);
 		//name = new JTextField(Values.tankDefaultName, 20);
 		
-		startingNode.setEditable(true);
+		startingNodeCombo.setEditable(true);
 		killedTargetBox.setEditable(true);
 		bombTargetBox.setEditable(true);
 		
 		JLabel healthLabel = new JLabel("Health: ");
 		JLabel startLabel = new JLabel("StartingPathTrackNode: ");
 		
-		addListeners();
+		initListeners();
 		setPairVisible(killedTargetLabel, killedTargetBox, false);
 		setPairVisible(killedActionLabel, killedActionField, false);
 		setPairVisible(bombTargetLabel, bombTargetBox, false);
 		setPairVisible(bombActionLabel, bombActionField, false);
 		
 		addGB(healthLabel, 0, 0);
-		addGB(health, 1, 0);
-		addGB(finalTank, 2, 0);
+		addGB(healthSpinner, 1, 0);
+		addGB(finalTankCheck, 2, 0);
 		
 		addGB(startLabel, 0, 1);
-		addGB(startingNode, 1, 1);
+		addGB(startingNodeCombo, 1, 1);
 		
 		addGB(onKilledCheck, 0, 2);
 		addGB(killedTargetLabel, 1, 2);
@@ -85,14 +92,80 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	}
 	
 	//currently just the relay checkboxes
-	private void addListeners() {
+	private void initListeners() {
 		onKilledCheck.addItemListener(event -> {
 			setPairVisible(killedTargetLabel, killedTargetBox, onKilledCheck.isSelected());
 			setPairVisible(killedActionLabel, killedActionField, onKilledCheck.isSelected());
+			
+			if(!onKilledCheck.isSelected()) {
+				killedNode = new RelayNode();
+				tankNode.removeKey(TankNode.ONKILLEDOUTPUT);
+			}
 		});
 		onBombCheck.addItemListener(event -> {
 			setPairVisible(bombTargetLabel, bombTargetBox, onBombCheck.isSelected());
 			setPairVisible(bombActionLabel, bombActionField, onBombCheck.isSelected());
+			
+			if(!onBombCheck.isSelected()) {
+				bombNode = new RelayNode();
+				tankNode.removeKey(TankNode.ONBOMBDROPPEDOUTPUT);
+			}
+		});
+		
+		healthSpinner.addChangeListener(event -> {
+			tankNode.putKey(TankNode.HEALTH, healthSpinner.getValue());
+		});
+		
+		finalTankCheck.addItemListener(event -> {
+			tankNode.putKey(TankNode.SKIN, finalTankCheck.isSelected());
+		});
+		
+		startingNodeCombo.addActionListener(event -> {
+			tankNode.putKey(TankNode.STARTINGPATHTRACKNODE, startingNodeCombo.getSelectedItem());
+		});
+		
+		killedTargetBox.addActionListener(event -> {
+			String text = (String) killedTargetBox.getSelectedItem();
+			updateRelayKey(TankNode.ONKILLEDOUTPUT, text, RelayNode.TARGET, tankNode, killedNode);
+		});
+		
+		bombTargetBox.addActionListener(event -> {
+			String text = (String) bombTargetBox.getSelectedItem();
+			updateRelayKey(TankNode.ONBOMBDROPPEDOUTPUT, text, RelayNode.TARGET, tankNode, bombNode);
+		});
+		
+		killedActionField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				String text = killedActionField.getText();
+				updateRelayKey(TankNode.ONKILLEDOUTPUT, text, RelayNode.ACTION, tankNode, killedNode);
+			}
+		});
+		
+		bombActionField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				String text = killedActionField.getText();
+				updateRelayKey(TankNode.ONBOMBDROPPEDOUTPUT, text, RelayNode.ACTION, tankNode, bombNode);
+			}
 		});
 	}
 	
@@ -103,58 +176,32 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	}
 	
 	public void updatePanel(TankNode node) {
-		health.setValue(node.getValue(TankNode.HEALTH));
-		finalTank.setSelected((boolean) node.getValue(TankNode.SKIN));
-		startingNode.setSelectedItem(node.getValue(TankNode.STARTINGPATHTRACKNODE));
-		if(node.getValue(TankNode.ONKILLEDOUTPUT) != null) {
-			RelayNode relay = (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT);
+		tankNode = node;
+		
+		healthSpinner.setValue(node.getValue(TankNode.HEALTH));
+		finalTankCheck.setSelected((boolean) node.getValue(TankNode.SKIN));
+		startingNodeCombo.setSelectedItem(node.getValue(TankNode.STARTINGPATHTRACKNODE));
+		if(node.containsKey(TankNode.ONKILLEDOUTPUT)) {
+			killedNode = (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT);
 			
 			onKilledCheck.setSelected(true);
-			killedTargetBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
-			killedActionField.setText((String) relay.getValue(RelayNode.ACTION));
+			killedTargetBox.setSelectedItem(killedNode.getValue(RelayNode.TARGET));
+			killedActionField.setText((String) killedNode.getValue(RelayNode.ACTION));
 		}
 		else {
 			onKilledCheck.setSelected(false);
+			killedNode = new RelayNode();
 		}
-		if(node.getValue(TankNode.ONBOMBDROPPEDOUTPUT) != null) {
-			RelayNode relay = (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT);
+		if(node.containsKey(TankNode.ONBOMBDROPPEDOUTPUT)) {
+			bombNode = (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT);
 			
 			onBombCheck.setSelected(true);
-			bombTargetBox.setSelectedItem(relay.getValue(RelayNode.TARGET));
-			bombActionField.setText((String) relay.getValue(RelayNode.ACTION));
+			bombTargetBox.setSelectedItem(bombNode.getValue(RelayNode.TARGET));
+			bombActionField.setText((String) bombNode.getValue(RelayNode.ACTION));
 		}
 		else {
 			onBombCheck.setSelected(false);
-		}
-	}
-	
-	public void updateNode(TankNode node) {
-		node.putKey(TankNode.HEALTH, health.getValue());
-		node.putKey(TankNode.SKIN, finalTank.isSelected());
-		node.putKey(TankNode.STARTINGPATHTRACKNODE, startingNode.getSelectedItem());
-		if(onKilledCheck.isSelected()) {
-			if(node.getValue(TankNode.ONKILLEDOUTPUT) == null) { //make relay if data is entered and no relay exists
-				node.putKey(TankNode.ONKILLEDOUTPUT, new RelayNode());
-			}
-			RelayNode relay = (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT);
-			
-			relay.putKey(RelayNode.TARGET, killedTargetBox.getSelectedItem());
-			relay.putKey(RelayNode.ACTION, killedActionField.getText());
-		}
-		else { //if it isn't selected, throw out old data
-			node.removeKey(TankNode.ONKILLEDOUTPUT);
-		}
-		if(onBombCheck.isSelected()) {
-			if(node.getValue(TankNode.ONBOMBDROPPEDOUTPUT) == null) { //make relay if data is entered and no relay exists
-				node.putKey(TankNode.ONBOMBDROPPEDOUTPUT, new RelayNode());
-			}
-			RelayNode relay = (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT);
-			
-			relay.putKey(RelayNode.TARGET, bombTargetBox.getSelectedItem());
-			relay.putKey(RelayNode.ACTION, bombActionField.getText());
-		}
-		else { //if it isn't selected, throw out old data
-			node.removeKey(TankNode.ONBOMBDROPPEDOUTPUT);
+			bombNode = new RelayNode();
 		}
 	}
 	

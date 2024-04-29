@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +18,8 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.Position;
 
@@ -24,6 +27,7 @@ import engipop.ButtonListManager.States;
 import engipop.Engipop.Classes;
 import engipop.Engipop.ItemSlot;
 import engipop.ItemParser.ItemData;
+import engipop.Node.PopNode;
 import engipop.Node.TFBotNode;
 import engipop.Node.WaveSpawnNode;
 
@@ -39,6 +43,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	MainWindow mainWindow;
 	EngiPanel attrPanel = new EngiPanel();
 	WherePanel teleWherePanel = new WherePanel();
+	NodePanelManager manager;
 	
 	//DefaultComboBoxModel<String> classModel;
 	DefaultComboBoxModel<String> iconModel = new DefaultComboBoxModel<String>();
@@ -104,9 +109,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JButton removeAttributeFromList = new JButton("Remove attribute");
 	
 	JComboBox<String> itemAttributesListBox;
-	List<Map<String, Object>> attributeMapsArray = new ArrayList<Map<String, Object>>(TFBotNode.ITEMCOUNT); //contains all item attribute maps
+	List<Object> attributeMapsArray = new ArrayList<Object>(TFBotNode.ITEMCOUNT); //contains all item attribute maps
 	Map<String, Object> currentAttributeMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
 	Map<String, Object> currentCharAttributeMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
+	
+	JButton removeTagRow = new JButton("-");
 	
 	//optional keyvals
 	JLabel healthLabel = new JLabel("Health:");
@@ -120,11 +127,21 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JLabel maxVisionLabel = new JLabel("MaxVisionRange:");
 	JSpinner maxVisionSpinner = new JSpinner();
 	
+	//these have default vals because botpanel needs them for startup
+	private TFBotNode botNode = new TFBotNode();
+	private String[] itemArray = new String[TFBotNode.ITEMCOUNT];
+	
+	private boolean attrReset = false;
+	private boolean tagReset = false;
+	
 	public BotPanel(MainWindow mainWindow, PopulationPanel popPanel) {
+		this(mainWindow, popPanel, null);
+	}
+	
+	public BotPanel(MainWindow mainWindow, PopulationPanel popPanel, NodePanelManager manager) {
 		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
 		JTextField cellEditor = new JTextField();
 		JButton addTagRow = new JButton("+");
-		JButton removeTagRow = new JButton("-");
 		
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
@@ -132,6 +149,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		attrPanel.setOpaque(false);
 		
 		this.mainWindow = mainWindow;
+		this.manager = manager;
 		popPanel.addPropertyChangeListener(this);
 		mainWindow.addPropertyChangeListener(this);
 		
@@ -147,9 +165,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		itemLists.add(hat3List);
 		itemLists.add(buildingList);
 		
-		initAttributePanel();
-		
 		botAttributeList = new JList<String>(TFBotNode.getAttributesList().toArray(new String[TFBotNode.getAttributesList().size()]));
+		
+		initAttributePanel();
+		initUpdateListeners();
 		
 		iconBox.setPrototypeDisplayValue("heavyweapons_healonkill_giant");
 		//templateField.setPrototypeDisplayValue("Giant Rapid Fire Demo Chief (T_TFBot_Giant_Demo_Spammer_Reload_Chief)");
@@ -159,47 +178,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		tagModel.addRow(new String[] {""});
 		tagTable.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cellEditor));
 		
-		classBox.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent a) {
-				Classes str = (Classes) classBox.getSelectedItem();
-				if(str != null) {
-					setIconBox(iconModel, str);
-				}
-				if(parser != null) { //prevent loading in cases where items_game.txt is unknown
-					setClassItems((Classes) classBox.getSelectedItem());
-				}		
-							
-				if(classBox.getSelectedItem() == Classes.Spy) {
-					buildingList.setVisible(true);
-					buildingLabel.setVisible(true);
-					
-					teleportLabel.setVisible(false);
-					teleWherePanel.setVisible(false);
-				}
-				else if(classBox.getSelectedItem() == Classes.Engineer) {
-					teleportLabel.setVisible(true);
-					teleWherePanel.setVisible(true);
-					
-					buildingList.setVisible(false);
-					buildingLabel.setVisible(false);
-				}
-				else {
-					buildingList.setVisible(false);
-					buildingLabel.setVisible(false);
-					
-					teleportLabel.setVisible(false);
-					teleWherePanel.setVisible(false);
-				}
-			}
-		});
-		tagTable.getSelectionModel().addListSelectionListener(event -> {
-			if(tagTable.getSelectedRowCount() == 1) {
-				removeTagRow.setEnabled(true);
-			}
-			else {
-				removeTagRow.setEnabled(false);
-			}
-		});
 		addTagRow.addActionListener(event -> {
 			tagModel.addRow(new String[] {""});
 		});
@@ -438,11 +416,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				
 				if(((String) cellEditor.getCellEditorValue()).isBlank()) {
 					currentAttributeMap.remove((String) itemAttributesListBox.getSelectedItem());
-					mainWindow.setFeedback("No value to add to attribute");
+					//mainWindow.setFeedback("No value to add to attribute");
 				}
 				else { //put attr - value pair in map
 					currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), cellEditor.getCellEditorValue());
-					mainWindow.setFeedback("Attribute value added");
+					//mainWindow.setFeedback("Attribute value added");
 				}
 			}
 		});
@@ -492,6 +470,8 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		});
 	}
 	public void updatePanel(TFBotNode tf) {	
+		botNode = tf;
+		
 		classBox.setSelectedItem(tf.getValue(TFBotNode.CLASSNAME));
 		if(tf.containsKey(TFBotNode.CLASSNAME)) {
 			setIconBox(iconModel, (Classes) tf.getValue(TFBotNode.CLASSNAME)); //values of classname are classes from enum
@@ -541,7 +521,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			wepGroup.setSelected(anyBut.getModel(), true);
 		}
 		
+		tagReset = true;
 		tagTable.clearSelection();
+		tagReset = false;
 		if(tf.containsKey(TFBotNode.TAGS)) {
 			List<Object> tags = new ArrayList<Object>();
 			tags.addAll(tf.getListValue(TFBotNode.TAGS));
@@ -561,7 +543,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 		}
 		
+		attrReset = true;
 		botAttributeList.clearSelection();
+		attrReset = false;
 		if(tf.containsKey(TFBotNode.ATTRIBUTES)) {
 			List<Object> attr = tf.getListValue(TFBotNode.ATTRIBUTES);
 			int[] indices = new int[attr.size()]; //max possible taglist
@@ -621,179 +605,288 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			hat2List.setSelectedItem(items[ItemSlot.COSMETIC2.getSlot()]);
 			hat3List.setSelectedItem(items[ItemSlot.COSMETIC3.getSlot()]);
 		}
+		
+		itemArray = (String[]) tf.getValue(TFBotNode.ITEM); //do it down here so it's sorted
 
+		attributesSlotsBox.removeAllItems();
+		attributesSlotsBox.addItem(ItemSlot.NONE.toString());
+		attributesSlotsBox.addItem(ItemSlot.CHARACTER.toString());
+		
+		//TODO: might not need these ifs anymore if forcing
 		if(tf.containsKey(TFBotNode.ITEMATTRIBUTES)) {
-			List<Object> list = tf.getListValue(TFBotNode.ITEMATTRIBUTES);
-			attributeMapsArray = new ArrayList<Map<String, Object>>(TFBotNode.ITEMCOUNT);
-			attributesSlotsBox.removeAllItems();
-			attributesSlotsBox.addItem(ItemSlot.NONE.toString());
-			attributesSlotsBox.addItem(ItemSlot.CHARACTER.toString());
+			attributeMapsArray = tf.getListValue(TFBotNode.ITEMATTRIBUTES);
 			
-			for(Object entry : list) {
+			for(Object entry : attributeMapsArray) {
 				Map<String, Object> map = (Map<String, Object>) entry;
-				Map<String, Object> mapCopy = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
-				mapCopy.putAll(map);
 				
 				if(map.containsKey(TFBotNode.ITEMNAME)) {
 					attributesSlotsBox.addItem((String) map.get(TFBotNode.ITEMNAME));
 				}
-				
-				attributeMapsArray.add(mapCopy);
 			}
-			
-			if(attributesSlotsBox.getItemCount() < TFBotNode.ITEMCOUNT) {
-				attributesSlotsModel.insertElementAt(ADDNEWATTR, attributesSlotsBox.getItemCount());
-			}
-			
 			attributesSlotsBox.setSelectedIndex(0);
 		}
-		else {
-			attributeMapsArray = new ArrayList<Map<String, Object>>(TFBotNode.ITEMCOUNT);
-			attributesSlotsBox.removeAllItems();
-			attributesSlotsBox.addItem(ItemSlot.NONE.toString());
-			attributesSlotsBox.addItem(ItemSlot.CHARACTER.toString());
-			
-			if(attributesSlotsBox.getItemCount() < TFBotNode.ITEMCOUNT) {
-				attributesSlotsModel.insertElementAt(ADDNEWATTR, attributesSlotsBox.getItemCount());
-			}
+		
+		if(attributesSlotsBox.getItemCount() < TFBotNode.ITEMCOUNT) {
+			attributesSlotsModel.insertElementAt(ADDNEWATTR, attributesSlotsBox.getItemCount());
 		}
 		
 		if(tf.containsKey(TFBotNode.CHARACTERATTRIBUTES)) {
 			currentCharAttributeMap = (Map<String, Object>) tf.getValue(TFBotNode.CHARACTERATTRIBUTES);
 		}
-		else {
-			currentCharAttributeMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
-		}
 		attributesSlotsBox.setSelectedItem(ItemSlot.NONE);
 		
-		teleWherePanel.clearSelection();
 		if(tf.containsKey(TFBotNode.TELEPORTWHERE)) {
 			teleWherePanel.updateWhere(tf.getListValue(TFBotNode.TELEPORTWHERE));
 		}
+		else {
+			teleWherePanel.clearSelection();
+		}
 	}
 	
-	public void updateNode(TFBotNode tf) { //put values into node
-		List<String> tags = new ArrayList<String>(4);
-		List<String> botAttr = new ArrayList<String>(4);
+	public void initUpdateListeners() { //put values into node
+		classBox.addActionListener(event -> {
+			botNode.putKey(TFBotNode.CLASSNAME, classBox.getSelectedItem());
+			
+			Classes str = (Classes) classBox.getSelectedItem();
+			if(str != null) {
+				setIconBox(iconModel, str);
+			}
+			if(parser != null) { //prevent loading in cases where items_game.txt is unknown
+				setClassItems((Classes) classBox.getSelectedItem());
+			}		
+			
+			if(manager != null) {
+				manager.updateWavebar();
+				manager.updateSquadRCName();
+			}
+			
+			if(classBox.getSelectedItem() == Classes.Spy) {
+				buildingList.setVisible(true);
+				buildingLabel.setVisible(true);
+				
+				teleportLabel.setVisible(false);
+				teleWherePanel.setVisible(false);
+			}
+			else if(classBox.getSelectedItem() == Classes.Engineer) {
+				teleportLabel.setVisible(true);
+				teleWherePanel.setVisible(true);
+				
+				buildingList.setVisible(false);
+				buildingLabel.setVisible(false);
+			}
+			else {
+				buildingList.setVisible(false);
+				buildingLabel.setVisible(false);
+				
+				teleportLabel.setVisible(false);
+				teleWherePanel.setVisible(false);
+			}
+		});
 		
-		tf.putKey(TFBotNode.CLASSNAME, classBox.getSelectedItem());
-		tf.putKey(TFBotNode.CLASSICON, iconBox.getSelectedItem()); //string
-		tf.putKey(TFBotNode.NAME, nameField.getText());
+		iconBox.addActionListener(event -> {
+			botNode.putKey(TFBotNode.CLASSICON, iconBox.getSelectedItem()); //string
+			
+			if(manager != null) {
+				manager.updateWavebar();
+			}
+		});
+		
+		nameField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				botNode.putKey(TFBotNode.NAME, nameField.getText());
+				if(manager != null) {
+					manager.updateSquadRCName();
+				}
+			}
+		});
+		
+		ActionListener skillListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				botNode.putKey(TFBotNode.SKILL, e.getActionCommand());
+			}
+		};
+		
 		//allow the default values, filter them out in treeparse while we're parsing
-		tf.putKey(TFBotNode.SKILL, skillGroup.getSelection().getActionCommand());
-		tf.putKey(TFBotNode.WEAPONRESTRICT, wepGroup.getSelection().getActionCommand());
+		noneBut.addActionListener(skillListener);
+		easyBut.addActionListener(skillListener);
+		normalBut.addActionListener(skillListener);
+		hardBut.addActionListener(skillListener);
+		expBut.addActionListener(skillListener);
 		
-		tf.putKey(TFBotNode.TEMPLATE, templateField.getText());
+		ActionListener restrictListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				botNode.putKey(TFBotNode.WEAPONRESTRICT, e.getActionCommand());
+			}
+		};
 		
-		for(int row : tagTable.getSelectedRows()) {
-			tags.add((String) tagTable.getValueAt(row, 0));
-		}
-		tf.putKey(TFBotNode.TAGS, tags);
+		anyBut.addActionListener(restrictListener);
+		priBut.addActionListener(restrictListener);
+		secBut.addActionListener(restrictListener);
+		melBut.addActionListener(restrictListener);
 		
-		botAttr.addAll(botAttributeList.getSelectedValuesList());
-		tf.putKey(TFBotNode.ATTRIBUTES, botAttr);
+		//copy pasted from ws, could link somehow
+		templateField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				String template = templateField.getText();
+				botNode.putKey(TFBotNode.TEMPLATE, template);
+				List<String> usedTemplates = Engipop.getPopNode().getUsedTemplates();
+				
+				if(template == null || template.isBlank()) {
+					return;
+				}
+				
+				if(manager != null) {
+					manager.updateWavebar();
+				}
+				
+				for(Entry<String, PopNode> entry : Engipop.getImportedTemplatePops().entrySet()) {
+					PopNode popNode = entry.getValue();
+					
+					if(!usedTemplates.contains(entry.getKey()) && popNode.getBotTemplateMap().containsKey(popNode)) {
+						Engipop.includeTemplate(entry.getKey());
+					}
+				}
+			}
+		});
 		
-		//this sucks
-		String[] array = new String[TFBotNode.ITEMCOUNT];
+		tagTable.getSelectionModel().addListSelectionListener(event -> {
+			if(event.getValueIsAdjusting() || tagReset) {
+				return;
+			}
+			
+			List<String> tags = new ArrayList<String>(4);
+			
+			if(tagTable.getSelectedRowCount() == 1) {
+				removeTagRow.setEnabled(true);
+			}
+			else {
+				removeTagRow.setEnabled(false);
+			}
+			
+			for(int row : tagTable.getSelectedRows()) {
+				tags.add((String) tagTable.getValueAt(row, 0));
+			}
+			botNode.putKey(TFBotNode.TAGS, tags);
+		});
 		
-		if(primaryList.getSelectedItem() != null && !((String) primaryList.getSelectedItem()).isBlank()) {
-			array[ItemSlot.PRIMARY.getSlot()] = (String) primaryList.getSelectedItem();
-		}
-		else { //if null or is blank
-			array[ItemSlot.PRIMARY.getSlot()] = null;
-		}
+		botAttributeList.addListSelectionListener(event -> {
+			if(event.getValueIsAdjusting() || attrReset) {
+				return;
+			}
+			
+			List<String> botAttr = new ArrayList<String>(4);
+			botAttr.addAll(botAttributeList.getSelectedValuesList());
+			botNode.putKey(TFBotNode.ATTRIBUTES, botAttr);
+			
+			if(manager != null) {
+				manager.updateWavebar();
+			}
+		});
 		
-		if(secList.getSelectedItem() != null && !((String) secList.getSelectedItem()).isBlank()) {
-			array[ItemSlot.SECONDARY.getSlot()] = (String) secList.getSelectedItem();
-		}
-		else { //if null or is blank
-			array[ItemSlot.SECONDARY.getSlot()] = null;
-		}
+		//this sucks	
+		primaryList.addActionListener(event -> {
+			if(primaryList.getSelectedItem() != null && !((String) primaryList.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.PRIMARY.getSlot()] = (String) primaryList.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.PRIMARY.getSlot()] = null;
+			}
+		});
 		
-		if(meleeList.getSelectedItem() != null && !((String) meleeList.getSelectedItem()).isBlank()) {
-			array[ItemSlot.MELEE.getSlot()] = (String) meleeList.getSelectedItem();
-		}
-		else { //if null or is blank
-			array[ItemSlot.MELEE.getSlot()] = null;
-		}
+		secList.addActionListener(event -> {
+			if(secList.getSelectedItem() != null && !((String) secList.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.SECONDARY.getSlot()] = (String) secList.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.SECONDARY.getSlot()] = null;
+			}
+		});
 		
+		meleeList.addActionListener(event -> {
+			if(meleeList.getSelectedItem() != null && !((String) meleeList.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.MELEE.getSlot()] = (String) meleeList.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.MELEE.getSlot()] = null;
+			}
+		});
+		
+		buildingList.addActionListener(event -> {
+			if(buildingList.getSelectedItem() != null && !((String) buildingList.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.BUILDING.getSlot()] = (String) buildingList.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.BUILDING.getSlot()] = null;
+			}
+		});
+		
+		/*
 		if(classBox.getSelectedItem() == Classes.Spy) {
 			//TODO: need to clear out buildings for not spy classes probably
 			if(buildingList.getSelectedItem() != null && !((String) buildingList.getSelectedItem()).isBlank()) {
-				array[ItemSlot.BUILDING.getSlot()] = (String) buildingList.getSelectedItem();
+				itemArray[ItemSlot.BUILDING.getSlot()] = (String) buildingList.getSelectedItem();
 			}
 			else { //if null or is blank
-				array[ItemSlot.BUILDING.getSlot()] = null;
+				itemArray[ItemSlot.BUILDING.getSlot()] = null;
 			}
 		}
 		else {
-			array[ItemSlot.BUILDING.getSlot()] = null;
-		}
+			itemArray[ItemSlot.BUILDING.getSlot()] = null;
+		} */
 		
-		if(hat1List.getSelectedItem() != null && !((String) hat1List.getSelectedItem()).isBlank()) {
-			array[ItemSlot.COSMETIC1.getSlot()] = (String) hat1List.getSelectedItem();
-		}
-		else { //if null or is blank
-			array[ItemSlot.COSMETIC1.getSlot()] = null;
-		}
-		
-		if(hat2List.getSelectedItem() != null && !((String) hat2List.getSelectedItem()).isBlank()) {
-			array[ItemSlot.COSMETIC2.getSlot()] = (String) hat2List.getSelectedItem();
-		}
-		else { //if null or is blank
-			array[ItemSlot.COSMETIC2.getSlot()] = null;
-		}
-		
-		if(hat3List.getSelectedItem() != null && !((String) hat3List.getSelectedItem()).isBlank()) {
-			array[ItemSlot.COSMETIC3.getSlot()] = (String) hat3List.getSelectedItem();
-		}
-		else { //if null or is blank
-			array[ItemSlot.COSMETIC3.getSlot()] = null;
-		}
-		
-		//item attributes are added separatelY
-		if(Arrays.asList(array).isEmpty()) {
-			tf.removeKey(TFBotNode.ITEM);
-		}
-		else {
-			tf.putKey(TFBotNode.ITEM, array);
-		}
-		
-		//this likely also needs some validation
-		tf.putKey(TFBotNode.CHARACTERATTRIBUTES, currentCharAttributeMap);
-		
-		Iterator<Map <String, Object>> iterator = attributeMapsArray.iterator();
-		while(iterator.hasNext()) {
-			Map<String, Object> map = iterator.next();
-			if(map.get(TFBotNode.ITEMNAME) == null || map.get(TFBotNode.ITEMNAME).equals(ADDNEWATTR)) {
-				iterator.remove();
+		hat1List.addActionListener(event -> {
+			if(hat1List.getSelectedItem() != null && !((String) hat1List.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.COSMETIC1.getSlot()] = (String) hat1List.getSelectedItem();
 			}
-		}
-		
-		//TODO: this may not be necessary?
-		int emptyItemAttributes = 0;
-		for(Map<String, Object> attributeMap : attributeMapsArray) {
-			if(attributeMap.isEmpty()) {
-				emptyItemAttributes++;
+			else { //if null or is blank
+				itemArray[ItemSlot.COSMETIC1.getSlot()] = null;
 			}
-		}
-		if(emptyItemAttributes == 0) {
-			tf.putKey(TFBotNode.ITEMATTRIBUTES, attributeMapsArray);
-		}
+		});
 		
-		tf.putKey(TFBotNode.TELEPORTWHERE, teleWherePanel.updateNode());
-		/*	
-				if(addedAttributes.isEmpty() || addedAttributes.containsValue(null) 
-						|| addedAttributes.containsValue("")) {
-					window.updateFeedback("Failed to add ItemAttributes list, an attribute is missing a value");
-				}
-				else {
-					list.set(selectedSlot.getSlot(), addedAttributes);
-					window.updateFeedback("ItemAttributes list added to TFBot");
-					removeAttrFromBot.setEnabled(true);
-				}
-				//possibly warn of overwrite
-		 */
+		hat2List.addActionListener(event -> {
+			if(hat2List.getSelectedItem() != null && !((String) hat2List.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.COSMETIC2.getSlot()] = (String) hat2List.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.COSMETIC2.getSlot()] = null;
+			}
+		});
+		
+		hat3List.addActionListener(event -> {
+			if(hat3List.getSelectedItem() != null && !((String) hat3List.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.COSMETIC3.getSlot()] = (String) hat3List.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.COSMETIC3.getSlot()] = null;
+			}
+		});
+		
+		teleWherePanel.getTable().getSelectionModel().addListSelectionListener(event -> {
+			List<String> wheres = teleWherePanel.updateNode();
+			if(wheres != null) {
+				botNode.putKey(TFBotNode.TELEPORTWHERE, wheres);
+			}
+		});
 	}
 	
 	void setIconBox(DefaultComboBoxModel<String> model, Classes str) { //set icon list depending on class
@@ -1007,9 +1100,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		}
 		else {
 			currentAttributeMap = null;
-			for(Map<String, Object> entry : attributeMapsArray) {
-				if(item.equals(entry.get(TFBotNode.ITEMNAME))) {
-					currentAttributeMap = entry;
+			for(Object entry : attributeMapsArray) {
+				Map<String, Object> map = (Map<String, Object>) entry;
+				
+				if(item.equals(map.get(TFBotNode.ITEMNAME))) {
+					currentAttributeMap = map;
 					break;
 				}
 			}

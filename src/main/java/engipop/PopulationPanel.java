@@ -37,8 +37,7 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 	
 	JButton loadPop = new JButton("Load a population file");
 	JButton loadTemplate = new JButton("Load a template file");
-	JButton updatePop = new JButton("Update population settings");
-	
+
 	MainWindow mainWindow;
 	SettingsWindow setWin;
 	PopNode popNode;
@@ -111,18 +110,9 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 		addGB(eventBox, 0, 4);
 		addGB(atkSpawnBox, 1, 4);
 		//this.addGB(advancedBox, 2, 4);
-		addGB(updatePop, 2, 5);
 	}
 	
 	private void initListeners() {
-		updatePop.addActionListener(event -> {
-			updateNode();
-			mainWindow.setFeedback("Population settings updated");
-			if(popNode.getMapIndex() > -1) { //if user entered a map
-				loadMapInfo(popNode.getMapIndex());
-			}
-		});
-		
 		loadPop.addActionListener(event -> {
 			File file = promptPopFile();
 			
@@ -143,6 +133,43 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 				propertySupport.firePropertyChange(IMPORTED, null, null);
 			}
 		});
+		
+		currSpinner.addChangeListener(event -> {
+			popNode.putKey(PopNode.STARTINGCURRENCY, currSpinner.getValue());
+		});
+		
+		respawnWaveSpinner.addChangeListener(event -> {
+			popNode.putKey(PopNode.RESPAWNWAVETIME, respawnWaveSpinner.getValue());
+		});
+		
+		waveTimeBox.addItemListener(event -> {
+			popNode.putKey(PopNode.FIXEDRESPAWNWAVETIME, waveTimeBox.isSelected());
+		});
+		
+		eventBox.addItemListener(event -> {
+			popNode.putKey(PopNode.EVENTPOPFILE, eventBox.isSelected());
+		});
+		
+		busterDmgSpinner.addChangeListener(event -> {
+			popNode.putKey(PopNode.BUSTERDAMAGE, busterDmgSpinner.getValue());
+		});
+		
+		busterKillSpinner.addChangeListener(event -> {
+			popNode.putKey(PopNode.BUSTERKILLS, busterKillSpinner.getValue());
+		});
+		
+		atkSpawnBox.addChangeListener(event -> {
+			popNode.putKey(PopNode.BOTSATKINSPAWN, atkSpawnBox.isSelected());
+		});
+		
+		maps.addActionListener(event -> {
+			popNode.setMapIndex(maps.getSelectedIndex());
+			if(popNode.getMapIndex() > -1) { //if user entered a map
+				loadMapInfo(popNode.getMapIndex());
+			}
+		});
+		
+		//popNode.putKey(PopNode.ADVANCED, advancedBox.isSelected());
 	}
 	
 	//listen to all changes
@@ -171,18 +198,6 @@ public class PopulationPanel extends EngiPanel { //population keyvals
     	propertySupport.firePropertyChange(TANKSPAWNS, null, info.getTankSpawns());
     	propertySupport.firePropertyChange(TANKRELAY, null, info.getTankRelays());
     }
-	
-	private void updateNode() {
-		popNode.setMapIndex(maps.getSelectedIndex());
-		popNode.putKey(PopNode.STARTINGCURRENCY, currSpinner.getValue());
-		popNode.putKey(PopNode.RESPAWNWAVETIME, respawnWaveSpinner.getValue());
-		popNode.putKey(PopNode.FIXEDRESPAWNWAVETIME, waveTimeBox.isSelected());
-		popNode.putKey(PopNode.EVENTPOPFILE, eventBox.isSelected());
-		popNode.putKey(PopNode.BUSTERDAMAGE, busterDmgSpinner.getValue());
-		popNode.putKey(PopNode.BUSTERKILLS, busterKillSpinner.getValue());
-		popNode.putKey(PopNode.BOTSATKINSPAWN, atkSpawnBox.isSelected());
-		//popNode.putKey(PopNode.ADVANCED, advancedBox.isSelected());
-	}
 	
 	public void updatePanel() {
 		currSpinner.setValue(popNode.getValue(PopNode.STARTINGCURRENCY));

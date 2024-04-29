@@ -114,7 +114,8 @@ public class TreeParse { //it is time to parse
 		//if wavespawn has a spawner that isn't a tank and it doesn't have a where 
 		if(ws.hasChildren() && ws.getSpawnerType() != SpawnerType.TANK) {
 			if(!ws.getMap().containsKey(WaveSpawnNode.WHERE)) {
-				stopCheck = errorString + "Where";
+				stopCheck = "Wavespawn " + (String) ws.getValue(WaveSpawnNode.NAME) + " in wave " + waveNum 
+						+ " does not have a Where selected";
 			}
 		}
 		
