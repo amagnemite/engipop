@@ -36,7 +36,6 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	//RandomChoiceNode currentRCNode = new RandomChoiceNode();
 	
 	JButton addMission = new JButton("Add mission");
-	//JButton updateMission = new JButton("Update mission");
 	JButton removeMission = new JButton("Remove mission");
 	
 	ButtonListManager missionBLManager = new ButtonListManager(addMission, removeMission);
@@ -50,6 +49,8 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	JSpinner beginSpinner = new JSpinner();
 	JSpinner runSpinner = new JSpinner();
 	JSpinner desiredSpinner = new JSpinner();
+	
+	private boolean isNodeResetting = false;
 	
 	public MissionPanel(MainWindow mainWindow, PopulationPanel popPanel, WaveBarPanel wavebar) {
 		setLayout(gbLayout);
@@ -133,7 +134,6 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		missionComponentPanel.addGB(runSpinner, 3, 3);
 		
 		buttonPanel.addGB(addMission, 1, 0);
-		//buttonPanel.addGB(updateMission, 1, 1);
 		buttonPanel.addGB(removeMission, 1, 2);
 		buttonPanel.gbConstraints.gridheight = 3;
 		buttonPanel.addGB(missionScroll, 0, 0);
@@ -151,9 +151,11 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		addGB(buttonPanel, 2, 0);
 		//addGB(listPanel, 2, 1);
 		
-		initListeners();
+		missionComponentPanel.getDisabledPanel().setEnabled(false);
+		botTankPanel.getDisabledPanel().setEnabled(false);
 		missionBLManager.changeButtonState(States.EMPTY);
 		spawnerListManager.setButtonState(States.DISABLE);
+		initListeners();
 	}
 	
 	private void initListeners() {
@@ -196,8 +198,8 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 			missionArray.add(currentMissionNode);
 			
 			missionListModel.addElement(MissionNode.DESTROYSENTRIES);
-			missionList.setSelectedIndex(missionListModel.getSize() - 1);
 			spawnerListManager.setParentNode(currentMissionNode);
+			missionList.setSelectedIndex(missionListModel.getSize() - 1);
 		});
 		/*
 		updateMission.addActionListener(event -> {
@@ -216,6 +218,9 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		});
 		
 		wherePanel.getTable().getSelectionModel().addListSelectionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			List<String> wheres = wherePanel.updateNode();
 			if(wheres != null) {
 				currentMissionNode.putKey(WaveSpawnNode.WHERE, wherePanel.updateNode());
@@ -223,31 +228,52 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		});
 		
 		objectiveBox.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			currentMissionNode.putKey(MissionNode.OBJECTIVE, objectiveBox.getSelectedItem());
+			updateMissionName();
 		});
 		
 		initialCooldownSpinner.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			currentMissionNode.putKey(MissionNode.INITIALCOOLDOWN, initialCooldownSpinner.getValue());
 		});
 		
 		cooldownSpinner.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			currentMissionNode.putKey(MissionNode.COOLDOWNTIME, cooldownSpinner.getValue());
 		});
 		
 		beginSpinner.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			currentMissionNode.putKey(MissionNode.BEGINATWAVE, beginSpinner.getValue());
+			updateMissionName();
 		});
 		
 		runSpinner.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			currentMissionNode.putKey(MissionNode.RUNFORTHISMANYWAVES, runSpinner.getValue());
 		});
 		
 		desiredSpinner.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			currentMissionNode.putKey(MissionNode.DESIREDCOUNT, desiredSpinner.getValue());
 		});
 	}
 	
 	private void updatePanel() {
+		isNodeResetting = true;
 		if(currentMissionNode.containsKey(WaveSpawnNode.WHERE)) {
 			wherePanel.updateWhere(currentMissionNode.getListValue(MissionNode.WHERE));
 		}
@@ -268,12 +294,20 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		}
 		
 		spawnerListManager.loadBot(false, currentBotNode);
+		isNodeResetting = false;
+	}
+	
+	private void updateMissionName() {
+		String name = (String) currentMissionNode.getValue(MissionNode.OBJECTIVE) + " " +
+				currentMissionNode.getValue(MissionNode.BEGINATWAVE).toString();
+		missionListModel.set(missionList.getSelectedIndex(), name);
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		PopNode popNode = Engipop.getPopNode();
 		missionArray = popNode.getListValue(PopNode.MISSION);
 		
+		isNodeResetting = true;
 		missionListModel.clear();
 		
 		for(Object node : missionArray) {
@@ -288,5 +322,6 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		else {
 			missionList.setSelectedIndex(-1);
 		}
+		isNodeResetting = false;
 	}
 }

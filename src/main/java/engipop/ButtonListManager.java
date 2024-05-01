@@ -8,7 +8,6 @@ import javax.swing.JList;
 public class ButtonListManager {
 	JList<String> list;
 	JButton add;
-	//JButton update;
 	JButton remove;
 	
 	public static enum States {
@@ -17,7 +16,6 @@ public class ButtonListManager {
 
 	public ButtonListManager(JButton add, JButton remove) {
 		this.add = add;
-		//this.update = update;
 		this.remove = remove;
 	}
 	
@@ -25,35 +23,18 @@ public class ButtonListManager {
 		switch (state) {
 			case EMPTY:
 				add.setEnabled(true);
-				//update.setEnabled(false);
 				remove.setEnabled(false);
 				break;
-			/*
-			case NOSELECTION: //potentially merge this with empty
+			case SELECTED: //this should be renamed
 				add.setEnabled(true);
-				//update.setEnabled(false);
 				remove.setEnabled(true);
-				break;
-			case REMOVEONLY:
-				add.setEnabled(false);
-				//update.setEnabled(false);
-				remove.setEnabled(true);
-				break;
-			*/
-			case SELECTED:
-				add.setEnabled(true);
-				//update.setEnabled(true);
-				remove.setEnabled(true);
-				break;
-			
+				break;	
 			case FILLEDSLOT:
 				add.setEnabled(false);
-				//update.setEnabled(true);
 				remove.setEnabled(true);
 				break;
 			case DISABLE:
 				add.setEnabled(false);
-				//update.setEnabled(false);
 				remove.setEnabled(false);
 				break;
 			default:

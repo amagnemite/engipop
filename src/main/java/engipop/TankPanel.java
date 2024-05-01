@@ -43,6 +43,10 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	RelayNode killedNode;
 	RelayNode bombNode;
 	
+	private boolean isNodeResetting = false;
+	private boolean isRelayResetting = false;
+	private boolean isPathResetting = false;
+	
 	public TankPanel(PopulationPanel SecondaryWindow) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
@@ -65,11 +69,12 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		JLabel healthLabel = new JLabel("Health: ");
 		JLabel startLabel = new JLabel("StartingPathTrackNode: ");
 		
-		initListeners();
 		setPairVisible(killedTargetLabel, killedTargetBox, false);
 		setPairVisible(killedActionLabel, killedActionField, false);
 		setPairVisible(bombTargetLabel, bombTargetBox, false);
 		setPairVisible(bombActionLabel, bombActionField, false);
+		
+		initListeners();
 		
 		addGB(healthLabel, 0, 0);
 		addGB(healthSpinner, 1, 0);
@@ -97,6 +102,10 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			setPairVisible(killedTargetLabel, killedTargetBox, onKilledCheck.isSelected());
 			setPairVisible(killedActionLabel, killedActionField, onKilledCheck.isSelected());
 			
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(!onKilledCheck.isSelected()) {
 				killedNode = new RelayNode();
 				tankNode.removeKey(TankNode.ONKILLEDOUTPUT);
@@ -106,6 +115,10 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			setPairVisible(bombTargetLabel, bombTargetBox, onBombCheck.isSelected());
 			setPairVisible(bombActionLabel, bombActionField, onBombCheck.isSelected());
 			
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(!onBombCheck.isSelected()) {
 				bombNode = new RelayNode();
 				tankNode.removeKey(TankNode.ONBOMBDROPPEDOUTPUT);
@@ -113,23 +126,38 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 		});
 		
 		healthSpinner.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			tankNode.putKey(TankNode.HEALTH, healthSpinner.getValue());
 		});
 		
 		finalTankCheck.addItemListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			tankNode.putKey(TankNode.SKIN, finalTankCheck.isSelected());
 		});
 		
 		startingNodeCombo.addActionListener(event -> {
+			if(isNodeResetting || isPathResetting) {
+				return;
+			}
 			tankNode.putKey(TankNode.STARTINGPATHTRACKNODE, startingNodeCombo.getSelectedItem());
 		});
 		
 		killedTargetBox.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
 			String text = (String) killedTargetBox.getSelectedItem();
 			updateRelayKey(TankNode.ONKILLEDOUTPUT, text, RelayNode.TARGET, tankNode, killedNode);
 		});
 		
 		bombTargetBox.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
 			String text = (String) bombTargetBox.getSelectedItem();
 			updateRelayKey(TankNode.ONBOMBDROPPEDOUTPUT, text, RelayNode.TARGET, tankNode, bombNode);
 		});
@@ -146,6 +174,9 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
 				String text = killedActionField.getText();
 				updateRelayKey(TankNode.ONKILLEDOUTPUT, text, RelayNode.ACTION, tankNode, killedNode);
 			}
@@ -163,6 +194,9 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
 				String text = killedActionField.getText();
 				updateRelayKey(TankNode.ONBOMBDROPPEDOUTPUT, text, RelayNode.ACTION, tankNode, bombNode);
 			}
@@ -177,6 +211,7 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	
 	public void updatePanel(TankNode node) {
 		tankNode = node;
+		isNodeResetting = true;
 		
 		healthSpinner.setValue(node.getValue(TankNode.HEALTH));
 		finalTankCheck.setSelected((boolean) node.getValue(TankNode.SKIN));
@@ -203,17 +238,21 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			onBombCheck.setSelected(false);
 			bombNode = new RelayNode();
 		}
+		isNodeResetting = false;
 	}
 	
-	public void setPathModel(List<String> spawns){ 
+	public void setPathModel(List<String> spawns){
+		isPathResetting = true;
 		pathTrackModel.removeAllElements();
 		
 		for(String s : spawns) {
 			pathTrackModel.addElement(s);
 		}
+		isPathResetting = false;
 	}
 	
 	public void setRelays(List<String> relays) {
+		isRelayResetting = true;
 		onKilledModel.removeAllElements();
 		onBombModel.removeAllElements();
 		
@@ -221,6 +260,7 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 			onKilledModel.addElement(s);
 			onBombModel.addElement(s);
 		}
+		isRelayResetting = false;
 	}
 
 	//get tankspawn and tankrelays from secondarywindow

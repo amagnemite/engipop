@@ -4,12 +4,15 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.swing.*;
@@ -27,6 +30,7 @@ import engipop.Node.WaveSpawnNode;
 public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener { //panel for creating wavespawns
 	
 	private static final int MIN = 0;
+	private MainWindow mainWindow;
 	
 	JTextField wsNameField = new JTextField(20);
 	JTextField wsDeadField = new JTextField(20);
@@ -66,6 +70,21 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	JCheckBox doLast = new JCheckBox("LastSpawnOutput?");
 	JCheckBox doDone = new JCheckBox("DoneOutput?");
 	
+	JLabel startWaveLabel = new JLabel("StartWaveOutput");
+	JLabel firstLabel = new JLabel("FirstSpawnOutput");
+	JLabel lastLabel = new JLabel("LastSpawnOutput");
+	JLabel doneLabel = new JLabel("DoneOutput");
+	
+	JLabel startTargetLabel = new JLabel("Target:");
+	JLabel firstTargetLabel = new JLabel("Target:");
+	JLabel lastTargetLabel = new JLabel("Target:");
+	JLabel doneTargetLabel = new JLabel("Target:");
+	
+	JLabel startActionLabel = new JLabel("Action:");
+	JLabel firstActionLabel = new JLabel("Action:");
+	JLabel lastActionLabel = new JLabel("Action:");
+	JLabel doneActionLabel = new JLabel("Action:");
+	
 	private WaveSpawnNode wsNode;
 	private RelayNode startNode;
 	private RelayNode firstNode;
@@ -73,11 +92,15 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	private RelayNode doneNode;
 	WaveNodePanelManager manager;
 	
-	public WaveSpawnPanel(PopulationPanel secondaryWindow) {
+	private boolean isNodeResetting = false;
+	private boolean isRelayResetting = false;
+	
+	public WaveSpawnPanel(PopulationPanel secondaryWindow, MainWindow mainWindow) {
 		int initial = 1, totalMax = 999, activeMax = 22, incr = 1, currMax = 30000, currIncr = 50;
 		double initWait = 0.0, minWait = 0.0, maxWait = 1000.0, incrWait = 1.0;
 		setBackground(new Color(96, 139, 165));
 		
+		this.mainWindow = mainWindow;
 		secondaryWindow.addPropertyChangeListener(this);
 		
 		JLabel label = new JLabel("WaveSpawn editor");
@@ -91,21 +114,6 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		JLabel wsAllDead = new JLabel("WaitForAllDead: ");
 		JLabel wsAllSpawned = new JLabel("WaitForAllSpawned: ");
 		JLabel templateLabel = new JLabel("Template: ");
-		
-		JLabel startWaveLabel = new JLabel("StartWaveOutput");
-		JLabel firstLabel = new JLabel("FirstSpawnOutput");
-		JLabel lastLabel = new JLabel("LastSpawnOutput");
-		JLabel doneLabel = new JLabel("DoneOutput");
-		
-		JLabel startTargetLabel = new JLabel("Target:");
-		JLabel firstTargetLabel = new JLabel("Target:");
-		JLabel lastTargetLabel = new JLabel("Target:");
-		JLabel doneTargetLabel = new JLabel("Target:");
-		
-		JLabel startActionLabel = new JLabel("Action:");
-		JLabel firstActionLabel = new JLabel("Action:");
-		JLabel lastActionLabel = new JLabel("Action:");
-		JLabel doneActionLabel = new JLabel("Action:");
 		
 		SpinnerNumberModel totalModel = new SpinnerNumberModel(initial, MIN, totalMax, incr); //totalcount bots
 		SpinnerNumberModel spawnModel = new SpinnerNumberModel(initial, MIN, activeMax, incr); //spawncount
@@ -155,52 +163,8 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		
 		isLimited.setVisible(false);
 		
-		initUpdateListeners();
-		
-		doStart.addItemListener(event -> {
-			startWaveLabel.setVisible(doStart.isSelected());
-			setComponentAndLabelVisible(startTargetLabel, startTarget, doStart.isSelected());
-			setComponentAndLabelVisible(startActionLabel, startAction, doStart.isSelected());
-			
-			if(!doStart.isSelected()) {
-				startNode = new RelayNode();
-				wsNode.removeKey(WaveSpawnNode.STARTWAVEOUTPUT);
-			}
-		});
-		
-		doFirst.addItemListener(event -> {
-			firstLabel.setVisible(doFirst.isSelected());
-			setComponentAndLabelVisible(firstTargetLabel, firstTarget, doFirst.isSelected());
-			setComponentAndLabelVisible(firstActionLabel, firstAction, doFirst.isSelected());
-			
-			if(!doFirst.isSelected()) {
-				firstNode = new RelayNode();
-				wsNode.removeKey(WaveSpawnNode.FIRSTSPAWNOUTPUT);
-			}
-		});
-		
-		doLast.addItemListener(event -> {
-			lastLabel.setVisible(doLast.isSelected());
-			setComponentAndLabelVisible(lastTargetLabel, lastTarget, doLast.isSelected());
-			setComponentAndLabelVisible(lastActionLabel, lastAction, doLast.isSelected());
-			
-			if(!doLast.isSelected()) {
-				lastNode = new RelayNode();
-				wsNode.removeKey(WaveSpawnNode.LASTSPAWNOUTPUT);
-			}
-		});
-		
-		doDone.addItemListener(event -> {
-			doneLabel.setVisible(doDone.isSelected());
-			setComponentAndLabelVisible(doneTargetLabel, doneTarget, doDone.isSelected());
-			setComponentAndLabelVisible(doneActionLabel, doneAction, doDone.isSelected());
-			
-			if(!doDone.isSelected()) {
-				doneNode = new RelayNode();
-				wsNode.removeKey(WaveSpawnNode.DONEOUTPUT);
-			}
-		});
-		
+		initListeners();
+
 		addGB(label, 0, 0);
 		
 		addGB(wsName, 0, 1);
@@ -268,7 +232,51 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		addGB(wherePanel, 3, 1);
 	}
 	
-	private void initUpdateListeners() {
+	private void initListeners() {
+		doStart.addItemListener(event -> {
+			startWaveLabel.setVisible(doStart.isSelected());
+			setComponentAndLabelVisible(startTargetLabel, startTarget, doStart.isSelected());
+			setComponentAndLabelVisible(startActionLabel, startAction, doStart.isSelected());
+			
+			if(!doStart.isSelected()) {
+				startNode = new RelayNode();
+				wsNode.removeKey(WaveSpawnNode.STARTWAVEOUTPUT);
+			}
+		});
+		
+		doFirst.addItemListener(event -> {
+			firstLabel.setVisible(doFirst.isSelected());
+			setComponentAndLabelVisible(firstTargetLabel, firstTarget, doFirst.isSelected());
+			setComponentAndLabelVisible(firstActionLabel, firstAction, doFirst.isSelected());
+			
+			if(!doFirst.isSelected()) {
+				firstNode = new RelayNode();
+				wsNode.removeKey(WaveSpawnNode.FIRSTSPAWNOUTPUT);
+			}
+		});
+		
+		doLast.addItemListener(event -> {
+			lastLabel.setVisible(doLast.isSelected());
+			setComponentAndLabelVisible(lastTargetLabel, lastTarget, doLast.isSelected());
+			setComponentAndLabelVisible(lastActionLabel, lastAction, doLast.isSelected());
+			
+			if(!doLast.isSelected()) {
+				lastNode = new RelayNode();
+				wsNode.removeKey(WaveSpawnNode.LASTSPAWNOUTPUT);
+			}
+		});
+		
+		doDone.addItemListener(event -> {
+			doneLabel.setVisible(doDone.isSelected());
+			setComponentAndLabelVisible(doneTargetLabel, doneTarget, doDone.isSelected());
+			setComponentAndLabelVisible(doneActionLabel, doneAction, doDone.isSelected());
+			
+			if(!doDone.isSelected()) {
+				doneNode = new RelayNode();
+				wsNode.removeKey(WaveSpawnNode.DONEOUTPUT);
+			}
+		});
+		
 		wsNameField.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				update();
@@ -281,6 +289,10 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
+				
 				wsNode.putKey(WaveSpawnNode.NAME, wsNameField.getText());
 				
 				if(manager != null) {
@@ -301,26 +313,19 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 			
 			public void update() {
-				String template = templateField.getText();
-				wsNode.putKey(WaveSpawnNode.TEMPLATE, template);
-				List<String> usedTemplates = Engipop.getPopNode().getUsedTemplates();
-				
-				if(template == null || template.isBlank()) {
+				if(isNodeResetting) {
 					return;
 				}
-				
-				for(Entry<String, PopNode> entry : Engipop.getImportedTemplatePops().entrySet()) {
-					PopNode popNode = entry.getValue();
-					
-					if(!usedTemplates.contains(entry.getKey()) && popNode.getWSTemplateMap().containsKey(popNode)) {
-						Engipop.includeTemplate(entry.getKey());
-					}
-				}
+				String template = templateField.getText();
+				wsNode.putKey(WaveSpawnNode.TEMPLATE, template);
 			}
 		});
 		
 		//TODO: copy paste, relink
 		wherePanel.getTable().getSelectionModel().addListSelectionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			List<String> wheres = wherePanel.updateNode();
 			if(wheres != null) {
 				wsNode.putKey(WaveSpawnNode.WHERE, wherePanel.updateNode());
@@ -328,26 +333,37 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		});
 		
 		wsTotalSpin.addChangeListener(event -> {
-			wsNode.putKey(WaveSpawnNode.TOTALCOUNT, wsTotalSpin.getValue());
-			
-			if(manager != null) {
-				manager.updateWavebar();
+			if(isNodeResetting) {
+				return;
 			}
+			wsNode.putKey(WaveSpawnNode.TOTALCOUNT, wsTotalSpin.getValue());
 		});
 		
 		wsMaxSpin.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			wsNode.putKey(WaveSpawnNode.MAXACTIVE, wsMaxSpin.getValue());
 		});
 		
 		wsSpawnSpin.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			wsNode.putKey(WaveSpawnNode.SPAWNCOUNT, wsSpawnSpin.getValue());
 		});
 		
 		wsStartSpin.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			wsNode.putKey(WaveSpawnNode.WAITBEFORESTARTING, wsStartSpin.getValue());
 		});
 		
 		wsCurrSpin.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			wsNode.putKey(WaveSpawnNode.TOTALCURRENCY, wsCurrSpin.getValue());
 		});
 		
@@ -363,6 +379,9 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
 				wsNode.putKey(WaveSpawnNode.WAITFORALLDEAD, wsDeadField.getText());
 			}
 		});
@@ -379,20 +398,28 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
 				wsNode.putKey(WaveSpawnNode.WAITFORALLSPAWNED, wsSpawnField.getText());
 			}
 		});
 		
 		isSupport.addItemListener(event -> {
 			isLimited.setVisible(isSupport.isSelected());
-			wsNode.putKey(WaveSpawnNode.SUPPORT, isSupport.isSelected());
 			
-			if(manager != null) {
-				manager.updateWavebar();
+			if(isNodeResetting) {
+				return;
 			}
+			
+			wsNode.putKey(WaveSpawnNode.SUPPORT, isSupport.isSelected());
 		});
 		
 		wsDeaths.addItemListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			updateBetweenSpawns();
 			wsNode.setBetweenDeaths(wsDeaths.isSelected());
 			
@@ -405,6 +432,9 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		});
 		
 		wsBetweenSpin.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			if(wsDeaths.isSelected()) { //this needs sanity checking
 				wsNode.putKey(WaveSpawnNode.WAITBETWEENSPAWNSAFTERDEATH, wsBetweenSpin.getValue());
 			}
@@ -414,29 +444,47 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		});
 		
 		isSupport.addItemListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			wsNode.putKey(WaveSpawnNode.SUPPORT, isSupport.isSelected());
 		});
 		
 		isLimited.addItemListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
 			wsNode.setSupportLimited(isLimited.isSelected());
 		});
 		
 		startTarget.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
 			String text = (String) startTarget.getSelectedItem();
 			updateRelayKey(WaveSpawnNode.STARTWAVEOUTPUT, text, RelayNode.TARGET, wsNode, startNode);
 		});
 		
 		firstTarget.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
 			String text = (String) firstTarget.getSelectedItem();
 			updateRelayKey(WaveSpawnNode.FIRSTSPAWNOUTPUT, text, RelayNode.TARGET, wsNode, firstNode);
 		});
 		
 		lastTarget.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
 			String text = (String) lastTarget.getSelectedItem();
 			updateRelayKey(WaveSpawnNode.LASTSPAWNOUTPUT, text, RelayNode.TARGET, wsNode, lastNode);
 		});
 		
 		doneTarget.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
 			String text = (String) doneTarget.getSelectedItem();
 			updateRelayKey(WaveSpawnNode.DONEOUTPUT, text, RelayNode.TARGET, wsNode, doneNode);
 		});
@@ -453,6 +501,9 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
 				String text = startAction.getText();
 				updateRelayKey(WaveSpawnNode.STARTWAVEOUTPUT, text, RelayNode.ACTION, wsNode, startNode);
 			}
@@ -470,6 +521,9 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
 				String text = firstAction.getText();
 				updateRelayKey(WaveSpawnNode.FIRSTSPAWNOUTPUT, text, RelayNode.ACTION, wsNode, firstNode);
 			}
@@ -487,6 +541,9 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
 				String text = lastAction.getText();
 				updateRelayKey(WaveSpawnNode.LASTSPAWNOUTPUT, text, RelayNode.ACTION, wsNode, lastNode);
 			}
@@ -504,6 +561,9 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
 				String text = doneAction.getText();
 				updateRelayKey(WaveSpawnNode.DONEOUTPUT, text, RelayNode.ACTION, wsNode, doneNode);
 			}
@@ -512,6 +572,8 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	
 	public void updatePanel(WaveSpawnNode wsn) { //sets panel components to reflect the node
 		wsNode = wsn;
+		isNodeResetting = true;
+		
 		wsNameField.setText((String) wsn.getValue(WaveSpawnNode.NAME));
 		
 		if(wsn.containsKey(WaveSpawnNode.WHERE)) {
@@ -583,6 +645,8 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			doDone.setSelected(false);
 			doneNode = new RelayNode();
 		}
+		
+		isNodeResetting = false;
 	}
 	
 	private void updateBetweenSpawns() { //update text to match wsdeaths state
@@ -595,6 +659,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	}
 	
 	public void setRelay(List<String> list) { //update relay list and attach to all the boxes
+		isRelayResetting = true;
 		startModel.removeAllElements();
 		firstModel.removeAllElements();
 		lastModel.removeAllElements();
@@ -606,6 +671,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			lastModel.addElement(s);
 			doneModel.addElement(s);
 		}
+		isRelayResetting = false;
 	}
 
 	//get ws relay and where from secondarywindow

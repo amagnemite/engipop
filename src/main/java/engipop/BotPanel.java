@@ -10,9 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.Map.Entry;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Set;
 import java.util.List;
 
 import javax.swing.*;
@@ -23,13 +21,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.Position;
 
-import engipop.ButtonListManager.States;
 import engipop.Engipop.Classes;
 import engipop.Engipop.ItemSlot;
 import engipop.ItemParser.ItemData;
-import engipop.Node.PopNode;
 import engipop.Node.TFBotNode;
-import engipop.Node.WaveSpawnNode;
 
 //todo: add some sort of sanity checking for itemattributes
 @SuppressWarnings("serial")
@@ -131,8 +126,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	private TFBotNode botNode = new TFBotNode();
 	private String[] itemArray = new String[TFBotNode.ITEMCOUNT];
 	
-	private boolean attrReset = false;
-	private boolean tagReset = false;
+	private boolean isNodeResetting = false;
 	
 	public BotPanel(MainWindow mainWindow, PopulationPanel popPanel) {
 		this(mainWindow, popPanel, null);
@@ -166,9 +160,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		itemLists.add(buildingList);
 		
 		botAttributeList = new JList<String>(TFBotNode.getAttributesList().toArray(new String[TFBotNode.getAttributesList().size()]));
-		
-		initAttributePanel();
-		initUpdateListeners();
 		
 		iconBox.setPrototypeDisplayValue("heavyweapons_healonkill_giant");
 		//templateField.setPrototypeDisplayValue("Giant Rapid Fire Demo Chief (T_TFBot_Giant_Demo_Spammer_Reload_Chief)");
@@ -278,6 +269,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		removeTagRow.setToolTipText("Remove the currently selected tag");
 		tagButtonPanel.add(addTagRow);
 		tagButtonPanel.add(removeTagRow);
+		
+		initAttributePanel();
+		initUpdateListeners();
 		
 		addGB(botClass, 0, 0);
 		addGB(classBox, 1, 0);
@@ -471,6 +465,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	}
 	public void updatePanel(TFBotNode tf) {	
 		botNode = tf;
+		isNodeResetting = true;
 		
 		classBox.setSelectedItem(tf.getValue(TFBotNode.CLASSNAME));
 		if(tf.containsKey(TFBotNode.CLASSNAME)) {
@@ -521,9 +516,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			wepGroup.setSelected(anyBut.getModel(), true);
 		}
 		
-		tagReset = true;
 		tagTable.clearSelection();
-		tagReset = false;
 		if(tf.containsKey(TFBotNode.TAGS)) {
 			List<Object> tags = new ArrayList<Object>();
 			tags.addAll(tf.getListValue(TFBotNode.TAGS));
@@ -543,9 +536,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 		}
 		
-		attrReset = true;
 		botAttributeList.clearSelection();
-		attrReset = false;
 		if(tf.containsKey(TFBotNode.ATTRIBUTES)) {
 			List<Object> attr = tf.getListValue(TFBotNode.ATTRIBUTES);
 			int[] indices = new int[attr.size()]; //max possible taglist
@@ -605,6 +596,15 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			hat2List.setSelectedItem(items[ItemSlot.COSMETIC2.getSlot()]);
 			hat3List.setSelectedItem(items[ItemSlot.COSMETIC3.getSlot()]);
 		}
+		else {
+			primaryList.setSelectedItem(null);
+			secList.setSelectedItem(null);
+			meleeList.setSelectedItem(null);
+			buildingList.setSelectedItem(null);
+			hat1List.setSelectedItem(null);
+			hat2List.setSelectedItem(null);
+			hat3List.setSelectedItem(null);
+		}
 		
 		itemArray = (String[]) tf.getValue(TFBotNode.ITEM); //do it down here so it's sorted
 
@@ -641,24 +641,19 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		else {
 			teleWherePanel.clearSelection();
 		}
+		
+		isNodeResetting = false;
 	}
 	
 	public void initUpdateListeners() { //put values into node
 		classBox.addActionListener(event -> {
-			botNode.putKey(TFBotNode.CLASSNAME, classBox.getSelectedItem());
-			
 			Classes str = (Classes) classBox.getSelectedItem();
 			if(str != null) {
 				setIconBox(iconModel, str);
 			}
 			if(parser != null) { //prevent loading in cases where items_game.txt is unknown
 				setClassItems((Classes) classBox.getSelectedItem());
-			}		
-			
-			if(manager != null) {
-				manager.updateWavebar();
-				manager.updateSquadRCName();
-			}
+			}	
 			
 			if(classBox.getSelectedItem() == Classes.Spy) {
 				buildingList.setVisible(true);
@@ -673,22 +668,34 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				
 				buildingList.setVisible(false);
 				buildingLabel.setVisible(false);
+				buildingList.setSelectedIndex(-1);
 			}
 			else {
 				buildingList.setVisible(false);
 				buildingLabel.setVisible(false);
+				buildingList.setSelectedIndex(-1);
 				
 				teleportLabel.setVisible(false);
 				teleWherePanel.setVisible(false);
 			}
+			
+			if(isNodeResetting) {
+				return;
+			}
+			
+			botNode.putKey(TFBotNode.CLASSNAME, classBox.getSelectedItem());
+			
+			if(manager != null) {
+				manager.updateSquadRCName();
+			}
 		});
 		
 		iconBox.addActionListener(event -> {
-			botNode.putKey(TFBotNode.CLASSICON, iconBox.getSelectedItem()); //string
-			
-			if(manager != null) {
-				manager.updateWavebar();
+			if(isNodeResetting) {
+				return;
 			}
+			
+			botNode.putKey(TFBotNode.CLASSICON, iconBox.getSelectedItem()); //string
 		});
 		
 		nameField.getDocument().addDocumentListener(new DocumentListener() {
@@ -703,6 +710,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 			
 			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
+				
 				botNode.putKey(TFBotNode.NAME, nameField.getText());
 				if(manager != null) {
 					manager.updateSquadRCName();
@@ -712,6 +723,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		ActionListener skillListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if(isNodeResetting) {
+					return;
+				}
+				
 				botNode.putKey(TFBotNode.SKILL, e.getActionCommand());
 			}
 		};
@@ -725,6 +740,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		
 		ActionListener restrictListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if(isNodeResetting) {
+					return;
+				}
+				
 				botNode.putKey(TFBotNode.WEAPONRESTRICT, e.getActionCommand());
 			}
 		};
@@ -735,6 +754,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		melBut.addActionListener(restrictListener);
 		
 		//copy pasted from ws, could link somehow
+		
 		templateField.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				update();
@@ -746,31 +766,22 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				update();
 			}
 			
-			public void update() {
-				String template = templateField.getText();
-				botNode.putKey(TFBotNode.TEMPLATE, template);
-				List<String> usedTemplates = Engipop.getPopNode().getUsedTemplates();
-				
-				if(template == null || template.isBlank()) {
+			public void update() { //TODO: this fires for every single char, which could be an issue
+				if(isNodeResetting) {
 					return;
 				}
 				
+				String template = templateField.getText();
+				botNode.putKey(TFBotNode.TEMPLATE, template);
+							
 				if(manager != null) {
-					manager.updateWavebar();
-				}
-				
-				for(Entry<String, PopNode> entry : Engipop.getImportedTemplatePops().entrySet()) {
-					PopNode popNode = entry.getValue();
-					
-					if(!usedTemplates.contains(entry.getKey()) && popNode.getBotTemplateMap().containsKey(popNode)) {
-						Engipop.includeTemplate(entry.getKey());
-					}
+					manager.updateSquadRCName();
 				}
 			}
 		});
 		
 		tagTable.getSelectionModel().addListSelectionListener(event -> {
-			if(event.getValueIsAdjusting() || tagReset) {
+			if(event.getValueIsAdjusting() || isNodeResetting) {
 				return;
 			}
 			
@@ -790,21 +801,21 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		});
 		
 		botAttributeList.addListSelectionListener(event -> {
-			if(event.getValueIsAdjusting() || attrReset) {
+			if(event.getValueIsAdjusting() || isNodeResetting) {
 				return;
 			}
 			
 			List<String> botAttr = new ArrayList<String>(4);
 			botAttr.addAll(botAttributeList.getSelectedValuesList());
 			botNode.putKey(TFBotNode.ATTRIBUTES, botAttr);
-			
-			if(manager != null) {
-				manager.updateWavebar();
-			}
 		});
 		
 		//this sucks	
 		primaryList.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(primaryList.getSelectedItem() != null && !((String) primaryList.getSelectedItem()).isBlank()) {
 				itemArray[ItemSlot.PRIMARY.getSlot()] = (String) primaryList.getSelectedItem();
 			}
@@ -814,6 +825,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		});
 		
 		secList.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(secList.getSelectedItem() != null && !((String) secList.getSelectedItem()).isBlank()) {
 				itemArray[ItemSlot.SECONDARY.getSlot()] = (String) secList.getSelectedItem();
 			}
@@ -823,6 +838,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		});
 		
 		meleeList.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(meleeList.getSelectedItem() != null && !((String) meleeList.getSelectedItem()).isBlank()) {
 				itemArray[ItemSlot.MELEE.getSlot()] = (String) meleeList.getSelectedItem();
 			}
@@ -832,6 +851,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		});
 		
 		buildingList.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(buildingList.getSelectedItem() != null && !((String) buildingList.getSelectedItem()).isBlank()) {
 				itemArray[ItemSlot.BUILDING.getSlot()] = (String) buildingList.getSelectedItem();
 			}
@@ -840,21 +863,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 		});
 		
-		/*
-		if(classBox.getSelectedItem() == Classes.Spy) {
-			//TODO: need to clear out buildings for not spy classes probably
-			if(buildingList.getSelectedItem() != null && !((String) buildingList.getSelectedItem()).isBlank()) {
-				itemArray[ItemSlot.BUILDING.getSlot()] = (String) buildingList.getSelectedItem();
-			}
-			else { //if null or is blank
-				itemArray[ItemSlot.BUILDING.getSlot()] = null;
-			}
-		}
-		else {
-			itemArray[ItemSlot.BUILDING.getSlot()] = null;
-		} */
-		
 		hat1List.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(hat1List.getSelectedItem() != null && !((String) hat1List.getSelectedItem()).isBlank()) {
 				itemArray[ItemSlot.COSMETIC1.getSlot()] = (String) hat1List.getSelectedItem();
 			}
@@ -864,6 +877,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		});
 		
 		hat2List.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(hat2List.getSelectedItem() != null && !((String) hat2List.getSelectedItem()).isBlank()) {
 				itemArray[ItemSlot.COSMETIC2.getSlot()] = (String) hat2List.getSelectedItem();
 			}
@@ -873,6 +890,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		});
 		
 		hat3List.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			if(hat3List.getSelectedItem() != null && !((String) hat3List.getSelectedItem()).isBlank()) {
 				itemArray[ItemSlot.COSMETIC3.getSlot()] = (String) hat3List.getSelectedItem();
 			}
@@ -882,6 +903,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		});
 		
 		teleWherePanel.getTable().getSelectionModel().addListSelectionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
 			List<String> wheres = teleWherePanel.updateNode();
 			if(wheres != null) {
 				botNode.putKey(TFBotNode.TELEPORTWHERE, wheres);
@@ -1001,38 +1026,16 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 						
 				}
 			}
-			
-			//set model(get the appropriate slot from lists, convert to a new string array of size inner list)
-			/*
-			primaryList.setModel(getNewModel(lists, ItemSlot.PRIMARY.getSlot()));
-			secList.setModel(getNewModel(lists, ItemSlot.SECONDARY.getSlot()));
-			meleeList.setModel(getNewModel(lists, ItemSlot.MELEE.getSlot()));
-			
-			hat1List.setModel(getNewModel(lists, ItemSlot.COSMETIC1.getSlot() - 1));
-			hat2List.setModel(getNewModel(lists, ItemSlot.COSMETIC1.getSlot() - 1));
-			hat3List.setModel(getNewModel(lists, ItemSlot.COSMETIC1.getSlot() - 1));
-			
-			if(index == Classes.Spy && buildingList.getItemAt(0) == null) {
-				//only need to load once since there's only one possible building list
-				buildingList.setModel(getNewModel(lists, ItemSlot.BUILDING.getSlot() + 1));
-				buildingList.setSelectedIndex(-1);
-			} */
 		}
 	
 		//default to no selection since these aren't mandatory
 		primaryList.setSelectedIndex(-1);
 		secList.setSelectedIndex(-1);
 		meleeList.setSelectedIndex(-1);
+		buildingList.setSelectedIndex(-1);
 		hat1List.setSelectedIndex(-1);
 		hat2List.setSelectedIndex(-1);
 		hat3List.setSelectedIndex(-1);
-	}
-	
-	//make new defaultcomboboxmodel from the sublist converted to string[] of sublist's size
-	private DefaultComboBoxModel<String> getNewModel(List<List<String>> lists, int slot) {
-		List<String> sublist = lists.get(slot);
-		
-		return new DefaultComboBoxModel<String>(sublist.toArray(new String[sublist.size()]));
 	}
 	
 	public void updateTagList(List<String> list) { //add custom tags to list

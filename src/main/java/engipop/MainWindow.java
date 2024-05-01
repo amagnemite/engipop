@@ -30,6 +30,8 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	//todo: update botpanel
 	JMenuItem settings = new JMenuItem("Engipop settings");
 	JMenuItem timeline = new JMenuItem("Minimum timeline viewer");
+	JMenuItem save = new JMenuItem("Save");
+	JMenuItem saveAs = new JMenuItem("Save as");
 	
 	WavePanel wavePanel;
 	WaveSpawnPanel wsPanel;
@@ -37,13 +39,12 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	TemplateTree templateTree;
 	
 	JLabel feedback = new JLabel("");
-	JButton createPop = new JButton("Create popfile"); //may consider putting this in window
 	
 	PopNode popNode;
 	
 	private PropertyChangeSupport support = new PropertyChangeSupport(this);
+	private File fileLocation = null;
 	
-	//todo: add a vertical scrollbar
 	public MainWindow() {
 		super("Engipop main");
 		//this.setBackground(new Color(193, 161, 138));
@@ -72,33 +73,16 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 			popParser.parseTemplates(pop, popURL, PopulationPanel.IMPORTED);
 		}
 		
-		settings.addActionListener(event -> {
-			if(!settingsWindow.isVisible()) {
-				settingsWindow.updateWindow();
-				settingsWindow.setVisible(true);
-			}
-		});
-		timeline.addActionListener(event -> {
-			JFileChooser c = new JFileChooser();
-			c.setFileFilter(new PopFileFilter());
-			c.showSaveDialog(this);
-			//if(result == JFileChooser.CANCEL_OPTION) return;
-			try { //double check
-				File file = c.getSelectedFile();
-				new MinTimeline().parsePopulation(file);
-			}
-			catch(Exception e) {
-				
-			}
-		});
-		
 		optionsMenu.add(settings);
+		optionsMenu.addSeparator();
+		optionsMenu.add(save);
+		optionsMenu.add(saveAs);
 		utilitiesMenu.add(timeline);
 		menuBar.add(optionsMenu);
 		//menuBar.add(utilitiesMenu);
 		setJMenuBar(menuBar);
 		
-		wsPanel = new WaveSpawnPanel(populationPanel);
+		wsPanel = new WaveSpawnPanel(populationPanel, this);
 		wavePanel = new WavePanel(populationPanel);
 		
 		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, populationPanel, wavebar);
@@ -113,17 +97,9 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		templateTreePane.setPreferredSize(new Dimension(225, templateTreePane.getPreferredSize().height));
 		//wavebar.setPreferredSize(new Dimension(WaveBarIcon.WIDTH, WaveBarIcon.HEIGHT));
 		
-		createPop.addActionListener(event -> { //potentially move this
-			String error = new TreeParse().treeCheck(popNode);
-			if(error.isEmpty()) {
-				generateFile();
-			}
-			else {
-				feedback.setText(error);
-			}	 
-		});
-		
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		
+		initListeners(settingsWindow);
 		
 		//for positioning populationpanel since it's much smaller than the rest
 		populationFillerPanel.setLayout(populationFillerPanel.gbLayout);
@@ -137,7 +113,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		
 		mainPanel.gbConstraints.gridwidth = 1;
 		mainPanel.addGB(feedback, 0, 1);
-		mainPanel.addGB(createPop, 2, 6);
+		mainPanel.addGB(waveNodeManager.getRefreshButton(), 2, 1);
 		
 		mainPanel.gbConstraints.gridwidth = 2;
 		mainPanel.addGB(wavePanel.getDisabledPanel(), 0, 2);
@@ -174,6 +150,98 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	private void initListeners(SettingsWindow settingsWindow) {
+		settings.addActionListener(event -> {
+			if(!settingsWindow.isVisible()) {
+				settingsWindow.updateWindow();
+				settingsWindow.setVisible(true);
+			}
+		});
+		timeline.addActionListener(event -> {
+			JFileChooser c = new JFileChooser();
+			c.setFileFilter(new PopFileFilter());
+			c.showSaveDialog(this);
+			//if(result == JFileChooser.CANCEL_OPTION) return;
+			try { //double check
+				File file = c.getSelectedFile();
+				new MinTimeline().parsePopulation(file);
+			}
+			catch(Exception e) {
+				
+			}
+		});
+		
+		save.addActionListener(event -> {
+			if(fileLocation == null) {
+				generateFile();
+			}
+			else {
+				new TreeParse().parseTree(fileLocation, popNode);
+				feedback.setText("Popfile successfully generated!");
+			}
+		});
+		
+		saveAs.addActionListener(event -> {
+			generateFile();
+		});
+	}
+	
+	private void generateFile() { //get filename/place to save pop at
+		String error = new TreeParse().treeCheck(popNode);
+		if(!error.isEmpty()) {
+			feedback.setText(error);
+			return;
+		} 
+		
+		JFileChooser c = new JFileChooser();
+		boolean write = false;
+		boolean appendExt = false;
+		
+		c.setFileFilter(new PopFileFilter());
+		if(c.showSaveDialog(this) == JFileChooser.CANCEL_OPTION) {
+			return;
+		}
+		//try { //double check
+			File file = c.getSelectedFile();
+			if(file.exists()) { //confirm overwrite
+				int op = JOptionPane.showConfirmDialog(this, "Overwrite this file?");
+				if(op == JOptionPane.YES_OPTION) {
+					write = true;
+				}
+			}
+			else { //if it doesn't exist, no overwrite check needed
+				write = true;
+				
+				//make sure the filename actually ends in .pop
+				String extension = file.getName();
+				int i = extension.lastIndexOf('.');
+				if (i > 0 && i < extension.length() - 1) {
+					extension = extension.substring(i+1).toLowerCase();
+		        }
+				else {
+					appendExt = true;
+				}
+				
+				if(!extension.equals("pop")) {
+					appendExt = true;
+				}
+				
+				if(appendExt) { //TODO: make sure this works on linux
+					file = new File(file.getPath() + ".pop");
+				}
+			}
+			
+			if(write) {
+				new TreeParse().parseTree(file, popNode);
+				feedback.setText("Popfile successfully generated!");
+				fileLocation = file;
+			}
+		//}
+		//catch(IOException i) {
+			
+		//}
 	}
 	
 	public static void main(String args[]) {
@@ -218,30 +286,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 			feedback.setText(" ");
 		}
 	} */
-	
-	private void generateFile() { //get filename/place to save pop at
-		JFileChooser c = new JFileChooser();
-		c.setFileFilter(new PopFileFilter());
-		c.showSaveDialog(this);
-		//if(result == JFileChooser.CANCEL_OPTION) return;
-		//try { //double check
-			File file = c.getSelectedFile();
-			if(file.exists()) { //confirm overwrite
-				int op = JOptionPane.showConfirmDialog(this, "Overwrite this file?");
-				if (op == JOptionPane.YES_OPTION) {
-					new TreeParse().parseTree(file, popNode);
-					feedback.setText("Popfile successfully generated!");
-				}
-			}
-			else { //if it doesn't exist, no overwrite check needed
-				new TreeParse().parseTree(file, popNode);
-				feedback.setText("Popfile successfully generated!");
-			}
-		//}
-		//catch(IOException i) {
-			
-		//}
-	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		this.popNode = Engipop.getPopNode();

@@ -146,8 +146,7 @@ public class Engipop {
 	}
 	
 	public static void includeTemplate(String popname) {
-		INCLUDEDTEMPLATEPOPS.put(popname, IMPORTEDTEMPLATEPOPS.remove(popname));
-		POPNODE.addTemplate(popname);
+		getIncludedTemplatePops().put(popname, getImportedTemplatePops().remove(popname));
 	}
 	
 	public static void setTFPath(Path tfpath) {

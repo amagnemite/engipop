@@ -43,7 +43,7 @@ public class MapInfo { //parse map info txt, load it into gui
 			}
 			in.close();
 		}
-		catch (Exception e) {
+		catch(IOException e) {
 			//print error here
 		}
 		return maps;
@@ -107,7 +107,7 @@ public class MapInfo { //parse map info txt, load it into gui
 			}
 			
 		}
-		catch (Exception e) {
+		catch(IOException e) {
 			//print somewhere file has gone missing
 		}
 	}

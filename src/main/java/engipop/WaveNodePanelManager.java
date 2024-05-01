@@ -13,7 +13,6 @@ import engipop.ButtonListManager.States;
 import engipop.EngiWindow.NoDeselectionModel;
 import engipop.Node.WaveNode;
 import engipop.Node.WaveSpawnNode;
-import engipop.Node.NodeWithSpawner;
 
 //also manages lists for wave/wavespawns
 public class WaveNodePanelManager extends NodePanelManager implements PropertyChangeListener {
@@ -21,11 +20,9 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	WaveSpawnPanel wsPanel;
 	
 	JButton addWave = new JButton("Add wave");
-	//JButton updateWave = new JButton("Update wave");
 	JButton removeWave = new JButton("Remove wave");
 	
 	JButton addWaveSpawn = new JButton("Add wavespawn");
-	//JButton updateWaveSpawn = new JButton("Update wavespawn");
 	JButton removeWaveSpawn = new JButton("Remove wavespawn");
 	
 	DefaultListModel<String> waveListModel = new DefaultListModel<String>();
@@ -39,7 +36,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	ButtonListManager waveBLManager = new ButtonListManager(addWave, removeWave);
 	ButtonListManager waveSpawnBLManager = new ButtonListManager(addWaveSpawn, removeWaveSpawn);
 	
-	//NodeWithSpawner currentParentNode = new WaveSpawnNode();
+	JButton refreshWavebar = new JButton("Refresh wavebar");
 	
 	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, PopulationPanel popPanel, 
 			WaveBarPanel wavebar) {
@@ -77,27 +74,27 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		
 		listPanel.gbConstraints = new GridBagConstraints(); //dump the one from NodePanelManager
 		listPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		listPanel.gbConstraints.insets = new Insets(5, 0, 5, 5);
+		listPanel.gbConstraints.insets = new Insets(0, 0, 5, 5);
 		
 		listPanel.addGB(addWave, 1, 1);
-		//listPanel.addGB(updateWave, 1, 2);
-		listPanel.addGB(removeWave, 1, 3);
+		listPanel.addGB(removeWave, 1, 2);
 		
 		listPanel.addGB(addWaveSpawn, 1, 5);
-		//listPanel.addGB(updateWaveSpawn, 1, 6);
-		listPanel.addGB(removeWaveSpawn, 1, 7);
+		listPanel.addGB(removeWaveSpawn, 1, 6);
 		
 		listPanel.addGB(addSpawner, 1, 8);
-		//listPanel.addGB(updateSpawner, 1, 9);
-		listPanel.addGB(removeSpawner, 1, 10);
+		listPanel.addGB(removeSpawner, 1, 9);
+		
+		listPanel.addGB(filler, 1, 10);
 		
 		listPanel.addGB(addSquadRandomBot, 1, 11);
-		//listPanel.addGB(updateSquadRandomBot, 1, 12);
-		listPanel.addGB(removeSquadRandomBot, 1, 13);
+		listPanel.addGB(removeSquadRandomBot, 1, 12);
 		
 		listPanel.gbConstraints.gridheight = 3;
 		listPanel.addGB(waveListScroll, 0, 1);
 		listPanel.addGB(waveSpawnListScroll, 0, 5);
+		
+		listPanel.gbConstraints.gridheight = 5;
 		listPanel.addGB(squadRandomListScroll, 0, 8);
 	}
 	
@@ -166,14 +163,6 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			}
 		});
 		
-		/*
-		updateWave.addActionListener(event -> {
-			mainWindow.setFeedback("Wave updated");
-			wavePanel.updateNode(currentWaveNode);
-			//don't update list since no real name
-		});
-		*/
-		
 		waveSpawnList.addListSelectionListener(event -> { //when wavespawn is selected from list
 			int waveSpawnIndex = waveSpawnList.getSelectedIndex();
 			mainWindow.setFeedback(" ");
@@ -234,9 +223,11 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			list.remove(waveSpawnList.getSelectedIndex());
 			waveSpawnListModel.remove(waveSpawnList.getSelectedIndex());
 			
+			/*
 			if(wavebar != null && currentParentNode.hasChildren()) {
 				wavebar.removeIcon((WaveSpawnNode) currentParentNode);
 			}
+			*/
 			
 			if(list.size() == 0) { //if no wavespawns again
 				resetWaveSpawnState(States.EMPTY);
@@ -244,6 +235,10 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			else {
 				waveSpawnList.setSelectedIndex(list.size() - 1);
 			}
+		});
+		
+		refreshWavebar.addActionListener(event -> {
+			wavebar.rebuildWavebar(currentWaveNode);
 		});
 		
 		/*
@@ -321,11 +316,19 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	}
 	
 	public void updateWSList() {
+		if(waveSpawnList.getSelectedIndex() == -1) { //???
+			return;
+		}
+		
 		if(currentParentNode.containsKey(WaveSpawnNode.NAME)) {
 			waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), (String) currentParentNode.getValue(WaveSpawnNode.NAME));
 		}
 		else { //fallback if name was added but then removed
 			waveSpawnListModel.set(waveSpawnList.getSelectedIndex(), "Wavespawn");
 		}
+	}
+	
+	public JButton getRefreshButton() {
+		return refreshWavebar;
 	}
 }

@@ -29,7 +29,7 @@ public class WherePanel extends EngiPanel {
 		
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		this.setOpaque(false);
+		setOpaque(false);
 		buttonPanel.setOpaque(false);
 		
 		whereTable.setTableHeader(null);

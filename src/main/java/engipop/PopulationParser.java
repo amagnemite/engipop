@@ -152,7 +152,6 @@ public class PopulationParser { //parse .pop
 		else {
 			mainWindow.setFeedback("No templates to process");
 		}
-		System.out.println("parsed " + filename);
 	}
 	
 	public static class TemplateData {

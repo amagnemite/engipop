@@ -36,27 +36,30 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	
 	private JCheckBox doInit = new JCheckBox("InitWaveOutput?");
 	
+	JLabel initLabel = new JLabel("InitWaveOutput");
+	JLabel initTargetLabel = new JLabel("Target: ");
+	JLabel initActionLabel = new JLabel("Action: ");
+	
 	private WaveNode waveNode;
 	private RelayNode startNode;
 	private RelayNode doneNode;
 	private RelayNode initNode;
 	
-	//String sound; 
+	//String sound;
+	private boolean isNodeResetting = false;
+	private boolean isRelayResetting = false;
 	
-	public WavePanel(PopulationPanel secondaryWindow) {
+	public WavePanel(PopulationPanel popPanel) {
 		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.insets = new Insets(0, 0, 0, 5);
-		this.setBackground(new Color(208, 169, 107));
+		setBackground(new Color(208, 169, 107));
 		
-		secondaryWindow.addPropertyChangeListener(PopulationPanel.WAVERELAY, this);
+		popPanel.addPropertyChangeListener(PopulationPanel.WAVERELAY, this);
 		
 		JLabel waveLabel = new JLabel("Wave editor");
 		JLabel startLabel = new JLabel("StartWaveOutput");
 		JLabel doneLabel = new JLabel("DoneOutput");
-		JLabel initLabel = new JLabel("InitWaveOutput");
-		JLabel initTargetLabel = new JLabel("Target: ");
-		JLabel initActionLabel = new JLabel("Action: ");
 		
 		startNameBox.setEditable(true);
 		doneNameBox.setEditable(true);
@@ -73,84 +76,8 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		initAction.setVisible(false);
 		
 		initNameBox.setVisible(false);
-		doInit.addItemListener(event -> { 
-			initLabel.setVisible(doInit.isSelected());
-			initTargetLabel.setVisible(doInit.isSelected());
-			initNameBox.setVisible(doInit.isSelected());
-			initActionLabel.setVisible(doInit.isSelected());
-			initAction.setVisible(doInit.isSelected());
-			
-			if(!doInit.isSelected()) {
-				initNode = new RelayNode();
-				waveNode.removeKey(WaveNode.INITWAVEOUTPUT);
-			}
-		});
 		
-		startNameBox.addActionListener(event -> {
-			String text = (String) startNameBox.getSelectedItem();
-			updateRelayKey(WaveNode.STARTWAVEOUTPUT, text, RelayNode.TARGET, waveNode, startNode);
-		});
-		
-		doneNameBox.addActionListener(event -> {
-			String text = (String) doneNameBox.getSelectedItem();
-			updateRelayKey(WaveNode.DONEOUTPUT, text, RelayNode.TARGET, waveNode, doneNode);
-		});
-		
-		initNameBox.addActionListener(event -> {
-			String text = (String) initNameBox.getSelectedItem();
-			updateRelayKey(WaveNode.INITWAVEOUTPUT, text, RelayNode.TARGET, waveNode, initNode);
-		});
-		
-		startAction.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				update();
-			}
-			public void insertUpdate(DocumentEvent e) {
-				update();
-			}
-			public void removeUpdate(DocumentEvent e) {
-				update();
-			}
-			
-			public void update() {
-				String text = startAction.getText();
-				updateRelayKey(WaveNode.STARTWAVEOUTPUT, text, RelayNode.ACTION, waveNode, startNode);
-			}
-		});
-		
-		doneAction.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				update();
-			}
-			public void insertUpdate(DocumentEvent e) {
-				update();
-			}
-			public void removeUpdate(DocumentEvent e) {
-				update();
-			}
-			
-			public void update() {
-				String text = doneAction.getText();
-				updateRelayKey(WaveNode.DONEOUTPUT, text, RelayNode.ACTION, waveNode, doneNode);
-			}
-		});
-		
-		initAction.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				update();
-			}
-			public void insertUpdate(DocumentEvent e) {
-				update();
-			}
-			public void removeUpdate(DocumentEvent e) {
-				update();
-			}
-			
-			public void update() {
-				String text = initAction.getText();
-				updateRelayKey(WaveNode.INITWAVEOUTPUT, text, RelayNode.ACTION, waveNode, initNode);
-			}
-		});
+		initListeners();
 		
 		addGB(waveLabel, 0, 0);
 		
@@ -175,7 +102,117 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		addGB(initAction, 5, 3);
 	}
 	
+	private void initListeners() {
+		doInit.addItemListener(event -> { 
+			initLabel.setVisible(doInit.isSelected());
+			initTargetLabel.setVisible(doInit.isSelected());
+			initNameBox.setVisible(doInit.isSelected());
+			initActionLabel.setVisible(doInit.isSelected());
+			initAction.setVisible(doInit.isSelected());
+			
+			if(isNodeResetting) {
+				return;
+			}
+			
+			if(!doInit.isSelected()) {
+				initNode = new RelayNode();
+				waveNode.removeKey(WaveNode.INITWAVEOUTPUT);
+			}
+		});
+		
+		startNameBox.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
+			
+			String text = (String) startNameBox.getSelectedItem();
+			updateRelayKey(WaveNode.STARTWAVEOUTPUT, text, RelayNode.TARGET, waveNode, startNode);
+		});
+		
+		doneNameBox.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
+			
+			String text = (String) doneNameBox.getSelectedItem();
+			updateRelayKey(WaveNode.DONEOUTPUT, text, RelayNode.TARGET, waveNode, doneNode);
+		});
+		
+		initNameBox.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
+			
+			String text = (String) initNameBox.getSelectedItem();
+			updateRelayKey(WaveNode.INITWAVEOUTPUT, text, RelayNode.TARGET, waveNode, initNode);
+		});
+		
+		startAction.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
+				
+				String text = startAction.getText();
+				updateRelayKey(WaveNode.STARTWAVEOUTPUT, text, RelayNode.ACTION, waveNode, startNode);
+			}
+		});
+		
+		doneAction.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
+				
+				String text = doneAction.getText();
+				updateRelayKey(WaveNode.DONEOUTPUT, text, RelayNode.ACTION, waveNode, doneNode);
+			}
+		});
+		
+		initAction.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
+				
+				String text = initAction.getText();
+				updateRelayKey(WaveNode.INITWAVEOUTPUT, text, RelayNode.ACTION, waveNode, initNode);
+			}
+		});
+	}
+	
 	public void setRelay(List<String> list) { //update relay list and attach to all the boxes
+		isRelayResetting = true;
 		startModel.removeAllElements();
 		doneModel.removeAllElements();
 		initModel.removeAllElements();
@@ -185,10 +222,12 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 			doneModel.addElement(s);
 			initModel.addElement(s);
 		}
+		isRelayResetting = false;
 	}
 	
 	public void updatePanel(WaveNode wave) {
 		waveNode = wave;
+		isNodeResetting = true;
 		
 		if(waveNode.containsKey(WaveNode.STARTWAVEOUTPUT)) {
 			startNode = (RelayNode) waveNode.getValue(WaveNode.STARTWAVEOUTPUT);
@@ -221,11 +260,12 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 			doInit.setSelected(false);
 			initNode = new RelayNode();
 		}
+		isNodeResetting = false;
 	}
 	
 	//get relay list from secondarywindow
 	public void propertyChange(PropertyChangeEvent evt) {
 		setRelay((List<String>) evt.getNewValue()); //this should always be a list<string>, may want to sanity check though
-		this.invalidate();
+		invalidate();
 	}
 }

@@ -185,7 +185,6 @@ public class Node {
     	private int mapIndex = -1;
     	private Map<String, Node> wsTemplateMap = new TreeMap<String, Node>(String.CASE_INSENSITIVE_ORDER);
     	private Map<String, Node> botTemplateMap = new TreeMap<String, Node>(String.CASE_INSENSITIVE_ORDER);
-    	private List<String> usedTemplates = new ArrayList<String>();
 
         public PopNode() {
         	putKey(STARTINGCURRENCY, 400);
@@ -329,14 +328,6 @@ public class Node {
         public Map<String, Node> getBotTemplateMap() {
         	return botTemplateMap;
         }
-        
-        public void addTemplate(String template) {
-        	usedTemplates.add(template);
-        }
-        
-        public List<String> getUsedTemplates() {
-        	return usedTemplates;
-        }
     
         public static List<String> getNodeKeyList() {
         	List<String> list = new ArrayList<String>(Arrays.asList(STARTINGCURRENCY, RESPAWNWAVETIME, FIXEDRESPAWNWAVETIME,
@@ -355,7 +346,6 @@ public class Node {
     	}
     	
     	//precheck spawner type
-    	//this assumes the child is valid
     	public SpawnerType getSpawnerType() {
     		Node node = getSpawner();
     		SpawnerType type = null;

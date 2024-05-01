@@ -3,12 +3,10 @@ package engipop;
 import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
 import engipop.Engipop.Classes;
 import engipop.Engipop.ItemSlot;
 import engipop.Node.*;
-import engipop.Node.TFBotNode.*;
 
 public class TreeParse { //it is time to parse
 	private int indentCount = 0;
@@ -19,7 +17,6 @@ public class TreeParse { //it is time to parse
 	//counts as assister is some kind of pet this update is going to be awesome
 	
 	public TreeParse() {
-		
 	}
 	
 	//sanity check pop, make sure no nulls and general silliness can get printed
@@ -111,6 +108,16 @@ public class TreeParse { //it is time to parse
 					? "" : errorString + "DoneOutput";
 		}
 		
+		if(ws.containsKey(WaveSpawnNode.TEMPLATE)) {
+			String template = (String) ws.getValue(WaveSpawnNode.TEMPLATE);
+			
+			for(Entry<String, PopNode> entry : Engipop.getImportedTemplatePops().entrySet()) {
+				if(!template.contains(entry.getKey()) && entry.getValue().getWSTemplateMap().containsKey(template)) {
+					Engipop.includeTemplate(entry.getKey());
+				}
+			}
+		}
+		
 		//if wavespawn has a spawner that isn't a tank and it doesn't have a where 
 		if(ws.hasChildren() && ws.getSpawnerType() != SpawnerType.TANK) {
 			if(!ws.getMap().containsKey(WaveSpawnNode.WHERE)) {
@@ -138,16 +145,39 @@ public class TreeParse { //it is time to parse
 	private void checkBot(TFBotNode bot) {
 		Classes botClass = (Classes) bot.getValue(TFBotNode.CLASSNAME);
 		
-		/*
 		if(bot.containsKey(TFBotNode.ITEM)) {
 			String[] itemList = (String[]) bot.getValue(TFBotNode.ITEM);
 			
-			itemList.remove(botClass.primary());
-			itemList.remove(botClass.secondary());
-			itemList.remove(botClass.melee());
+			int slot = ItemSlot.PRIMARY.getSlot();
+			if(itemList[slot] != null && itemList[slot].equals(botClass.primary())) {
+				itemList[slot] = null;
+			}
+			
+			slot = ItemSlot.SECONDARY.getSlot();
+			if(itemList[slot] != null && itemList[slot].equals(botClass.secondary())) {
+				itemList[slot] = null;
+			}
+			
+			slot = ItemSlot.MELEE.getSlot();
+			if(itemList[slot] != null && itemList[slot].equals(botClass.melee())) {
+				itemList[slot] = null;
+			}
+			
+			slot = ItemSlot.BUILDING.getSlot();
+			if(itemList[slot] != null && itemList[slot].equals(botClass.building())) {
+				itemList[slot] = null;
+			}
 		}
-		*/
-		//might need to strip building here
+		
+		if(bot.containsKey(TFBotNode.TEMPLATE)) {
+			String template = (String) bot.getValue(TFBotNode.TEMPLATE);
+			
+			for(Entry<String, PopNode> entry : Engipop.getImportedTemplatePops().entrySet()) {
+				if(!template.contains(entry.getKey()) && entry.getValue().getBotTemplateMap().containsKey(template)) {
+					Engipop.includeTemplate(entry.getKey());
+				}
+			}
+		}
 	} 
 	
 	private String checkTank(TankNode tank, int waveNum, String wsName) {
@@ -199,6 +229,12 @@ public class TreeParse { //it is time to parse
 			pw = new PrintWriter(fw, true);
 			
 			pw.println("//made with engipop");
+			
+			for(String include : Engipop.getIncludedTemplatePops().keySet()) {
+				pw.println("#base " + include);
+			}
+			
+			pw.println("");
 			pw.println("WaveSchedule");
 			pw.println("{");
 			
