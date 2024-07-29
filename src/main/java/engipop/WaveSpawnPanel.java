@@ -129,7 +129,6 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		wsStartSpin.setModel(startModel);
 		wsBetweenSpin.setModel(betweenModel);
 		
-		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.insets = new Insets(0, 0, 0, 10);
 		

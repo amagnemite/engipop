@@ -43,7 +43,7 @@ public class EngiWindow extends JFrame {
 	public void addGB(Component comp, int x, int y) {
 		gbConstraints.gridx = x;
 		gbConstraints.gridy = y;
-		this.add(comp, gbConstraints);
+		add(comp, gbConstraints);
 	}
 
 	public static class NoDeselectionModel extends DefaultListSelectionModel {

@@ -137,7 +137,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		JTextField cellEditor = new JTextField();
 		JButton addTagRow = new JButton("+");
 		
-		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		setBackground(new Color(192, 192, 192));
 		attrPanel.setOpaque(false);
@@ -346,7 +345,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	}
 	
 	private void initAttributePanel() {
-		attrPanel.setLayout(gbLayout);
 		attrPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
 		attributesSlotsModel.addElement(ItemSlot.NONE.toString());
@@ -368,7 +366,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		//itemAttributeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		itemAttributesListBox.setPrototypeDisplayValue("CHARACTER");
-		attrListPane.setPreferredSize(new Dimension(300, 200)); //this is arbitary but the preferred is giant
+		attrListPane.setPreferredSize(new Dimension(300, 100)); //this is arbitary but the preferred is giant
 		//itemAttributeTable.getPreferredScrollableViewportSize()
 		
 		attrPanel.addGB(addAttributeToListButton, 0, 1);
@@ -402,8 +400,9 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 						int index = attributesSlotsBox.getSelectedIndex();
 						currentAttributeMap.put(TFBotNode.ITEMNAME, (String) cellEditor.getCellEditorValue());
 						//this will trigger an attributes slots action
+						attributesSlotsModel.removeElementAt(index);
 						attributesSlotsModel.insertElementAt((String) cellEditor.getCellEditorValue(), index);
-						attributesSlotsModel.removeElementAt(index + 1);
+						attributesSlotsBox.setSelectedIndex(index);
 						return;
 					}
 				}

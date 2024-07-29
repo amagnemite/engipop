@@ -53,9 +53,7 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 	private boolean isNodeResetting = false;
 	
 	public MissionPanel(MainWindow mainWindow, PopulationPanel popPanel, WaveBarPanel wavebar) {
-		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		missionComponentPanel.setLayout(missionComponentPanel.gbLayout);
 		missionComponentPanel.gbConstraints.anchor = GridBagConstraints.LINE_START;
 		missionComponentPanel.gbConstraints.insets = new Insets(0, 0, 0, 5);
 		//this.setBackground(new Color(208, 169, 107));
@@ -105,7 +103,6 @@ public class MissionPanel extends EngiPanel implements PropertyChangeListener{
 		//missionScroll.setPreferredSize(missionList.getPreferredScrollableViewportSize());
 		
 		EngiPanel buttonPanel = new EngiPanel();
-		buttonPanel.setLayout(buttonPanel.gbLayout);
 		buttonPanel.setBackground(new Color(240, 129, 73));
 		buttonPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		

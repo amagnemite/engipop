@@ -28,7 +28,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	WaveBarPanel wavebar = new WaveBarPanel();
 	
 	//todo: update botpanel
-	JMenuItem settings = new JMenuItem("Engipop settings");
+	JMenuItem settings = new JMenuItem("Settings");
 	JMenuItem timeline = new JMenuItem("Minimum timeline viewer");
 	JMenuItem save = new JMenuItem("Save");
 	JMenuItem saveAs = new JMenuItem("Save as");
@@ -46,7 +46,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	private File fileLocation = null;
 	
 	public MainWindow() {
-		super("Engipop main");
+		super("Engipop");
 		//this.setBackground(new Color(193, 161, 138));
 		
 		setLayout(new BorderLayout());
@@ -54,15 +54,13 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		popNode = Engipop.getPopNode();
 		setSize(1200, 850);
 		
-		mainPanel.setLayout(mainPanel.gbLayout);
 		mainPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
-		//may want to reconsider this
 		SettingsWindow settingsWindow = new SettingsWindow(this);
 		PopulationPanel populationPanel = new PopulationPanel(this, settingsWindow);
 		TemplatePanel tempPanel = new TemplatePanel(this, populationPanel);
 		MissionPanel missionPanel = new MissionPanel(this, populationPanel, wavebar);
-			
+		
 		populationPanel.addPropertyChangeListener("POPNODE", this);
 		
 		String[] valvePops = {"robot_standard.pop", "robot_giant.pop", "robot_gatebot.pop"};
@@ -92,6 +90,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		EngiPanel populationFillerPanel = new EngiPanel();
 		JScrollPane templateTreePane = templateTree.getTreePane();
 		JScrollPane panelScroll = new JScrollPane(mainPanel);
+		//EngiPanel wavebarPanel = new EngiPanel();
 		
 		//templateTreePane.setMinimumSize(new Dimension(225, templateTreePane.getPreferredSize().height));
 		templateTreePane.setPreferredSize(new Dimension(225, templateTreePane.getPreferredSize().height));
@@ -102,18 +101,27 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		initListeners(settingsWindow);
 		
 		//for positioning populationpanel since it's much smaller than the rest
-		populationFillerPanel.setLayout(populationFillerPanel.gbLayout);
 		populationFillerPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		populationFillerPanel.gbConstraints.weightx = 1;
 		populationFillerPanel.gbConstraints.weighty = 1;
 		populationFillerPanel.addGB(populationPanel, 0, 0);
 		
+		//wavebarPanel.setBorder(BorderFactory.createTitledBorder("Wavebar preview"));
+		/*
+		wavebarPanel.gbConstraints.anchor = GridBagConstraints.WEST;
+		wavebarPanel.addGB(new JLabel("Wavebar preview"), 0, 0);
+		wavebarPanel.addGB(waveNodeManager.getRefreshButton(), 0, 2);
+		
+		wavebarPanel.gbConstraints.anchor = GridBagConstraints.CENTER;
+		wavebarPanel.gbConstraints.gridwidth = 2;
+		wavebarPanel.addGB(wavebar, 0, 1);
+		*/
+		
 		mainPanel.gbConstraints.gridwidth = 2;
 		mainPanel.addGB(wavebar, 0, 0);
-		
+		//mainPanel.addGB(wavebarPanel, 0, 0);
 		mainPanel.gbConstraints.gridwidth = 1;
-		mainPanel.addGB(feedback, 0, 1);
-		mainPanel.addGB(waveNodeManager.getRefreshButton(), 2, 1);
+		mainPanel.addGB(waveNodeManager.getRefreshButton(), 0, 1);
 		
 		mainPanel.gbConstraints.gridwidth = 2;
 		mainPanel.addGB(wavePanel.getDisabledPanel(), 0, 2);
@@ -142,10 +150,11 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		//populationFillerPanel.setBackground(Color.BLUE);
 		
 		tabbedPane.addTab("Main", panelScroll);
-		tabbedPane.addTab("Population", populationFillerPanel);
+		tabbedPane.addTab("Population settings", populationFillerPanel);
 		tabbedPane.addTab("Templates", tempPanel);
 		tabbedPane.addTab("Missions", missionPanel);
 		
+		add(feedback, BorderLayout.PAGE_START);
 		add(tabbedPane, BorderLayout.CENTER);
 		
 		setVisible(true);
@@ -206,7 +215,8 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		//try { //double check
 			File file = c.getSelectedFile();
 			if(file.exists()) { //confirm overwrite
-				int op = JOptionPane.showConfirmDialog(this, "Overwrite this file?");
+				int op = JOptionPane.showConfirmDialog(this, "Overwrite this file?", "Select an Option",
+						JOptionPane.YES_NO_OPTION);
 				if(op == JOptionPane.YES_OPTION) {
 					write = true;
 				}

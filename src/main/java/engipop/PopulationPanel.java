@@ -46,7 +46,6 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 	private PropertyChangeSupport propertySupport = new PropertyChangeSupport(this);
 	
 	public PopulationPanel(MainWindow mainwindow, SettingsWindow setWin) {
-		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		//this.setBackground(new Color(.86f, .22f, .22f, 1.0f));
 		//189.0, 59.0, 59.0,
@@ -90,11 +89,11 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 		}
 		maps.setModel(mapsModel);
 		
+		addGB(loadPop, 0, 0);
+		addGB(loadTemplate, 1, 0);
+		
 		addGB(mapLabel, 0, 1);
 		addGB(maps, 1, 1);
-		
-		addGB(loadPop, 2, 1);
-		addGB(loadTemplate, 3, 1);
 		
 		addGB(currLabel, 0, 2);
 		addGB(currSpinner, 1, 2);

@@ -48,7 +48,6 @@ public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	private boolean isPathResetting = false;
 	
 	public TankPanel(PopulationPanel SecondaryWindow) {
-		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.insets = new Insets(0, 0, 0, 5);
 		

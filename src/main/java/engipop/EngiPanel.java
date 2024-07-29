@@ -14,10 +14,14 @@ import engipop.Node.WaveNode;
 
 @SuppressWarnings("serial")
 public class EngiPanel extends JPanel {
-	protected GridBagLayout gbLayout = new GridBagLayout();
+	private GridBagLayout gbLayout = new GridBagLayout();
 	protected GridBagConstraints gbConstraints = new GridBagConstraints();
 	
 	private DisabledPanel disabledpanel = new DisabledPanel(this);
+	
+	public EngiPanel() {
+		setLayout(gbLayout);
+	}
 	
 	//method to position on grid bag layout
 	protected void addGB(Component comp, int x, int y) {

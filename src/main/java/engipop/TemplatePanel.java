@@ -81,7 +81,6 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	//TODO: needs to be cleaned up due to template handling changes
 	
 	public TemplatePanel(MainWindow mainWindow, PopulationPanel popPanel) {
-		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		//setBackground(new Color(11, 97, 163));
 		
@@ -111,7 +110,6 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		templateComboBox.setPrototypeDisplayValue("T_TFBot_Giant_Demo_Spammer_Reload_Chief");
 		templateComboBox.setMinimumSize(templateNameField.getPreferredSize());
 		
-		templateButtonPanel.setLayout(gbLayout);
 		templateButtonPanel.gbConstraints.anchor = GridBagConstraints.WEST;
 		templateButtonPanel.gbConstraints.insets = new Insets(0, 0, 5, 0);
 		
@@ -131,8 +129,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		
 		addGB(modePanel, 0, 0);
 		
-		//addGB(wsPanel.getDisabledPanel(), 0, 1);
-		addGB(wsPanel, 0, 1);
+		addGB(wsPanel.getDisabledPanel(), 0, 3);
 		addGB(spawnerPanel, 0, 2);
 		
 		gbConstraints.weighty = 1;
@@ -150,7 +147,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		//force a load/hide ws cycle
 		modeGroup.setSelected(wsModeButton.getModel(), true);
 		modeGroup.setSelected(botModeButton.getModel(), true);
-		//spawnerListManager.getBotTankPanel().getDisabledPanel().setEnabled(false);
+		wsPanel.getDisabledPanel().setEnabled(false);
+		spawnerListManager.getBotTankPanel().getDisabledPanel().setEnabled(false);
 	}
 	
 	//check if map contains the entered template name already
@@ -167,7 +165,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 		}
 		
 		if(keyset.contains(newName)) { //todo: fix 
-			int op = JOptionPane.showConfirmDialog(this, "Overwrite the existing template?");
+			int op = JOptionPane.showConfirmDialog(this, "Overwrite the existing template?", "Select an Option",
+					JOptionPane.YES_NO_OPTION);
 			if(op == JOptionPane.YES_OPTION) {
 				overwrite = true;
 			}
@@ -238,7 +237,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	//ws and bot counterparts do essentially the same thing
 	private void initListeners() {
 		wsModeButton.addItemListener(event -> {
-			wsPanel.setVisible(wsModeButton.isSelected());
+			wsPanel.getDisabledPanel().setVisible(wsModeButton.isSelected());
 			spawnerPanel.setVisible(wsModeButton.isSelected());
 			listPanel.setVisible(wsModeButton.isSelected());
 			
@@ -254,8 +253,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 
 				gbConstraints.weighty = 1;
 				addGB(spawnerListManager.getBotTankPanel().getDisabledPanel(), 0, 3);
-				
 				gbConstraints.weighty = 0;
+				addGB(wsPanel.getDisabledPanel(), 0, 1); //this needs to be shuffled around to not cause visual issues
 			}
 			else { //if botmode
 				addTemplateButton.setText(ADDBOT);
@@ -265,8 +264,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 				
 				gbConstraints.weighty = 1;
 				addGB(spawnerListManager.getBotTankPanel().getDisabledPanel(), 0, 1);
-				
 				gbConstraints.weighty = 0;
+				addGB(wsPanel.getDisabledPanel(), 0, 3);
 				
 				spawnerListManager.setSelectedButton(SpawnerType.TFBOT);
 			}
@@ -282,7 +281,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 
 			if(index != -1) {
 				templateNameField.setEnabled(true);
-				//spawnerListManager.getBotTankPanel().getDisabledPanel().setEnabled(true);
+				spawnerListManager.getBotTankPanel().getDisabledPanel().setEnabled(true);
+				wsPanel.getDisabledPanel().setEnabled(true);
 				if(wsModeButton.isSelected()) {
 					//TODO: update to match current map setup
 					currentWSNode = (WaveSpawnNode) wsTemplateMap.get(templateComboBox.getSelectedItem());
@@ -317,7 +317,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 				templateBLManager.changeButtonState(States.EMPTY);
 				spawnerListManager.setButtonState(States.DISABLE);
 				modeGroup.setSelected(botModeButton.getModel(), true);
-				//spawnerListManager.getBotTankPanel().getDisabledPanel().setEnabled(true);
+				wsPanel.getDisabledPanel().setEnabled(false);
+				spawnerListManager.getBotTankPanel().getDisabledPanel().setEnabled(false);
 			}
 		});
 		
@@ -402,8 +403,8 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 			templateComboModel.removeElement(removed);
 			isTemplateListResetting = false;
 			templateComboBox.setSelectedIndex(templateComboModel.getSize() - 1);
-			Node node = map.remove(removed);
 			
+			Node node = map.remove(removed);
 			popPanel.fireTemplateChange(type, node, null);
 		});
 		

@@ -8,6 +8,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -26,7 +27,7 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	private DefaultComboBoxModel<String> doneModel = new DefaultComboBoxModel<String>();
 	private DefaultComboBoxModel<String> initModel = new DefaultComboBoxModel<String>();
 	
-	private JComboBox<String> startNameBox = new JComboBox<String>(startModel);
+	private JComboBox<String> startTarget = new JComboBox<String>(startModel);
 	private JComboBox<String> doneNameBox = new JComboBox<String>(doneModel);
 	private JComboBox<String> initNameBox = new JComboBox<String>(initModel);
 	
@@ -50,7 +51,6 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 	private boolean isRelayResetting = false;
 	
 	public WavePanel(PopulationPanel popPanel) {
-		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.WEST;
 		gbConstraints.insets = new Insets(0, 0, 0, 5);
 		setBackground(new Color(208, 169, 107));
@@ -61,7 +61,12 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		JLabel startLabel = new JLabel("StartWaveOutput");
 		JLabel doneLabel = new JLabel("DoneOutput");
 		
-		startNameBox.setEditable(true);
+		EngiPanel startPanel = new EngiPanel();
+		startPanel.setBorder(BorderFactory.createTitledBorder("StartWaveOutput"));
+		startPanel.setOpaque(false);
+		startPanel.gbConstraints.anchor = GridBagConstraints.WEST;
+		
+		startTarget.setEditable(true);
 		doneNameBox.setEditable(true);
 		initNameBox.setEditable(true);
 		
@@ -81,12 +86,24 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		
 		addGB(waveLabel, 0, 0);
 		
+		//startPanel.addGB(startLabel, 0, 1);
+		startPanel.addGB(new JLabel("Target: "), 0, 0);
+		startPanel.addGB(startTarget, 1, 0);
+		startPanel.addGB(new JLabel("Action: "), 0, 1);
+		startPanel.gbConstraints.ipadx = 14;
+		startPanel.addGB(startAction, 1, 1);
+		
+		gbConstraints.gridheight = 3;
+		addGB(startPanel, 0, 1);
+		
+		/*
 		addGB(startLabel, 0, 1);
 		addGB(new JLabel("Target: "), 0, 2);
 		addGB(startNameBox, 1, 2);
 		addGB(new JLabel("Action: "), 0, 3);
 		addGB(startAction, 1, 3);
-		
+		*/
+		gbConstraints.gridheight = 1;
 		addGB(doneLabel, 2, 1);
 		addGB(new JLabel("Target: "), 2, 2);
 		addGB(doneNameBox, 3, 2);
@@ -120,12 +137,12 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 			}
 		});
 		
-		startNameBox.addActionListener(event -> {
+		startTarget.addActionListener(event -> {
 			if(isNodeResetting || isRelayResetting) {
 				return;
 			}
 			
-			String text = (String) startNameBox.getSelectedItem();
+			String text = (String) startTarget.getSelectedItem();
 			updateRelayKey(WaveNode.STARTWAVEOUTPUT, text, RelayNode.TARGET, waveNode, startNode);
 		});
 		
@@ -232,7 +249,7 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		if(waveNode.containsKey(WaveNode.STARTWAVEOUTPUT)) {
 			startNode = (RelayNode) waveNode.getValue(WaveNode.STARTWAVEOUTPUT);
 			
-			startNameBox.setSelectedItem(startNode.getValue(RelayNode.TARGET));
+			startTarget.setSelectedItem(startNode.getValue(RelayNode.TARGET));
 			startAction.setText((String) startNode.getValue(RelayNode.ACTION));
 		}
 		else {

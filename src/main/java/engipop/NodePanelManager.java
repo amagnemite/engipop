@@ -120,11 +120,9 @@ public class NodePanelManager {
 		
 		initListeners();
 		
-		listPanel.setLayout(listPanel.gbLayout);
 		listPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		listPanel.gbConstraints.insets = new Insets(0, 0, 5, 5);
 		
-		botTankPanel.setLayout(botTankPanel.gbLayout);
 		botTankPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
 		tankPanel.setVisible(false);

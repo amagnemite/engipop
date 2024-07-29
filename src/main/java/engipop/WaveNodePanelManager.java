@@ -285,7 +285,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				waveSpawnListModel.addElement((String) t.getValue(WaveSpawnNode.NAME));
 			}
 			else {
-				waveSpawnListModel.addElement(Integer.toString(i));
+				waveSpawnListModel.addElement("Wavespawn");
 			}
 		}
 		//waveSpawnList.setSelectedIndex(0);

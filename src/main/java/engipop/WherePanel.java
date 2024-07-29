@@ -11,8 +11,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import engipop.Node.WaveSpawnNode;
-
 //manages where jtable + add/remove buttons
 @SuppressWarnings("serial")
 public class WherePanel extends EngiPanel {
@@ -27,7 +25,6 @@ public class WherePanel extends EngiPanel {
 		JScrollPane whereScroll = new JScrollPane(whereTable);
 		JPanel buttonPanel = new JPanel();
 		
-		setLayout(gbLayout);
 		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		setOpaque(false);
 		buttonPanel.setOpaque(false);

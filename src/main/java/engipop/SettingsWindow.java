@@ -226,7 +226,8 @@ public class SettingsWindow extends EngiWindow {
 		File cfg = new File("engiconfig.cfg");
 		try {
 			if(cfg.createNewFile() || modifiedConfig.get(TFPATH) == null) { //if no cfg existed or cfg existed but has no path set
-				int op = JOptionPane.showConfirmDialog(this, "The TF2 scripts path is currently unset. Set it?");
+				int op = JOptionPane.showConfirmDialog(this, "The TF2 scripts path is currently unset. Set it?", "Select an Option",
+						JOptionPane.YES_NO_OPTION);
 				
 				if(op == JOptionPane.YES_OPTION) {
 					Path path = promptTFPath(); //try to get item path, then parse

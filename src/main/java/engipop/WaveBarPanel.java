@@ -2,6 +2,7 @@ package engipop;
 
 import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
@@ -52,6 +53,10 @@ public class WaveBarPanel extends EngiPanel {
 	private int commonIndex = -1;
 	private int supportIndex = -1;
 	private int missionIndex = -1;
+	
+	public WaveBarPanel() {
+		gbConstraints.insets = new Insets(0, 0, 0, 4);
+	}
 	
 	public enum BotType {
 		GIANT,
@@ -191,7 +196,7 @@ public class WaveBarPanel extends EngiPanel {
 			}
 			
 			for(int i = indexShift; i < iconArray.size(); i++) {
-				addGB(iconArray.get(i), 0, i);
+				addGB(iconArray.get(i), i, 0);
 			}
 		}
 	}
