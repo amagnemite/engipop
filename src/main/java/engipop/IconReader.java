@@ -1,5 +1,7 @@
 package engipop;
 
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -9,6 +11,9 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 
 public class IconReader {
 	
@@ -100,6 +105,38 @@ public class IconReader {
 			return null;
 		}
 		return imageData;
+	}
+	
+	public ImageIcon parseIcon(File file) {
+		byte[] data = getImageData(file);	
+		return parseIcon(data);
+	}
+	
+	public ImageIcon parseIcon(URL url) {
+		byte[] data = getImageData(url);
+		return parseIcon(data);
+	}
+	
+	private ImageIcon parseIcon(byte[] data) {
+		if(data == null) {
+			System.out.println("bad input");
+			return null;
+		}
+		if((data[0] & 0xFF) != 0x56 && (data[1] & 0xFF) != 0x54 && (data[2] & 0xFF) != 0x46) {
+			return null;
+			//error
+		}
+		int height = getHeight(data);
+		int width = getWidth(data);
+		int[] pixels = readIcon(data);
+		if(pixels == null) {
+			return null;
+			//error
+		}
+		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		image.setRGB(0, 0, width, height, pixels, 0, width);
+		
+		return new ImageIcon(image.getScaledInstance(32, 32, Image.SCALE_SMOOTH));
 	}
 	
 	private byte[] openStream(File file) throws FileNotFoundException, IOException {

@@ -171,11 +171,18 @@ public class TreeParse { //it is time to parse
 		
 		if(bot.containsKey(TFBotNode.TEMPLATE)) {
 			String template = (String) bot.getValue(TFBotNode.TEMPLATE);
+			List<String> newIncludes = new ArrayList<String>();
 			
 			for(Entry<String, PopNode> entry : Engipop.getImportedTemplatePops().entrySet()) {
 				if(!template.contains(entry.getKey()) && entry.getValue().getBotTemplateMap().containsKey(template)) {
-					Engipop.includeTemplate(entry.getKey());
+					if(!newIncludes.contains(entry.getKey())) {
+						newIncludes.add(entry.getKey());
+					}
 				}
+			}
+			
+			for(String pop : newIncludes) { //need to do this way since can't add to map while iterating through it
+				Engipop.includeTemplate(pop);
 			}
 		}
 	} 

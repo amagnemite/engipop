@@ -686,6 +686,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			
 			if(manager != null) {
 				manager.updateSquadRCName();
+				manager.updateWavebar(false);
 			}
 		});
 		
@@ -695,6 +696,10 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 			
 			botNode.putKey(TFBotNode.CLASSICON, iconBox.getSelectedItem()); //string
+			
+			if(manager != null) {
+				manager.updateWavebar(false);
+			}
 		});
 		
 		nameField.getDocument().addDocumentListener(new DocumentListener() {
@@ -715,6 +720,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				
 				botNode.putKey(TFBotNode.NAME, nameField.getText());
 				if(manager != null) {
+					manager.updateWavebar(false);
 					manager.updateSquadRCName();
 				}
 			}
@@ -775,6 +781,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 							
 				if(manager != null) {
 					manager.updateSquadRCName();
+					manager.updateWavebar(false);
 				}
 			}
 		});

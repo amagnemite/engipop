@@ -668,9 +668,9 @@ public class NodePanelManager {
 		}
 	}
 	
-	public void updateWavebar() {
+	public void updateWavebar(boolean generateNewSeed) {
 		if(wavebar != null) {
-			wavebar.rebuildWavebar((WaveNode) currentParentNode.getParent());
+			wavebar.rebuildWavebar((WaveNode) currentParentNode.getParent(), generateNewSeed);
 		}
 	}
 	

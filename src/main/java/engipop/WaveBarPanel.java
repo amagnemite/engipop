@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -25,28 +25,14 @@ import engipop.Engipop.Classes;
 import engipop.Node.*;
 @SuppressWarnings("serial")
 public class WaveBarPanel extends EngiPanel {
+	private static final ImageIcon REDBG = new ImageIcon(MainWindow.class.getResource("/redbg.png"));
+	private static final ImageIcon WHITEBG = new ImageIcon(MainWindow.class.getResource("/whitebg.png"));
+	private static final ImageIcon CRIT = new ImageIcon(MainWindow.class.getResource("/crit.png"));
+	private static final ImageIcon MISSING = new ImageIcon(MainWindow.class.getResource("/missing.png"));
 	
-	private static Set<String> valveIcons = new HashSet<String>(Arrays.asList(
-		"scout", "scout_bat", "scout_bonk",
-		"scout_fan", "scout_giant_fast", "scout_jumping",
-		"scout_shortstop", "scout_stun", "scout_stun_armored",		
-		"soldier", "soldier_backup", "soldier_barrage",
-		"soldier_blackbox", "soldier_buff", "soldier_burstfire",
-		"soldier_conch", "soldier_crit", "soldier_libertylauncher",
-		"soldier_major_crits", "soldier_sergeant_crits", "soldier_spammer",
-		"pyro", "pyro_flare",
-		"demo", "demo_bomber", "demo_burst",
-		"demoknight", "demoknight_samurai",
-		"heavy", "heavy_champ", "heavy_chief",
-		"heavy_deflector", "heavy_deflector_healonkill", "heavy_deflector_push",
-		"heavy_gru", "heavy_heater", "heavy_mittens", "heavy_shotgun",
-		"heavy_steelfist", "heavy_urgent",
-		"engineer",
-		"medic", "medic_uber",
-		"sniper", "sniper_bow", "sniper_multi",
-		"sniper_jarate", "sniper_sydneysleeper",
-		"spy",
-		"tank"));
+	private Map<String, ImageIcon> valveIcons = new HashMap<String, ImageIcon>(50);
+	private Map<String, ImageIcon> iconCache = new HashMap<String, ImageIcon>();
+	
 	private List<WaveBarIcon> iconArray = new ArrayList<WaveBarIcon>();
 	private Map<String, WaveBarIcon> iconNames = new HashMap<String, WaveBarIcon>();
 	private int giantIndex = -1; //index of last giant icon
@@ -54,8 +40,39 @@ public class WaveBarPanel extends EngiPanel {
 	private int supportIndex = -1;
 	private int missionIndex = -1;
 	
+	private int seed = new Random().nextInt(0, 100000);
+	private Random ranGen = new Random(seed);
+	
 	public WaveBarPanel() {
+		Set<String> iconNames = new HashSet<String>(Arrays.asList(
+			"scout", "scout_bat", "scout_bonk",
+			"scout_fan", "scout_giant_fast", "scout_jumping",
+			"scout_shortstop", "scout_stun", "scout_stun_armored",		
+			"soldier", "soldier_backup", "soldier_barrage",
+			"soldier_blackbox", "soldier_buff", "soldier_burstfire",
+			"soldier_conch", "soldier_crit", "soldier_libertylauncher",
+			"soldier_major_crits", "soldier_sergeant_crits", "soldier_spammer",
+			"pyro", "pyro_flare",
+			"demo", "demo_bomber", "demo_burst",
+			"demoknight", "demoknight_samurai",
+			"heavy", "heavy_champ", "heavy_chief",
+			"heavy_deflector", "heavy_deflector_healonkill", "heavy_deflector_push",
+			"heavy_gru", "heavy_heater", "heavy_mittens", "heavy_shotgun",
+			"heavy_steelfist", "heavy_urgent",
+			"engineer",
+			"medic", "medic_uber",
+			"sniper", "sniper_bow", "sniper_bow_multi",
+			"sniper_jarate", "sniper_sydneysleeper",
+			"spy",
+			"tank"));
+		
+		IconReader reader = new IconReader();
 		gbConstraints.insets = new Insets(0, 0, 0, 4);
+		
+		for(String name : iconNames) {
+			String fullName = "/leaderboard_class_" + name + ".vtf";
+			valveIcons.put(name, reader.parseIcon(MainWindow.class.getResource(fullName)));
+		}
 	}
 	
 	public enum BotType {
@@ -82,10 +99,11 @@ public class WaveBarPanel extends EngiPanel {
 		if(bot.getValue(TFBotNode.TEMPLATE) != null && (iconName == null || isCrit == false || type == null)) {
 			//need to go through the whole list if not miniboss/minicrits
 			Node node = bot;
+			String classname = null;
 			
 			while(node != null && node.getValue(TFBotNode.TEMPLATE) != null) {
 				node = Engipop.findTemplateNode((String) node.getValue(TFBotNode.TEMPLATE));
-				//if template isn't found it returns null so just terminate early
+				//if template isn't found, it returns null so just terminate early
 				if(node == null) {
 					break;
 				}
@@ -93,6 +111,8 @@ public class WaveBarPanel extends EngiPanel {
 				if(iconName == null) {
 					iconName = node != null ? (String) node.getValue(TFBotNode.CLASSICON) : null;
 				}
+				
+				classname = node.getValue(TFBotNode.CLASSNAME).toString();
 				
 				if(node.getListValue(TFBotNode.ATTRIBUTES) != null) {
 					if(node.getListValue(TFBotNode.ATTRIBUTES).contains("AlwaysCrit")) {
@@ -105,14 +125,12 @@ public class WaveBarPanel extends EngiPanel {
 			}
 			
 			if(iconName == null) {
-				//if we reached the base template without finding a classicon, it probably
-				//uses the class one
-				iconName = getClassIconName(node.getValue(TFBotNode.CLASSNAME).toString());
+				iconName = classname;
 			}
 		}
 		
 		if(iconName == null) {
-			if(bot.getValue(TFBotNode.CLASSNAME) != Classes.None) {
+			if(bot.containsKey(TFBotNode.CLASSNAME) && bot.getValue(TFBotNode.CLASSNAME) != Classes.None) {
 				String value = bot.getValue(TFBotNode.CLASSNAME).toString();
 				
 				iconName = getClassIconName(value);
@@ -233,7 +251,7 @@ public class WaveBarPanel extends EngiPanel {
 		
 		switch(ws.getSpawnerType()) {
 			case RANDOMCHOICE:
-				rebuildWavebar((WaveNode) ws.getParent());
+				rebuildWavebar((WaveNode) ws.getParent(), false);
 				break;
 			case SQUAD:
 				int spawnCount = (int) ws.getValue(WaveSpawnNode.SPAWNCOUNT);
@@ -251,6 +269,8 @@ public class WaveBarPanel extends EngiPanel {
 					type = BotType.GIANT;
 				}
 				removeIcon("tank", false, count, type);
+				break;
+			case NONE:
 				break;
 		}
 	}
@@ -297,7 +317,7 @@ public class WaveBarPanel extends EngiPanel {
 		setPreferredSize(new Dimension(100, 58));
 	}
 	
-	public void rebuildWavebar(WaveNode wave) {
+	public void rebuildWavebar(WaveNode wave, boolean generateNewSeed) {
 		iconArray.clear();
 		iconNames.clear();
 		removeAll();
@@ -306,6 +326,11 @@ public class WaveBarPanel extends EngiPanel {
 		commonIndex = -1;
 		supportIndex = -1;
 		missionIndex = -1;
+		
+		if(generateNewSeed) {
+			seed = new Random().nextInt(0, 100000);
+		}
+		ranGen.setSeed(seed);
 		
 		for(Node node : wave.getChildren()) {
 			WaveSpawnNode ws = (WaveSpawnNode) node;
@@ -327,7 +352,8 @@ public class WaveBarPanel extends EngiPanel {
 					
 					if(!((RandomChoiceNode) ws.getSpawner()).hasNestedSquadRC() && childrenCount > 0) {
 						for(int i = 0; i < batches; i++) {
-							modifyIcon((TFBotNode) (spawners.get(ThreadLocalRandom.current().nextInt(0, childrenCount))), spawnCount, type, true);
+							//modifyIcon((TFBotNode) (spawners.get(ThreadLocalRandom.current().nextInt(0, childrenCount))), spawnCount, type, true);
+							modifyIcon((TFBotNode) (spawners.get(ranGen.nextInt(childrenCount))), spawnCount, type, true);
 						}
 					}
 					break;
@@ -391,52 +417,48 @@ public class WaveBarPanel extends EngiPanel {
 		
 		public static final int WIDTH = 32;
 		public static final int HEIGHT = 48;
-		private static final URL REDURL = MainWindow.class.getResource("/redbg.png");
-		private static final URL WHITEURL = MainWindow.class.getResource("/whitebg.png");
-		private static final URL CRITURL = MainWindow.class.getResource("/crit.png");
-		private static final URL MISSINGURL = MainWindow.class.getResource("/missing.png");
 		
 		public WaveBarIcon(BotType botType, String iconName, boolean isCrit, int count) {
 			iconName = iconName.endsWith("_giant") ? iconName.substring(0, iconName.length() - 6) : iconName;
-			this.iconName = iconName;
+			this.iconName = iconName.toLowerCase();
 			this.count = count;
 			this.isCrit = isCrit;
 			type = botType;
-			String fullIconName = "leaderboard_class_" + iconName + ".vtf";
+			String fullIconName = "leaderboard_class_" + this.iconName + ".vtf";
 			File iconFile = null;
-			URL iconURL = null;
+			IconReader reader = new IconReader();
 			
-			if(valveIcons.contains(iconName.toLowerCase())) {
-				fullIconName = "/" + fullIconName;
-				iconURL = MainWindow.class.getResource(fullIconName);
+			iconPanel.setLayout(new BoxLayout(iconPanel, BoxLayout.Y_AXIS));
+			setPreferredSize(new Dimension(WIDTH, HEIGHT));
+			
+			if(botType == BotType.GIANT) {
+				bg = new JLabel(REDBG);
+			}
+			else {
+				bg = new JLabel(WHITEBG);
+			}
+			
+			if(valveIcons.containsKey(this.iconName)) {
+				icon = new JLabel(valveIcons.get(this.iconName));
+			}
+			else if(iconCache.containsKey(this.iconName)) {
+				icon = new JLabel(iconCache.get(this.iconName));
 			}
 			else {
 				iconFile = Engipop.getIconPath().resolve(fullIconName).toFile();
 				if(!iconFile.exists()) {
 					iconFile = Engipop.getDownloadIconPath().resolve(fullIconName).toFile();
 				}
+				
+				if(iconFile != null && iconFile.exists()) {
+					ImageIcon image = reader.parseIcon(iconFile);
+					icon = new JLabel(image);
+					iconCache.put(this.iconName, image);
+				}
+				else {
+					icon = new JLabel(MISSING);
+				}
 			}
-			
-			iconPanel.setLayout(new BoxLayout(iconPanel, BoxLayout.Y_AXIS));
-			setPreferredSize(new Dimension(WIDTH, HEIGHT));
-			
-			if(botType == BotType.GIANT) {
-				bg = new JLabel(new ImageIcon(REDURL));
-			}
-			else {
-				bg = new JLabel(new ImageIcon(WHITEURL));
-			}
-			
-			if(iconFile != null && iconFile.exists()) {
-				icon = parseIcon(iconFile);
-			}
-			else if(iconURL != null) {
-				icon = parseIcon(iconURL);
-			}
-			else {
-				icon = new JLabel(new ImageIcon(MISSINGURL));
-			}
-			
 			iconPanel.add(icon);
 			
 			if(type != BotType.SUPPORT) {
@@ -445,7 +467,7 @@ public class WaveBarPanel extends EngiPanel {
 			}
 			
 			if(isCrit) {
-				crit = new JLabel(new ImageIcon(CRITURL));
+				crit = new JLabel(CRIT);
 				crit.setBounds(0, 0, 32, 32);
 				add(crit, Integer.valueOf(3));
 			}
@@ -517,7 +539,7 @@ public class WaveBarPanel extends EngiPanel {
 		public void setCrit(boolean isCrit) {
 			this.isCrit = isCrit;
 			if(isCrit) {
-				crit = new JLabel(new ImageIcon(CRITURL));
+				crit = new JLabel(CRIT);
 				crit.setBounds(0, 0, 32, 32);
 				add(crit, Integer.valueOf(3));
 			}
@@ -528,43 +550,6 @@ public class WaveBarPanel extends EngiPanel {
 		
 		public BotType getType() {
 			return type;
-		}
-		
-		private JLabel parseIcon(URL icon) {
-			IconReader reader = new IconReader();
-			byte[] data = reader.getImageData(icon);
-			
-			return parseIcon(reader, data);
-		}
-		
-		private JLabel parseIcon(File icon) {
-			IconReader reader = new IconReader();
-			byte[] data = reader.getImageData(icon);
-			
-			return parseIcon(reader, data);
-		}
-		
-		private JLabel parseIcon(IconReader reader, byte[] data) {
-			if(data == null) {
-				System.out.println("bad input");
-				return null;
-			}
-			if((data[0] & 0xFF) != 0x56 && (data[1] & 0xFF) != 0x54 && (data[2] & 0xFF) != 0x46) {
-				return null;
-				//error
-			}
-			int height = reader.getHeight(data);
-			int width = reader.getWidth(data);
-			int[] pixels = reader.readIcon(data);
-			if(pixels == null) {
-				return null;
-				//error
-			}
-			
-			BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-			image.setRGB(0, 0, width, height, pixels, 0, width);
-			
-			return new JLabel(new ImageIcon(image.getScaledInstance(32, 32, Image.SCALE_SMOOTH)));
 		}
 	}
 }

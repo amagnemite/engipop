@@ -20,7 +20,6 @@ public class MinTimeline {
 	private static Double TANK = -0.1337;
 	private static Double BOSS = -0.2401;
 	
-	
 	public void parsePopulation(File file) {
 		VDFNode root = null;
 		int waveCount = 0;
@@ -89,7 +88,7 @@ public class MinTimeline {
 				}
 				
 				//treated as floats to get a float result, even if they're ints
-				wsTime = wsTime * wavespawnNode.getFloat(WaveSpawnNode.TOTALCOUNT) / wavespawnNode.getFloat(WaveSpawnNode.SPAWNCOUNT);
+				wsTime = wsTime * (wavespawnNode.getFloat(WaveSpawnNode.TOTALCOUNT) / wavespawnNode.getFloat(WaveSpawnNode.SPAWNCOUNT));
 				
 				if(wavespawnNode.containsKey(WaveSpawnNode.WAITFORALLSPAWNED)) {
 					dependency = wavespawnNode.getString(WaveSpawnNode.WAITFORALLSPAWNED);

@@ -88,6 +88,7 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 			mapsModel.addElement(s);
 		}
 		maps.setModel(mapsModel);
+		maps.setSelectedItem("");
 		
 		addGB(loadPop, 0, 0);
 		addGB(loadTemplate, 1, 0);

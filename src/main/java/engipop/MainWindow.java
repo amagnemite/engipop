@@ -7,12 +7,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 
 import engipop.Node.*;
-import engipop.WaveBarPanel.WaveBarIcon;
 
 //main class
 @SuppressWarnings("serial")
@@ -77,7 +74,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		optionsMenu.add(saveAs);
 		utilitiesMenu.add(timeline);
 		menuBar.add(optionsMenu);
-		//menuBar.add(utilitiesMenu);
+		menuBar.add(utilitiesMenu);
 		setJMenuBar(menuBar);
 		
 		wsPanel = new WaveSpawnPanel(populationPanel, this);
@@ -121,7 +118,7 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		mainPanel.addGB(wavebar, 0, 0);
 		//mainPanel.addGB(wavebarPanel, 0, 0);
 		mainPanel.gbConstraints.gridwidth = 1;
-		mainPanel.addGB(waveNodeManager.getRefreshButton(), 0, 1);
+		//mainPanel.addGB(waveNodeManager.getRefreshButton(), 0, 1);
 		
 		mainPanel.gbConstraints.gridwidth = 2;
 		mainPanel.addGB(wavePanel.getDisabledPanel(), 0, 2);
@@ -257,7 +254,21 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	public static void main(String args[]) {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
+			
+			//Font font = new Font("TF2 Build", Font.PLAIN, 12);
+			
+			//UIDefaults defaultUI = UIManager.getDefaults();
+			//defaultUI.put("Label.font", new Font("TF2 Build", Font.PLAIN, 12));
+			
+			/*
+			Font sec = new Font("TF2 secondary", Font.PLAIN, 12);
+			defaultUI.put("Button.font", sec);
+			defaultUI.put("ComboBox.font", sec);
+			defaultUI.put("TextArea.font", sec); 
+			defaultUI.put("Spinner.font", sec);
+			*/
+		}
+		catch (Exception e) {
 		    //
 		}
 		

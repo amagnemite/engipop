@@ -48,6 +48,8 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	JComboBox<String> lastTarget = new JComboBox<String>(lastModel);
 	JComboBox<String> doneTarget = new JComboBox<String>(doneModel);
 	
+	JComboBox<String> supportCombo = new JComboBox<String>(new String[] {"No", "Yes", "Limited"});
+	
 	JTextField startAction = new JTextField(13);
 	JTextField firstAction = new JTextField(13);
 	JTextField lastAction = new JTextField(13);
@@ -63,8 +65,6 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	JCheckBox wsDeaths = new JCheckBox("AfterDeath?");
 	JLabel wsBetwSpawns = new JLabel("WaitBetweenSpawns: ");
 	
-	JCheckBox isSupport = new JCheckBox("Support?");
-	JCheckBox isLimited = new JCheckBox("Limited?");
 	JCheckBox doStart = new JCheckBox("StartWaveOutput?");
 	JCheckBox doFirst = new JCheckBox("FirstSpawnOutput?");
 	JCheckBox doLast = new JCheckBox("LastSpawnOutput?");
@@ -90,7 +90,7 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 	private RelayNode firstNode;
 	private RelayNode lastNode;
 	private RelayNode doneNode;
-	WaveNodePanelManager manager;
+	WaveNodePanelManager manager = null;
 	
 	private boolean isNodeResetting = false;
 	private boolean isRelayResetting = false;
@@ -104,16 +104,17 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		secondaryWindow.addPropertyChangeListener(this);
 		
 		JLabel label = new JLabel("WaveSpawn editor");
-		JLabel wsName = new JLabel("Name: ");
-		JLabel whereLabel = new JLabel("Where: ");
-		JLabel wsTotalCount = new JLabel("TotalCount: ");
-		JLabel wsMaxActive = new JLabel("MaxActive: ");
-		JLabel wsSpawnCount = new JLabel("SpawnCount: ");
-		JLabel wsBeforeStart = new JLabel("WaitBeforeStarting: ");
-		JLabel wsCurrency = new JLabel("TotalCurrency: ");
-		JLabel wsAllDead = new JLabel("WaitForAllDead: ");
-		JLabel wsAllSpawned = new JLabel("WaitForAllSpawned: ");
-		JLabel templateLabel = new JLabel("Template: ");
+		JLabel wsName = new JLabel("Name:");
+		JLabel whereLabel = new JLabel("Where:");
+		JLabel wsTotalCount = new JLabel("Total count:");
+		JLabel wsMaxActive = new JLabel("Max active:");
+		JLabel wsSpawnCount = new JLabel("Spawn count:");
+		JLabel wsBeforeStart = new JLabel("Wait before starting:");
+		JLabel wsCurrency = new JLabel("Total currency:");
+		JLabel wsAllDead = new JLabel("Wait for all dead:");
+		JLabel wsAllSpawned = new JLabel("Wait for all spawned:");
+		JLabel templateLabel = new JLabel("Template:");
+		JLabel supportLabel = new JLabel("Support:");
 		
 		SpinnerNumberModel totalModel = new SpinnerNumberModel(initial, MIN, totalMax, incr); //totalcount bots
 		SpinnerNumberModel spawnModel = new SpinnerNumberModel(initial, MIN, activeMax, incr); //spawncount
@@ -160,8 +161,6 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		setComponentAndLabelVisible(doneTargetLabel, doneTarget, doDone.isSelected());
 		setComponentAndLabelVisible(doneActionLabel, doneAction, doDone.isSelected());
 		
-		isLimited.setVisible(false);
-		
 		initListeners();
 
 		addGB(label, 0, 0);
@@ -175,20 +174,20 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		
 		addGB(wsTotalCount, 0, 3);
 		addGB(wsTotalSpin, 1, 3);
-		addGB(wsMaxActive, 2, 3);
-		addGB(wsMaxSpin, 3, 3);		
-		addGB(wsSpawnCount, 4, 3);
-		addGB(wsSpawnSpin, 5, 3);	
+		addGB(wsMaxActive, 0, 4);
+		addGB(wsMaxSpin, 1, 4);		
+		addGB(wsSpawnCount, 0, 5);
+		addGB(wsSpawnSpin, 1, 5);	
 		
-		addGB(wsBeforeStart, 0, 6);
-		addGB(wsStartSpin, 1, 6);
+		addGB(supportLabel, 2, 3);
+		addGB(supportCombo, 3, 3);
 		
-		addGB(isSupport, 2, 6);
-		addGB(isLimited, 3, 6);
+		addGB(wsBeforeStart, 2, 4);
+		addGB(wsStartSpin, 3, 4);
 		
-		addGB(wsBetwSpawns, 0, 7);
-		addGB(wsBetweenSpin, 1, 7);		
-		addGB(wsDeaths, 2, 7);
+		addGB(wsBetwSpawns, 2, 5);
+		addGB(wsBetweenSpin, 3, 5);		
+		addGB(wsDeaths, 4, 5);
 		addGB(wsCurrency, 0, 8);
 		addGB(wsCurrSpin, 1, 8);
 		
@@ -336,6 +335,10 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 				return;
 			}
 			wsNode.putKey(WaveSpawnNode.TOTALCOUNT, wsTotalSpin.getValue());
+			
+			if(manager != null) {
+				manager.updateWavebar(false);
+			}
 		});
 		
 		wsMaxSpin.addChangeListener(event -> {
@@ -404,14 +407,26 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			}
 		});
 		
-		isSupport.addItemListener(event -> {
-			isLimited.setVisible(isSupport.isSelected());
-			
+		supportCombo.addActionListener(event -> {
 			if(isNodeResetting) {
 				return;
 			}
 			
-			wsNode.putKey(WaveSpawnNode.SUPPORT, isSupport.isSelected());
+			String support = (String) supportCombo.getSelectedItem();
+			switch(support) {
+				case "No":
+					wsNode.putKey(WaveSpawnNode.SUPPORT, false);
+					wsNode.setSupportLimited(false);
+					break;
+				case "Yes":
+					wsNode.putKey(WaveSpawnNode.SUPPORT, true);
+					wsNode.setSupportLimited(false);
+					break;
+				case "Limited":
+					wsNode.putKey(WaveSpawnNode.SUPPORT, true);
+					wsNode.setSupportLimited(true);
+					break;
+			}
 		});
 		
 		wsDeaths.addItemListener(event -> {
@@ -440,20 +455,6 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 			else {
 				wsNode.putKey(WaveSpawnNode.WAITBETWEENSPAWNS, wsBetweenSpin.getValue());
 			}
-		});
-		
-		isSupport.addItemListener(event -> {
-			if(isNodeResetting) {
-				return;
-			}
-			wsNode.putKey(WaveSpawnNode.SUPPORT, isSupport.isSelected());
-		});
-		
-		isLimited.addItemListener(event -> {
-			if(isNodeResetting) {
-				return;
-			}
-			wsNode.setSupportLimited(isLimited.isSelected());
 		});
 		
 		startTarget.addActionListener(event -> {
@@ -593,8 +594,18 @@ public class WaveSpawnPanel extends EngiPanel implements PropertyChangeListener 
 		wsCurrSpin.setValue(wsn.getValue(WaveSpawnNode.TOTALCURRENCY));
 		wsDeadField.setText((String) wsn.getValue(WaveSpawnNode.WAITFORALLDEAD));
 		wsSpawnField.setText((String) wsn.getValue(WaveSpawnNode.WAITFORALLSPAWNED));
-		isSupport.setSelected((Boolean) wsn.getValue(WaveSpawnNode.SUPPORT));
-		isLimited.setSelected(wsn.getSupportLimited());
+		
+		if((Boolean) wsn.getValue(WaveSpawnNode.SUPPORT)) {
+			if(wsn.getSupportLimited()) {
+				supportCombo.setSelectedIndex(2);
+			}
+			else {
+				supportCombo.setSelectedIndex(1);
+			}
+		}
+		else {
+			supportCombo.setSelectedIndex(0);
+		}
 		
 		//relays aren't mandatory, so only show them if they exist
 		if(wsn.containsKey(WaveSpawnNode.STARTWAVEOUTPUT)) {

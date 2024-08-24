@@ -61,10 +61,12 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		JLabel startLabel = new JLabel("StartWaveOutput");
 		JLabel doneLabel = new JLabel("DoneOutput");
 		
+		/*
 		EngiPanel startPanel = new EngiPanel();
 		startPanel.setBorder(BorderFactory.createTitledBorder("StartWaveOutput"));
 		startPanel.setOpaque(false);
 		startPanel.gbConstraints.anchor = GridBagConstraints.WEST;
+		*/
 		
 		startTarget.setEditable(true);
 		doneNameBox.setEditable(true);
@@ -86,7 +88,8 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		
 		addGB(waveLabel, 0, 0);
 		
-		//startPanel.addGB(startLabel, 0, 1);
+		/*
+		startPanel.addGB(startLabel, 0, 1);
 		startPanel.addGB(new JLabel("Target: "), 0, 0);
 		startPanel.addGB(startTarget, 1, 0);
 		startPanel.addGB(new JLabel("Action: "), 0, 1);
@@ -95,14 +98,14 @@ public class WavePanel extends EngiPanel implements PropertyChangeListener { //i
 		
 		gbConstraints.gridheight = 3;
 		addGB(startPanel, 0, 1);
+		*/
 		
-		/*
 		addGB(startLabel, 0, 1);
 		addGB(new JLabel("Target: "), 0, 2);
-		addGB(startNameBox, 1, 2);
+		addGB(startTarget, 1, 2);
 		addGB(new JLabel("Action: "), 0, 3);
 		addGB(startAction, 1, 3);
-		*/
+
 		gbConstraints.gridheight = 1;
 		addGB(doneLabel, 2, 1);
 		addGB(new JLabel("Target: "), 2, 2);

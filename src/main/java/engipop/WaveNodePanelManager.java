@@ -36,7 +36,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 	ButtonListManager waveBLManager = new ButtonListManager(addWave, removeWave);
 	ButtonListManager waveSpawnBLManager = new ButtonListManager(addWaveSpawn, removeWaveSpawn);
 	
-	JButton refreshWavebar = new JButton("Refresh wavebar");
+	//JButton refreshWavebar = new JButton("Refresh wavebar");
 	
 	public WaveNodePanelManager(MainWindow window, WavePanel wavePanel, WaveSpawnPanel wsPanel, PopulationPanel popPanel, 
 			WaveBarPanel wavebar) {
@@ -123,7 +123,7 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 				}
 				
 				if(wavebar != null) {
-					wavebar.rebuildWavebar(currentWaveNode);
+					wavebar.rebuildWavebar(currentWaveNode, true);
 				}
 			}
 			else { 
@@ -237,9 +237,11 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 			}
 		});
 		
+		/*
 		refreshWavebar.addActionListener(event -> {
 			wavebar.rebuildWavebar(currentWaveNode);
 		});
+		*/
 		
 		/*
 		updateWaveSpawn.addActionListener(event -> { //update wavespawn button clicked
@@ -328,7 +330,9 @@ public class WaveNodePanelManager extends NodePanelManager implements PropertyCh
 		}
 	}
 	
+	/*
 	public JButton getRefreshButton() {
 		return refreshWavebar;
 	}
+	*/
 }
