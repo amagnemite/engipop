@@ -163,12 +163,11 @@ public class NodePanelManager {
 					
 					spawnerInfo.setText(botSpawner);
 					
-					/*
 					if(wavebar != null) {
 						int count = (Integer) currentParentNode.getValue(WaveSpawnNode.TOTALCOUNT);
 						wavebar.modifyIcon(currentBotNode, count, BotType.COMMON, true); //by default new tfbots are just scouts
 					}
-					*/
+					loadBot(false, currentBotNode);
 					break;
 				case (addTankMsg):
 					currentTankNode = new TankNode();
@@ -176,19 +175,19 @@ public class NodePanelManager {
 					
 					spawnerInfo.setText(tankSpawner);
 					
-					/*
 					if(wavebar != null) {
 						int count = (Integer) currentParentNode.getValue(WaveSpawnNode.TOTALCOUNT);
 						wavebar.addIcon("tank", false, count, BotType.GIANT); //may need to check support tanks as well
 					}
-					*/
+					loadTank(false);
 					break;
 				case (addSquadMsg): //for squadrc handle their wavebars when bots actually get added
 					currentSquadNode = new SquadNode();
 					currentSquadNode.connectNodes(currentParentNode);
 					squadRandomBLManager.changeButtonState(States.EMPTY); //enable adding bot subnodes
 					
-					spawnerInfo.setText(squadSpawner);		
+					spawnerInfo.setText(squadSpawner);
+					loadSquad(false);
 					break;
 				case (addRandomMsg):
 					currentRCNode = new RandomChoiceNode();
@@ -196,6 +195,7 @@ public class NodePanelManager {
 					squadRandomBLManager.changeButtonState(States.EMPTY);
 					
 					spawnerInfo.setText(randomSpawner);
+					loadRandom(false);
 					break;
 			}
 		});

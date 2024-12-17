@@ -50,6 +50,7 @@ public class PopulationParser { //parse .pop
 		}
 		catch(VDFParseException v) { //TODO: edit vdfparser for more specifics
 			//also need to do something about missing values
+			System.out.println(v.getMessage());
 			mainWindow.setFeedback("Failed to parse popfile, mismatched number of brackets?");
 			return null;
 		}

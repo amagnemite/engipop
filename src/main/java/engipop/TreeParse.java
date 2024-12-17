@@ -830,6 +830,10 @@ public class TreeParse { //it is time to parse
 		//text.replace("\\", "/");
 		String text = key.contains(" ") ? "\"" + key + "\" " : key + " ";
 		
+		if(value == null) {
+			return;
+		}
+		
 		if(value.getClass() == Double.class) { 
 			if((Double) value % 1 != 0) {
 				pw.println(indent.substring(0, indentCount + 1) + String.format(text + "%f", value));

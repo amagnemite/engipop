@@ -91,6 +91,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	JComboBox<String> attributesSlotsBox = new JComboBox<String>(attributesSlotsModel);
 	
 	DefaultTableModel itemAttributeTableModel = new DefaultTableModel(0, 2);
+	//TODO: this needs an exception for characterattributes
 	JTable itemAttributeTable = new JTable(itemAttributeTableModel) { //lock first row from editing
 		public boolean isCellEditable(int row, int column) {
 			if(row == 0 && column == 0) {
@@ -647,7 +648,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	public void initUpdateListeners() { //put values into node
 		classBox.addActionListener(event -> {
 			Classes str = (Classes) classBox.getSelectedItem();
-			if(str != null) {
+			if(str != Classes.None) {
 				setIconBox(iconModel, str);
 			}
 			if(parser != null) { //prevent loading in cases where items_game.txt is unknown
