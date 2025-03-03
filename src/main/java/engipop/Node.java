@@ -138,8 +138,6 @@ public class Node {
             //for(int i = 0; i < entry.getValue().length; i++) {
             for(Object arrayEntry : entry.getValue()) {
                 if(arrayEntry instanceof Map) {
-                	//Map<String, List<Object>> subMap = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
-                    //subMap.putAll((VDFNode) entry.getValue()[i]);
                     array.add(copyVDFNode((VDFNode) arrayEntry));
                 }
                 else if(!stringSet.contains(entry.getKey().toLowerCase())) { //convert string numbers into ints/doubles

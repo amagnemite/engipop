@@ -225,14 +225,18 @@ public class TreeParse { //it is time to parse
 		return stopCheck;
 	}
 	
-	public void parseTree(File file, PopNode root) {
+	public void parseTree(File originalFile, PopNode root) {
+		File tempFile;
+		File backupFile = new File(originalFile.getAbsolutePath() + ".bak");
 		int waveCount = root.getChildren().size();
 		FileWriter fw;
 		PrintWriter pw;
 		indentCount = 0;
 		
 		try { //make these work so parse doesn't happen if error
-			fw = new FileWriter(file);
+			tempFile = File.createTempFile(originalFile.getName(), ".tmp", originalFile.getParentFile());
+			tempFile.deleteOnExit();
+			fw = new FileWriter(tempFile);
 			pw = new PrintWriter(fw, true);
 			
 			pw.println("//made with engipop");
@@ -258,6 +262,11 @@ public class TreeParse { //it is time to parse
 			pw.close();
 			fw.close();
 			
+			if(backupFile.exists()) {
+				backupFile.delete();
+			}
+			originalFile.renameTo(backupFile);
+			tempFile.renameTo(originalFile);
 		}
 		catch (FileNotFoundException e){
 			
@@ -265,7 +274,6 @@ public class TreeParse { //it is time to parse
 		catch (IOException i) {
 			
 		}
-	
 	}
 	
 	private void printGenericMap(PrintWriter pw, Map<String, List<Object>> map) {
