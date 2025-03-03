@@ -1,151 +1,274 @@
 package engipop;
 
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
-import engipop.Tree.RelayNode;
-import engipop.Tree.TankNode;
+import engipop.Node.RelayNode;
+import engipop.Node.TankNode;
+import engipop.Node.WaveNode;
 
 //panel for tank
 @SuppressWarnings("serial")
-public class TankPanel extends EngiPanel {
+public class TankPanel extends EngiPanel implements PropertyChangeListener {
 	
-	JSpinner health; 
+	JSpinner healthSpinner; 
 	JSpinner speed;
 	JTextField name;
-	JCheckBox finalTank = new JCheckBox("Final tank?");
+	JCheckBox finalTankCheck = new JCheckBox("Final tank?");
 	JCheckBox onKilledCheck = new JCheckBox("OnKilledOutput?");
 	JCheckBox onBombCheck = new JCheckBox("OnBombDroppedOutput?");
 	
 	DefaultComboBoxModel<String> pathTrackModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> onKilledModel = new DefaultComboBoxModel<String>();
 	DefaultComboBoxModel<String> onBombModel = new DefaultComboBoxModel<String>();
-	JComboBox<String> startingNode = new JComboBox<String>(pathTrackModel);
-	JComboBox<String> onKilledBox = new JComboBox<String>(onKilledModel);
-	JComboBox<String> onBombBox = new JComboBox<String>(onBombModel);
+	JComboBox<String> startingNodeCombo = new JComboBox<String>(pathTrackModel);
+	JComboBox<String> killedTargetBox = new JComboBox<String>(onKilledModel);
+	JComboBox<String> bombTargetBox = new JComboBox<String>(onBombModel);
+	JTextField killedActionField = new JTextField(13);
+	JTextField bombActionField = new JTextField(13);
 	
-	JLabel killedLabel = new JLabel("OnKilledOutput");
-	JLabel bombLabel = new JLabel("OnBombDroppedOutput");
+	JLabel killedTargetLabel = new JLabel("Target:");
+	JLabel bombTargetLabel = new JLabel("Target:");
+	JLabel killedActionLabel = new JLabel("Action:");
+	JLabel bombActionLabel = new JLabel("Action:");
 	
-	public TankPanel() {
-		setLayout(new GridBagLayout());
-		gb.anchor = GridBagConstraints.WEST;
-		gb.insets = new Insets(0, 0, 0, 5);
+	TankNode tankNode;
+	RelayNode killedNode;
+	RelayNode bombNode;
+	
+	private boolean isNodeResetting = false;
+	private boolean isRelayResetting = false;
+	private boolean isPathResetting = false;
+	
+	public TankPanel(PopulationPanel SecondaryWindow) {
+		gbConstraints.anchor = GridBagConstraints.WEST;
+		gbConstraints.insets = new Insets(0, 0, 0, 5);
 		
-		int tankInit = EngiPanel.tankDefaultHealth, min = 0, tankMax = 300000, tankIncr = 1000;
+		int tankInit = Engipop.TANKDEFAULTHEALTH, min = 0, tankMax = 300000, tankIncr = 1000;
 		//double speedInit = Values.tankDefaultSpeed, dMin = 0.0, speedMax = 300.0, speedIncr = 1.0;
 		
 		SpinnerNumberModel healthModel = new SpinnerNumberModel(tankInit, min, tankMax, tankIncr);
 		//SpinnerNumberModel speedModel = new SpinnerNumberModel(speedInit, dMin, speedMax, speedIncr);
 		
-		health = new JSpinner(healthModel);
+		healthSpinner = new JSpinner(healthModel);
 		//speed = new JSpinner(speedModel);
 		//name = new JTextField(Values.tankDefaultName, 20);
 		
-		startingNode.setEditable(true);
-		onKilledBox.setEditable(true);
-		onBombBox.setEditable(true);
+		startingNodeCombo.setEditable(true);
+		killedTargetBox.setEditable(true);
+		bombTargetBox.setEditable(true);
 		
 		JLabel healthLabel = new JLabel("Health: ");
 		JLabel startLabel = new JLabel("StartingPathTrackNode: ");
 		
-		addListeners();
-		setBoxVisible(killedLabel, onKilledBox, false);
-		setBoxVisible(bombLabel, onBombBox, false);
+		setPairVisible(killedTargetLabel, killedTargetBox, false);
+		setPairVisible(killedActionLabel, killedActionField, false);
+		setPairVisible(bombTargetLabel, bombTargetBox, false);
+		setPairVisible(bombActionLabel, bombActionField, false);
+		
+		initListeners();
 		
 		addGB(healthLabel, 0, 0);
-		addGB(health, 1, 0);
-		addGB(finalTank, 2, 0);
+		addGB(healthSpinner, 1, 0);
+		addGB(finalTankCheck, 2, 0);
 		
 		addGB(startLabel, 0, 1);
-		addGB(startingNode, 1, 1);
+		addGB(startingNodeCombo, 1, 1);
 		
 		addGB(onKilledCheck, 0, 2);
-		addGB(killedLabel, 1, 2);
-		addGB(onKilledBox, 2, 2);
+		addGB(killedTargetLabel, 1, 2);
+		addGB(killedTargetBox, 2, 2);
+		addGB(killedActionLabel, 3, 2);
+		addGB(killedActionField, 4, 2);
 		
 		addGB(onBombCheck, 0, 3);
-		addGB(bombLabel, 1, 3);
-		addGB(onBombBox, 2, 3);
+		addGB(bombTargetLabel, 1, 3);
+		addGB(bombTargetBox, 2, 3);
+		addGB(bombActionLabel, 3, 3);
+		addGB(bombActionField, 4, 3);
 	}
 	
 	//currently just the relay checkboxes
-	private void addListeners() {
+	private void initListeners() {
 		onKilledCheck.addItemListener(event -> {
-			if(onKilledCheck.isSelected()) {
-				setBoxVisible(killedLabel, onKilledBox, true);
+			setPairVisible(killedTargetLabel, killedTargetBox, onKilledCheck.isSelected());
+			setPairVisible(killedActionLabel, killedActionField, onKilledCheck.isSelected());
+			
+			if(isNodeResetting) {
+				return;
 			}
-			else {
-				setBoxVisible(killedLabel, onKilledBox, false);
+			
+			if(!onKilledCheck.isSelected()) {
+				killedNode = new RelayNode();
+				tankNode.removeKey(TankNode.ONKILLEDOUTPUT);
 			}
 		});
 		onBombCheck.addItemListener(event -> {
-			if(onBombCheck.isSelected()) {
-				setBoxVisible(bombLabel, onBombBox, true);
+			setPairVisible(bombTargetLabel, bombTargetBox, onBombCheck.isSelected());
+			setPairVisible(bombActionLabel, bombActionField, onBombCheck.isSelected());
+			
+			if(isNodeResetting) {
+				return;
 			}
-			else {
-				setBoxVisible(bombLabel, onBombBox, false);
+			
+			if(!onBombCheck.isSelected()) {
+				bombNode = new RelayNode();
+				tankNode.removeKey(TankNode.ONBOMBDROPPEDOUTPUT);
+			}
+		});
+		
+		healthSpinner.addChangeListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			tankNode.putKey(TankNode.HEALTH, healthSpinner.getValue());
+		});
+		
+		finalTankCheck.addItemListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			tankNode.putKey(TankNode.SKIN, finalTankCheck.isSelected());
+		});
+		
+		startingNodeCombo.addActionListener(event -> {
+			if(isNodeResetting || isPathResetting) {
+				return;
+			}
+			tankNode.putKey(TankNode.STARTINGPATHTRACKNODE, startingNodeCombo.getSelectedItem());
+		});
+		
+		killedTargetBox.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
+			String text = (String) killedTargetBox.getSelectedItem();
+			updateRelayKey(TankNode.ONKILLEDOUTPUT, text, RelayNode.TARGET, tankNode, killedNode);
+		});
+		
+		bombTargetBox.addActionListener(event -> {
+			if(isNodeResetting || isRelayResetting) {
+				return;
+			}
+			String text = (String) bombTargetBox.getSelectedItem();
+			updateRelayKey(TankNode.ONBOMBDROPPEDOUTPUT, text, RelayNode.TARGET, tankNode, bombNode);
+		});
+		
+		killedActionField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
+				String text = killedActionField.getText();
+				updateRelayKey(TankNode.ONKILLEDOUTPUT, text, RelayNode.ACTION, tankNode, killedNode);
+			}
+		});
+		
+		bombActionField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
+				String text = killedActionField.getText();
+				updateRelayKey(TankNode.ONBOMBDROPPEDOUTPUT, text, RelayNode.ACTION, tankNode, bombNode);
 			}
 		});
 	}
 	
 	//don't really think combobox needs parameter
-	private void setBoxVisible(JLabel label, JComboBox<String> box, boolean state) {
+	private void setPairVisible(JLabel label, JComponent box, boolean state) {
 		label.setVisible(state);
 		box.setVisible(state);
 	}
 	
 	public void updatePanel(TankNode node) {
-		health.setValue(node.getHealth());
-		finalTank.setSelected(node.getSkin());
-		startingNode.setSelectedItem(node.getStartingPath());
-		if(node.getOnKilled() != null) {
-			onKilledBox.setSelectedItem(node.getOnKilled().getTarget());
+		tankNode = node;
+		isNodeResetting = true;
+		
+		healthSpinner.setValue(node.getValue(TankNode.HEALTH));
+		finalTankCheck.setSelected((boolean) node.getValue(TankNode.SKIN));
+		startingNodeCombo.setSelectedItem(node.getValue(TankNode.STARTINGPATHTRACKNODE));
+		if(node.containsKey(TankNode.ONKILLEDOUTPUT)) {
+			killedNode = (RelayNode) node.getValue(TankNode.ONKILLEDOUTPUT);
+			
+			onKilledCheck.setSelected(true);
+			killedTargetBox.setSelectedItem(killedNode.getValue(RelayNode.TARGET));
+			killedActionField.setText((String) killedNode.getValue(RelayNode.ACTION));
 		}
-		if(node.getOnBomb() != null) {
-			onBombBox.setSelectedItem(node.getOnBomb().getTarget());
+		else {
+			onKilledCheck.setSelected(false);
+			killedNode = new RelayNode();
 		}
+		if(node.containsKey(TankNode.ONBOMBDROPPEDOUTPUT)) {
+			bombNode = (RelayNode) node.getValue(TankNode.ONBOMBDROPPEDOUTPUT);
+			
+			onBombCheck.setSelected(true);
+			bombTargetBox.setSelectedItem(bombNode.getValue(RelayNode.TARGET));
+			bombActionField.setText((String) bombNode.getValue(RelayNode.ACTION));
+		}
+		else {
+			onBombCheck.setSelected(false);
+			bombNode = new RelayNode();
+		}
+		isNodeResetting = false;
 	}
 	
-	public void updateNode(TankNode node) {
-		node.setHealth((int) health.getValue());
-		node.setSkin(finalTank.isSelected());
-		node.setStartingPath((String) startingNode.getSelectedItem());
-		if(onKilledCheck.isSelected()) {
-			if(node.getOnKilled() == null) { //make relay if data is entered and no relay exists
-				node.setOnKilled(new RelayNode());
-			}
-			node.getOnKilled().setTarget((String) onKilledBox.getSelectedItem());
-		}
-		else { //if it isn't selected, throw out old data
-			node.setOnKilled(null); 
-		}
-		if(onBombCheck.isSelected()) {
-			if(node.getOnBomb() == null) { //make relay if data is entered and no relay exists
-				node.setOnBomb(new RelayNode());
-			}
-			node.getOnBomb().setTarget((String) onBombBox.getSelectedItem());
-		}
-		else { //if it isn't selected, throw out old data
-			node.setOnBomb(null); 
-		}
-	}
-	
-	public void setMapInfo(List<String> spawns, List<String> relays){ 
+	public void setPathModel(List<String> spawns){
+		isPathResetting = true;
 		pathTrackModel.removeAllElements();
-		onKilledModel.removeAllElements();
-		onBombModel.removeAllElements();
 		
 		for(String s : spawns) {
 			pathTrackModel.addElement(s);
 		}
+		isPathResetting = false;
+	}
+	
+	public void setRelays(List<String> relays) {
+		isRelayResetting = true;
+		onKilledModel.removeAllElements();
+		onBombModel.removeAllElements();
+		
 		for(String s : relays) {
 			onKilledModel.addElement(s);
 			onBombModel.addElement(s);
+		}
+		isRelayResetting = false;
+	}
+
+	//get tankspawn and tankrelays from secondarywindow
+	public void propertyChange(PropertyChangeEvent evt) {
+		if(evt.getPropertyName().equals(PopulationPanel.TANKSPAWNS)) {
+			setPathModel((List<String>) evt.getNewValue());
+		}
+		else if(evt.getPropertyName().equals(PopulationPanel.TANKRELAY)) {
+			setRelays((List<String>) evt.getNewValue());
 		}
 	}
 }

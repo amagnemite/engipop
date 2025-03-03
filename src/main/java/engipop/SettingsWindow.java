@@ -1,9 +1,6 @@
 package engipop;
 
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
@@ -15,10 +12,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -27,68 +30,66 @@ import javax.swing.JTextField;
 //window for managing settings/config
 //todo: unjank this
 @SuppressWarnings("serial")
-public class SettingsWindow extends JFrame {
-	GridBagLayout gbLayout = new GridBagLayout();
-	GridBagConstraints gb = new GridBagConstraints();
+public class SettingsWindow extends EngiWindow {
+	private static File cfgFileName = new File("engiconfig.cfg");
+	private static final String TFPATH = "TFPath";
 	
-	static File cfgFileName = new File("engiconfig.cfg");
-	static final String itemsPath = "items_path.txt path";
+	private Map<String, String> modifiedConfig = new HashMap<String, String>();
+	private Map<String, String> oldConfig = new HashMap<String, String>();
 	
-	//String itemsTxtPath;
-	Map<String, String> modifiedConfig = new HashMap<String, String>();
-	Map<String, String> oldConfig = new HashMap<String, String>();
+	private JTextField pathText = new JTextField(45);
+	private MainWindow window;
 	
-	JTextField itemsTxtBox = new JTextField();
-	window window;
-	
-	public SettingsWindow(window window) {
+	public SettingsWindow(MainWindow window) {
 		super("Settings");
-		setLayout(gbLayout);
-		gb.anchor = GridBagConstraints.WEST;
+		gbConstraints.anchor = GridBagConstraints.WEST;
 		setSize(800, 200);
 		
-		this.setIconImage(engipop.window.icon.getImage());
-		
 		this.window = window;
-		JLabel itemsTxtLabel = new JLabel("items_game.txt path: ");
+		JLabel itemsTxtLabel = new JLabel("tf path: ");
+		pathText.setEditable(false);
 		
-		readFromConfig();
+		readFromConfig(); //checks if config exists
+		initConfig(); //inits config if it doesn't
 		
-		itemsTxtBox.setEditable(false);
-		if(modifiedConfig.get(itemsPath) != null) {
-			itemsTxtBox.setText(modifiedConfig.get(itemsPath));
-		}
-		else {
-			itemsTxtBox.setText(" ");
-		}
+		Path path = modifiedConfig.get(TFPATH) != null ? Paths.get(modifiedConfig.get(TFPATH)) : null;
+		setTFPath(path);
+		
+		oldConfig.putAll(modifiedConfig);
+		
+		//there may be other possibly null values, in which case it'd be better handle nulls generically
 		
 		//if new items_game is selected or nothing is selected
 		//update map
 		JButton updateItemsPath = new JButton("...");
 		updateItemsPath.addActionListener(event -> {
-			File file = window.getItemsTxtPath();
-			setItemsTxtPath(file);
+			Path newPath = promptTFPath();
+			modifiedConfig.put(TFPATH, newPath.toString());
+			if(path != null) {
+				pathText.setText(newPath.toString());
+			}
+			else {
+				pathText.setText(" ");
+			}
+			validate();
 		});
 		
 		JButton updateConfig = new JButton("Update settings");
 		updateConfig.addActionListener(event -> {
 			writeToConfig();
 			
-			if(modifiedConfig.get(itemsPath) != null) {
-				window.parseItems(new File(modifiedConfig.get(itemsPath)));
+			if(modifiedConfig.get(TFPATH) != null) {
+				setTFPath(Paths.get(modifiedConfig.get(TFPATH)));
 			}
-			
-			oldConfig.clear();
-			oldConfig.putAll(modifiedConfig);
 		});
 		
 		windowClosing();
 		
-		addGB(this, gb, itemsTxtLabel, 0, 0);
-		addGB(this, gb, itemsTxtBox, 1, 0);
-		addGB(this, gb, updateItemsPath, 2, 0);
+		addGB(itemsTxtLabel, 0, 0);
+		addGB(pathText, 1, 0);
+		addGB(updateItemsPath, 2, 0);
 		
-		addGB(this, gb, updateConfig, 2, 1);
+		addGB(updateConfig, 2, 1);
 		
 		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		//makes it so canceling in windowClosing() does nothing
@@ -104,8 +105,8 @@ public class SettingsWindow extends JFrame {
 					switch (op) {
 						case JOptionPane.YES_OPTION: 
 							writeToConfig();
-							if(modifiedConfig.get(itemsPath) != null) {
-								window.parseItems(new File(modifiedConfig.get(itemsPath)));
+							if(modifiedConfig.get(TFPATH) != null) {
+								parseItems(Engipop.getItemSchemaPath().toFile());
 							}
 							oldConfig.clear();
 							oldConfig.putAll(modifiedConfig); //copies modified into old without making them point the same place
@@ -127,26 +128,39 @@ public class SettingsWindow extends JFrame {
 		});
 	}
 	
-	public void setItemsTxtPath(File file) {
-		if(file != null) {
-			modifiedConfig.put(itemsPath, file.getPath());
-			itemsTxtBox.setText(modifiedConfig.get(itemsPath));
+	public void setTFPath(Path path) {
+		if(path != null) {
+			//modifiedConfig.put(tfPath, path.toString());
+			//itemsTxtBox.setText(modifiedConfig.get(tfPath));
+			pathText.setText(path.toString());
+			Engipop.setTFPath(path);
+			parseItems(Engipop.getItemSchemaPath().toFile());
 		}
 		else {
-			modifiedConfig.put(itemsPath, null);
-			itemsTxtBox.setText(" ");
+			//modifiedConfig.put(tfPath, null);
+			pathText.setText(" ");
 		}
-		this.validate(); //updates textbox size
+		validate(); //updates textbox size
 	}
 	
-	public String getItemsTxtPath() {
-		return modifiedConfig.get(itemsPath);
+	public void updateWindow() { //reloads text to old if window was previously closed with unsaved changes
+		if(oldConfig.get(TFPATH) != null) {
+			pathText.setText(oldConfig.get(TFPATH));
+		}
+		else {
+			pathText.setText(" ");
+		}
+		validate(); //updates textbox size
+		modifiedConfig.clear();
+		modifiedConfig.putAll(oldConfig);
 	}
 	
 	//write map from config file
 	public void readFromConfig() {
 		Reader ir;
 		BufferedReader in;
+		Set<String> validCfg = new HashSet<String>(Arrays.asList(TFPATH));
+		Boolean updateConfig = false;
 		
 		try {
 			ir = new InputStreamReader(new FileInputStream(cfgFileName));
@@ -154,23 +168,31 @@ public class SettingsWindow extends JFrame {
 			String line;
 			try {
 				while((line = in.readLine()) != null) {
-					modifiedConfig.put((line.substring(0, line.indexOf('='))), line.substring(line.indexOf('=') + 1));
+					String key = line.substring(0, line.indexOf('='));
+					if(validCfg.contains(key)) {
+						modifiedConfig.put(key, line.substring(line.indexOf('=') + 1));
+					}
+					else {
+						updateConfig = true;
+					}
+					
 					//key = substring of length (where the = is) - 1 to 0
 					//value = substring starting at where the = is + 1
 				}
-				if(modifiedConfig.isEmpty() || modifiedConfig.get(itemsPath).equals("null")) {
-					modifiedConfig.put(itemsPath, null);
-				} //there may be othe rpossibly null values, in which case it'd be better handle nulls generically
 			}
 			catch (IOException e) {
-				window.updateFeedback("Engiconfig.cfg could not be read");
+				window.setFeedback("Engiconfig.cfg could not be read");
 			}
 		}
 		catch (FileNotFoundException f) {
-			window.updateFeedback("Engiconfig.cfg could not be found");
+			window.setFeedback("Engiconfig.cfg could not be found");
+		}
+		
+		if(updateConfig) {
+			writeToConfig();
 		}
 	}
-	
+		
 	//write config file from map
 	//ideally we would not write to file every time a var is changed, only when large amounts are
 	public void writeToConfig() {
@@ -182,7 +204,12 @@ public class SettingsWindow extends JFrame {
 			pw = new PrintWriter(fw, true);
 			
 			modifiedConfig.forEach((k, v) -> {
-				pw.println(k + "=" + v);
+				if(v == null) {
+					pw.println(k + "=");
+				}
+				else {
+					pw.println(k + "=" + v);
+				}
 			});
 			pw.close();
 			
@@ -190,25 +217,58 @@ public class SettingsWindow extends JFrame {
 			oldConfig.putAll(modifiedConfig);
 		}
 		catch (IOException e) {
-			window.updateFeedback("Could not write to engiconfig.cfg");
+			window.setFeedback("Could not write to engiconfig.cfg");
 		}
 	}
 	
-	public void updateWindow() {
-		if(modifiedConfig.get(itemsPath) != null) {
-			itemsTxtBox.setText(modifiedConfig.get(itemsPath));
+	//check for itemstxtpath on load
+	public void initConfig() {
+		File cfg = new File("engiconfig.cfg");
+		try {
+			if(cfg.createNewFile() || modifiedConfig.get(TFPATH) == null) { //if no cfg existed or cfg existed but has no path set
+				int op = JOptionPane.showConfirmDialog(this, "The TF2 scripts path is currently unset. Set it?", "Select an Option",
+						JOptionPane.YES_NO_OPTION);
+				
+				if(op == JOptionPane.YES_OPTION) {
+					Path path = promptTFPath(); //try to get item path, then parse
+					if(path != null) {
+						//setTFPath(tfPath);
+						modifiedConfig.put(TFPATH, path.toString());
+						writeToConfig();
+					}
+				}
+			}
+		}
+		catch (IOException io) {
+			window.setFeedback("engiconfig.cfg was not found or is unable to be written to");
+		}
+	}
+	
+	private Path promptTFPath() { //get file object of scripts
+		Path defaultScriptsPath = null;
+		if(System.getProperty("os.name").contains("Windows")) {
+			defaultScriptsPath =
+				Paths.get("C:", "Program Files (x86)", "Steam", "steamapps", "common", "Team Fortress 2", "tf");
 		}
 		else {
-			itemsTxtBox.setText(" ");
+			// Linux/OSX
+			defaultScriptsPath =
+				Paths.get(System.getProperty("user.home"), ".steam", "steam", "steamapps", "common", "Team Fortress 2", "tf");
 		}
-		this.validate(); //updates textbox size
-		oldConfig.clear();
-		oldConfig.putAll(modifiedConfig);
+		JFileChooser c = new JFileChooser(defaultScriptsPath.toFile());
+		c.setDialogTitle("Select tf/ folder");
+		c.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		c.showOpenDialog(this);
+		File selection = c.getSelectedFile();
+		if(selection == null) {
+			return null;
+		}
+		return c.getSelectedFile().toPath();
 	}
 	
-	private void addGB(Container cont, GridBagConstraints gb, Component comp, int x, int y) {
-		gb.gridx = x;
-		gb.gridy = y;
-		cont.add(comp, gb);
+	private void parseItems(File itemsTxt) { //take items file and parse into lists
+		ItemParser itemParser = new ItemParser();
+		itemParser.parse(itemsTxt, window);
+		BotPanel.setItemParser(itemParser);
 	}
 }

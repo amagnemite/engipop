@@ -2,63 +2,81 @@ package engipop;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.Set;
+import java.util.List;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.text.Position;
 
-import engipop.ButtonListManager.States;
-import engipop.Tree.TFBotNode;
-import engipop.Tree.TFBotNode.*;
-//import engipop.window;
+import engipop.Engipop.Classes;
+import engipop.Engipop.ItemSlot;
+import engipop.ItemParser.ItemData;
+import engipop.Node.TFBotNode;
 
 //todo: add some sort of sanity checking for itemattributes
-public class BotPanel extends EngiPanel { //class to make the panel for bot creation/editing
+@SuppressWarnings("serial")
+public class BotPanel extends EngiPanel implements PropertyChangeListener { //class to make the panel for bot creation/editing
+	private final static int ATTRMAX = 20; //apparently the game stops parsing attributes after the 20th
+	private final static String ADDNEWATTR = "Add new ItemAttributes";
+	static ItemParser parser; //make sure all botpanels have same list
 	
 	String[] tags = {"bot_giant", "bot_squad_member"}; //potentially move bot_giant
-	String[] attr = {"todo: big attr list goes here"};
 	
-	window window;
-	AttributesPanel attrPanel;
+	MainWindow mainWindow;
+	EngiPanel attrPanel = new EngiPanel();
+	WherePanel teleWherePanel = new WherePanel();
+	NodePanelManager manager;
 	
 	//DefaultComboBoxModel<String> classModel;
 	DefaultComboBoxModel<String> iconModel = new DefaultComboBoxModel<String>();
-	DefaultListModel<String> tagModel = new DefaultListModel<String>();
+	DefaultTableModel tagModel = new DefaultTableModel(0, 1);
+	DefaultTableModel teleModel = new DefaultTableModel(0, 1);
+	DefaultComboBoxModel<String> primaryModel = new DefaultComboBoxModel<String>();
+	DefaultComboBoxModel<String> secModel = new DefaultComboBoxModel<String>();
+	DefaultComboBoxModel<String> meleeModel = new DefaultComboBoxModel<String>();
+	DefaultComboBoxModel<String> buildingModel = new DefaultComboBoxModel<String>();
+	DefaultComboBoxModel<String> hat1Model = new DefaultComboBoxModel<String>();
+	DefaultComboBoxModel<String> hat2Model = new DefaultComboBoxModel<String>();
+	DefaultComboBoxModel<String> hat3Model = new DefaultComboBoxModel<String>();
 	
 	JTextField nameField = new JTextField(30); //max bot name is ~32
+	JTextField templateField = new JTextField(30);
 	JComboBox<Classes> classBox = new JComboBox<Classes>(Classes.values());
 	JComboBox<String> iconBox = new JComboBox<String>(iconModel);
-	JList<String> tagList = new JList<String>(tags);
-	JList<String> attrList = new JList<String>(attr);
+	JTable tagTable = new JTable(tagModel);
+	JTable teleTable = new JTable(teleModel);
+	JList<String> botAttributeList;
 	
 	List<JComboBox<String>> itemLists = new ArrayList<JComboBox<String>>();
 	
-	JComboBox<String> primaryList = new JComboBox<String>();
-	JComboBox<String> secList = new JComboBox<String>();
-	JComboBox<String> meleeList = new JComboBox<String>();
-	JComboBox<String> buildingList = new JComboBox<String>();
-	JComboBox<String> hat1List = new JComboBox<String>();
-	JComboBox<String> hat2List = new JComboBox<String>();
-	JComboBox<String> hat3List = new JComboBox<String>();
+	JComboBox<String> primaryList = new JComboBox<String>(primaryModel);
+	JComboBox<String> secList = new JComboBox<String>(secModel);
+	JComboBox<String> meleeList = new JComboBox<String>(meleeModel);
+	JComboBox<String> buildingList = new JComboBox<String>(buildingModel);
+	JComboBox<String> hat1List = new JComboBox<String>(hat1Model);
+	JComboBox<String> hat2List = new JComboBox<String>(hat2Model);
+	JComboBox<String> hat3List = new JComboBox<String>(hat3Model);
 	
-	JComboBox<String> itemAttributesListBox;
+	JLabel buildingLabel = new JLabel("Sapper: ");
+	JLabel teleportLabel = new JLabel("TeleportWhere");
 	
-	ItemParser parser;
-	
-	JLabel botBuilding = new JLabel("Sapper: ");
-	
-	ButtonGroup wepGroup = new ButtonGroup();;
+	ButtonGroup wepGroup = new ButtonGroup();
 	ButtonGroup skillGroup = new ButtonGroup();
 	
+	JRadioButton noneBut = new JRadioButton(TFBotNode.NOSKILL);
 	JRadioButton easyBut = new JRadioButton(TFBotNode.EASY);
 	JRadioButton normalBut = new JRadioButton(TFBotNode.NORMAL);
 	JRadioButton hardBut = new JRadioButton(TFBotNode.HARD);
@@ -69,57 +87,99 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 	JRadioButton secBut = new JRadioButton(TFBotNode.SECONDARYONLY);
 	JRadioButton melBut = new JRadioButton(TFBotNode.MELEEONLY);
 	
-	//radio buttons to select active attribute editing
-	JPanel attrButPanel = new JPanel();
-	JPanel attrButPanel2 = new JPanel();
-	ButtonGroup attrGroup = new ButtonGroup();
-	JRadioButton noAttrBut = new JRadioButton("None");
-	JRadioButton charAttrBut = new JRadioButton("CharacterAttributes");
-	JRadioButton priAttrBut = new JRadioButton("Primary ItemAttributes");
-	JRadioButton secAttrBut = new JRadioButton("Secondary ItemAttributes");
-	JRadioButton melAttrBut = new JRadioButton("Melee ItemAttributes");
-	JRadioButton buiAttrBut = new JRadioButton("Sapper ItemAttributes");
-	JRadioButton hat1AttrBut = new JRadioButton("Cosmetic 1 ItemAttributes"); //consider updating these dynamically
-	JRadioButton hat2AttrBut = new JRadioButton("Cosmetic 2 ItemAttributes");
-	JRadioButton hat3AttrBut = new JRadioButton("Cosmetic 3 ItemAttributes");
+	DefaultComboBoxModel<String> attributesSlotsModel = new DefaultComboBoxModel<String>();
+	JComboBox<String> attributesSlotsBox = new JComboBox<String>(attributesSlotsModel);
 	
-	public BotPanel(window window) {
-		setLayout(gbLayout);
-		gb.anchor = GridBagConstraints.WEST;
+	DefaultTableModel itemAttributeTableModel = new DefaultTableModel(0, 2);
+	//TODO: this needs an exception for characterattributes
+	JTable itemAttributeTable = new JTable(itemAttributeTableModel) { //lock first row from editing
+		public boolean isCellEditable(int row, int column) {
+			if(row == 0 && column == 0) {
+				return false;
+			}
+			return true;
+		}
+	};
+	
+	JButton addAttributeToListButton = new JButton("Add attribute");
+	JButton removeAttributeFromList = new JButton("Remove attribute");
+	
+	JComboBox<String> itemAttributesListBox;
+	List<Object> attributeMapsArray = new ArrayList<Object>(TFBotNode.ITEMCOUNT); //contains all item attribute maps
+	Map<String, Object> currentAttributeMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
+	Map<String, Object> currentCharAttributeMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
+	
+	JButton removeTagRow = new JButton("-");
+	
+	//optional keyvals
+	JLabel healthLabel = new JLabel("Health:");
+	JSpinner healthSpinner = new JSpinner();
+	JLabel scaleLabel = new JLabel("Scale:");
+	JSpinner scaleSpinner = new JSpinner();
+	JLabel autoJumpMinLabel = new JLabel("AutoJumpMin:");
+	JSpinner autoJumpMinSpinner = new JSpinner();
+	JLabel autoJumpMaxLabel = new JLabel("AutoJumpMax:");
+	JSpinner autoJumpMaxSpinner = new JSpinner();
+	JLabel maxVisionLabel = new JLabel("MaxVisionRange:");
+	JSpinner maxVisionSpinner = new JSpinner();
+	
+	//these have default vals because botpanel needs them for startup
+	private TFBotNode botNode = new TFBotNode();
+	private String[] itemArray = new String[TFBotNode.ITEMCOUNT];
+	
+	private boolean isNodeResetting = false;
+	
+	public BotPanel(MainWindow mainWindow, PopulationPanel popPanel) {
+		this(mainWindow, popPanel, null);
+	}
+	
+	public BotPanel(MainWindow mainWindow, PopulationPanel popPanel, NodePanelManager manager) {
+		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
+		JTextField cellEditor = new JTextField();
+		JButton addTagRow = new JButton("+");
 		
-		//this.parser = parser;
+		gbConstraints.anchor = GridBagConstraints.WEST;
+		setBackground(new Color(192, 192, 192));
+		attrPanel.setOpaque(false);
 		
-		this.window = window;
+		this.mainWindow = mainWindow;
+		this.manager = manager;
+		popPanel.addPropertyChangeListener(this);
+		mainWindow.addPropertyChangeListener(this);
 		
-		attrPanel = new AttributesPanel(ItemAttributes.getItemAttributes());
+		itemAttributesListBox = new JComboBox<String>(new ItemAttributes().getItemAttributes());
 		attrPanel.setVisible(false);
+		removeTagRow.setEnabled(false);
 		
-		initItemLists();
-		initAttributeRadio();
+		itemLists.add(primaryList);
+		itemLists.add(secList);
+		itemLists.add(meleeList);
+		itemLists.add(hat1List);
+		itemLists.add(hat2List);
+		itemLists.add(hat3List);
+		itemLists.add(buildingList);
+		
+		botAttributeList = new JList<String>(TFBotNode.getAttributesList().toArray(new String[TFBotNode.getAttributesList().size()]));
 		
 		iconBox.setPrototypeDisplayValue("heavyweapons_healonkill_giant");
+		//templateField.setPrototypeDisplayValue("Giant Rapid Fire Demo Chief (T_TFBot_Giant_Demo_Spammer_Reload_Chief)");
+		//tagList.setPrototypeCellValue("bot_squad_member");
+		botAttributeList.setPrototypeCellValue("BecomeSpectatorOnDeath");
 		
-		//setIconBox(iconBox, iconModel, "Scout");
+		tagModel.addRow(new String[] {""});
+		tagTable.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cellEditor));
 		
-		classBox.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent a) {
-				Classes str = (Classes) classBox.getSelectedItem();
-				setIconBox(iconBox, iconModel, str);
-				if(parser != null) { //prevent loading in cases where items_game.txt is unknown
-					setClassItems(classBox.getSelectedIndex());
-				}		
-							
-				if(classBox.getSelectedIndex() == 8) {
-					buildingState(true);
-				}
-				else {
-					buildingState(false);
-				}
-			}
+		addTagRow.addActionListener(event -> {
+			tagModel.addRow(new String[] {""});
+		});
+		removeTagRow.addActionListener(event -> {
+			tagModel.removeRow(tagTable.getSelectedRow());
 		});
 		
 		classBox.setSelectedIndex(0);
+		tagTable.setTableHeader(null);
 		
+		iconBox.setEditable(true);
 		primaryList.setEditable(true);
 		secList.setEditable(true);
 		meleeList.setEditable(true);
@@ -127,11 +187,19 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		hat1List.setEditable(true);
 		hat2List.setEditable(true);
 		hat3List.setEditable(true);
+		templateField.setEditable(true);
+		
 		buildingList.setVisible(false);
 	
 		//skill level radio buttons
 		JPanel skillPanel = new JPanel();
+		JPanel wepPanel = new JPanel();
+		skillPanel.setOpaque(false);
+		wepPanel.setOpaque(false);
 		
+		skillPanel.add(noneBut);
+		noneBut.setActionCommand(TFBotNode.NOSKILL);
+		skillGroup.add(noneBut);
 		skillPanel.add(easyBut);
 		easyBut.setActionCommand(TFBotNode.EASY);
 		skillGroup.add(easyBut);
@@ -147,7 +215,6 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		skillGroup.setSelected(easyBut.getModel(), true);
 		
 		//wep restrict radio buttons
-		JPanel wepPanel = new JPanel();
 		wepPanel.add(anyBut);
 		anyBut.setActionCommand(TFBotNode.ANY);
 		wepGroup.add(anyBut);
@@ -168,36 +235,64 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		JLabel botSkill = new JLabel("Skill: ");
 		JLabel botRestrict = new JLabel("WeaponRestrictions: ");
 		JLabel botTags = new JLabel("Tags: ");
-		JLabel botAttributes = new JLabel("Attributes: ");
+		JLabel botAttributesLabel = new JLabel("Attributes: ");
 		JLabel botPrimary = new JLabel("Primary weapon: ");
 		JLabel botSecondary = new JLabel("Secondary weapon: ");
 		JLabel botMelee = new JLabel("Melee weapon: ");
 		JLabel botHat = new JLabel("Hats: ");
+		JLabel templateLabel = new JLabel("Template: ");
+		JLabel itemAttributesLabel = new JLabel("ItemAttributes: ");
 	
-		//shrinks down the attribute radio button panels so they fit beter
-		((FlowLayout) attrButPanel2.getLayout()).setVgap(0);
-		((FlowLayout) attrButPanel.getLayout()).setVgap(0);
-		attrButPanel.setPreferredSize(new Dimension(529, 20));
-		attrButPanel2.setPreferredSize(new Dimension(557, 20));
+		JScrollPane tagListPane = new JScrollPane(tagTable);
+		JScrollPane attributesListPane = new JScrollPane(botAttributeList);
+		JPanel tagButtonPanel = new JPanel();
+		
+		teleportLabel.setVisible(false);
+		teleWherePanel.setVisible(false);
+		
+		//prevents dumb resizing stuff with the attr panel
+		//may fix later
+		nameField.setMinimumSize(nameField.getPreferredSize());
+		templateField.setMinimumSize(templateField.getPreferredSize());
+		classBox.setMinimumSize(classBox.getPreferredSize());
+		iconBox.setMinimumSize(iconBox.getPreferredSize()); //double check this once custom input happens
+		//tagListPane.setMinimumSize(tagList.getPreferredScrollableViewportSize());
+		tagListPane.setMinimumSize(new Dimension(200, 100));
+		tagListPane.setPreferredSize(new Dimension(200, 100));
+		attributesListPane.setMinimumSize(new Dimension(botAttributeList.getPreferredScrollableViewportSize().width + 20, 
+				botAttributeList.getPreferredScrollableViewportSize().height));
+		attributesListPane.setMaximumSize(new Dimension(375, 250));
+		//375, 250
+		//attributesListPane.setPreferredSize(attributesListPane.getMinimumSize());
+		
+		addTagRow.setToolTipText("Add a row to the tag list");
+		removeTagRow.setToolTipText("Remove the currently selected tag");
+		tagButtonPanel.add(addTagRow);
+		tagButtonPanel.add(removeTagRow);
+		
+		initAttributePanel();
+		initUpdateListeners();
 		
 		addGB(botClass, 0, 0);
-		addGB(new JScrollPane(classBox), 1, 0); //fix size
+		addGB(classBox, 1, 0);
 		addGB(botIcon, 2, 0);
-		addGB(new JScrollPane(iconBox), 3, 0); //fix size so it doesn't change for long lists
+		addGB(iconBox, 3, 0); //fix size so it doesn't change for long lists
 		
 		addGB(botName, 0, 1);
 		addGB(nameField, 1, 1); 
+		addGB(templateLabel, 2, 1);
+		addGB(templateField, 3, 1);
 		
 		addGB(botSkill, 0, 3);
 		addGB(skillPanel, 1, 3);
 		addGB(botRestrict, 2, 3);
 		addGB(wepPanel, 3, 3);
-		addGB(botTags, 0, 5);
-		addGB(new JScrollPane(tagList), 1, 5);
+		addGB(tagButtonPanel, 1, 5);
+		addGB(botTags, 0, 4);
+		addGB(tagListPane, 1, 4);
 		
-		addGB(botAttributes, 2, 5);
-		addGB(attrList, 3, 5);
-		
+		addGB(botAttributesLabel, 2, 4);
+		addGB(attributesListPane, 3, 4);
 		
 		addGB(botPrimary, 0, 8);
 		addGB(primaryList, 1, 8);
@@ -206,138 +301,628 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 		addGB(botMelee, 0, 10);
 		addGB(meleeList, 1, 10);
 		
-		addGB(botBuilding, 0, 11);
+		addGB(buildingLabel, 0, 11);
 		addGB(buildingList, 1, 11);
 		
 		addGB(botHat, 0, 12);
 		addGB(hat1List, 1, 12);		
 		addGB(hat2List, 1, 13);		
 		addGB(hat3List, 1, 14);
+		addGB(teleportLabel, 0, 15);
 		
-		addGB(buiAttrBut, 2, 9);
+		addGB(itemAttributesLabel, 2, 7);
+		addGB(attributesSlotsBox, 3, 7);
 		
-		gb.gridwidth = 2;
-		addGB(attrButPanel, 2, 7);
-		addGB(attrButPanel2, 2, 8);
+		gbConstraints.gridwidth = 2;
+		addGB(teleWherePanel, 1, 15);
 		
-		gb.gridheight = 8;
-		addGB(attrPanel, 2, 10);
+		gbConstraints.anchor = GridBagConstraints.WEST;
+		gbConstraints.gridheight = 8;
+		addGB(attrPanel, 2, 8);
+		
+		gbConstraints = new GridBagConstraints();
+		gbConstraints.anchor = GridBagConstraints.WEST;
+		addGB(healthLabel, 0, 16);
+		addGB(healthSpinner, 1, 16);
+		addGB(scaleLabel, 2, 16);
+		addGB(scaleSpinner, 3, 16);
+		addGB(autoJumpMinLabel, 0, 17);
+		addGB(autoJumpMinSpinner, 1, 17);
+		addGB(autoJumpMaxLabel, 2, 17);
+		addGB(autoJumpMaxSpinner, 3, 17);
+		addGB(maxVisionLabel, 0, 18);
+		addGB(maxVisionSpinner, 1, 18);
+		
+		healthLabel.setVisible(false);
+		healthSpinner.setVisible(false);
+		scaleLabel.setVisible(false);
+		scaleSpinner.setVisible(false);
+		autoJumpMinLabel.setVisible(false);
+		autoJumpMinSpinner.setVisible(false);
+		autoJumpMaxLabel.setVisible(false);
+		autoJumpMaxSpinner.setVisible(false);
+		maxVisionLabel.setVisible(false);
+		maxVisionSpinner.setVisible(false);
 	}
 	
-	private void initItemLists() { //add boxes to the list of lists
-		itemLists.add(primaryList);
-		itemLists.add(secList);
-		itemLists.add(meleeList);
-		itemLists.add(hat1List);
-		itemLists.add(hat2List);
-		itemLists.add(hat3List);
-		itemLists.add(buildingList);
-	}
-	
-	private void buildingState(boolean state) { //change building related visibility
-		buildingList.setVisible(state);
-		botBuilding.setVisible(state);
-		buiAttrBut.setVisible(state);
-	}
-	
-	public void updatePanel(TFBotNode tf) {
-		int[] indices = new int[tagList.getModel().getSize()]; //max possible taglist
+	private void initAttributePanel() {
+		attrPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
-		classBox.setSelectedItem(tf.getValue(TFBotKeys.CLASSNAME));
-		setIconBox(iconBox, iconModel, (Classes) tf.getValue(TFBotKeys.CLASSNAME));
-		//values of classname are classes from enum
-		iconBox.setSelectedItem(tf.getValue(TFBotKeys.CLASSICON));
-		nameField.setText((String) tf.getValue(TFBotKeys.NAME));
-		switch ((String) tf.getValue(TFBotKeys.SKILL)) {
-			case TFBotNode.EASY:
-				skillGroup.setSelected(easyBut.getModel(), true);
-				break;
-			case TFBotNode.NORMAL:
-				skillGroup.setSelected(normalBut.getModel(), true);
-				break;
-			case TFBotNode.HARD:
-				skillGroup.setSelected(hardBut.getModel(), true);
-				break;
-			case TFBotNode.EXPERT:
-				skillGroup.setSelected(expBut.getModel(), true);
-				break;
-		}
-		switch ((String) tf.getValue(TFBotKeys.WEAPONRESTRICT)) {
-			case TFBotNode.ANY:
-				wepGroup.setSelected(anyBut.getModel(), true);
-				break;
-			case TFBotNode.PRIMARYONLY:
-				wepGroup.setSelected(priBut.getModel(), true);
-				break;
-			case TFBotNode.SECONDARYONLY:
-				wepGroup.setSelected(secBut.getModel(), true);
-				break;
-			case TFBotNode.MELEEONLY:
-				wepGroup.setSelected(melBut.getModel(), true);
-				break;
-		}
-		List<String> tags = tf.getTags();
-		if(tags.size() > 0) {
-			for(int i = 0; i < tags.size(); i++) { //get indices so they can be selected
-				indices[i] = tagList.getNextMatch(tags.get(i), 0, Position.Bias.Forward);
+		attributesSlotsModel.addElement(ItemSlot.NONE.toString());
+		attributesSlotsModel.addElement(ItemSlot.CHARACTER.toString());
+		attributesSlotsModel.addElement(ADDNEWATTR);
+		
+		JTextField cellField = new JTextField();
+		DefaultCellEditor cellEditor = new DefaultCellEditor(cellField);
+		itemAttributeTableModel.setColumnIdentifiers(new Object[] {"Attribute name", "Value"});
+		itemAttributeTable.putClientProperty("terminateEditOnFocusLost", true);
+		itemAttributeTable.getColumnModel().getColumn(1).setCellEditor(cellEditor);
+		//so adding identifiers causes new column objs
+		
+		//consider adding custom coloring
+		
+		itemAttributesListBox.setEditable(true);
+
+		JScrollPane attrListPane = new JScrollPane(itemAttributeTable);
+		//itemAttributeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		itemAttributesListBox.setPrototypeDisplayValue("CHARACTER");
+		attrListPane.setPreferredSize(new Dimension(300, 100)); //this is arbitary but the preferred is giant
+		//itemAttributeTable.getPreferredScrollableViewportSize()
+		
+		attrPanel.addGB(addAttributeToListButton, 0, 1);
+		attrPanel.addGB(removeAttributeFromList, 1, 1);
+		
+		attrPanel.gbConstraints.gridwidth = 2;
+		attrPanel.gbConstraints.fill = GridBagConstraints.BOTH;
+		attrPanel.addGB(itemAttributesListBox, 0, 0);
+		
+		attrPanel.gbConstraints.fill = GridBagConstraints.NONE;
+		
+		//attrPanel.gbConstraints.gridwidth = 2;
+		//attrPanel.gbConstraints.gridheight = 6;
+		attrPanel.addGB(attrListPane, 0, 2);
+		
+		itemAttributeTable.getSelectionModel().addListSelectionListener(event -> {
+			if(itemAttributeTable.getSelectedRowCount() == 1 && itemAttributeTable.getSelectedRow() != 0) {
+				removeAttributeFromList.setEnabled(true);
 			}
-			tagList.setSelectedIndices(indices);
+			else {
+				removeAttributeFromList.setEnabled(false);
+			}
+		});
+		cellEditor.addCellEditorListener(new CellEditorListener() {
+			public void editingCanceled(ChangeEvent c) {
+			}
+			
+			public void editingStopped(ChangeEvent c) {
+				if(!attributesSlotsModel.getSelectedItem().equals(ItemSlot.CHARACTER.toString())) {
+					if(itemAttributeTable.getSelectedRow() == 0 && itemAttributeTable.getSelectedColumn() == 1) {
+						int index = attributesSlotsBox.getSelectedIndex();
+						currentAttributeMap.put(TFBotNode.ITEMNAME, (String) cellEditor.getCellEditorValue());
+						//this will trigger an attributes slots action
+						attributesSlotsModel.removeElementAt(index);
+						attributesSlotsModel.insertElementAt((String) cellEditor.getCellEditorValue(), index);
+						attributesSlotsBox.setSelectedIndex(index);
+						return;
+					}
+				}
+				
+				if(((String) cellEditor.getCellEditorValue()).isBlank()) {
+					currentAttributeMap.remove((String) itemAttributesListBox.getSelectedItem());
+					//mainWindow.setFeedback("No value to add to attribute");
+				}
+				else { //put attr - value pair in map
+					currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), cellEditor.getCellEditorValue());
+					//mainWindow.setFeedback("Attribute value added");
+				}
+			}
+		});
+		
+		addAttributeToListButton.addActionListener(event -> {
+			if(!currentAttributeMap.containsKey((String) itemAttributesListBox.getSelectedItem())) {
+				itemAttributeTableModel.addRow(new String[] {(String) itemAttributesListBox.getSelectedItem(), ""});
+				currentAttributeMap.put((String) itemAttributesListBox.getSelectedItem(), null);
+			}
+			else {
+				mainWindow.setFeedback("Attribute already in list");
+			}
+			
+			if(itemAttributeTable.getRowCount() - 1 == ATTRMAX) {
+				addAttributeToListButton.setEnabled(false);
+			}
+		});
+		
+		//remove a specific attribute from the list
+		removeAttributeFromList.addActionListener(event -> { 
+			currentAttributeMap.remove(itemAttributeTable.getValueAt(itemAttributeTable.getSelectedRow(), 0));
+			//doesn't do anything if attr wasn't added to map
+			itemAttributeTableModel.removeRow(itemAttributeTable.getSelectedRow());
+			
+			if(!addAttributeToListButton.isEnabled()) { //reenable if we were previously at max
+				addAttributeToListButton.setEnabled(true);
+			}
+		});
+		attributesSlotsBox.addActionListener(event -> {
+			String slot = (String) attributesSlotsBox.getSelectedItem();
+			if(attributesSlotsBox.getSelectedIndex() != -1) {
+				if(slot == ItemSlot.NONE.toString()) {
+					attrPanel.setVisible(false);
+				}
+				else if(slot.equals(ADDNEWATTR)) {
+					if(attributesSlotsBox.getItemCount() < TFBotNode.ITEMCOUNT) {
+						attributesSlotsModel.insertElementAt(ADDNEWATTR, attributesSlotsBox.getItemCount());
+					}
+					attrPanel.setVisible(true);
+					loadMap(slot);
+				}
+				else {
+					attrPanel.setVisible(true);
+					loadMap(slot);
+				}
+			}
+		});
+	}
+	public void updatePanel(TFBotNode tf) {	
+		botNode = tf;
+		isNodeResetting = true;
+		
+		classBox.setSelectedItem(tf.getValue(TFBotNode.CLASSNAME));
+		if(tf.containsKey(TFBotNode.CLASSNAME)) {
+			setIconBox(iconModel, (Classes) tf.getValue(TFBotNode.CLASSNAME)); //values of classname are classes from enum
+		}
+		iconBox.setSelectedItem(tf.getValue(TFBotNode.CLASSICON));
+		nameField.setText((String) tf.getValue(TFBotNode.NAME));
+		if(tf.containsKey(TFBotNode.SKILL)) {
+			switch ((String) tf.getValue(TFBotNode.SKILL)) {
+				case TFBotNode.NOSKILL:
+					skillGroup.setSelected(noneBut.getModel(), true);
+					break;
+				case TFBotNode.EASY:
+					skillGroup.setSelected(easyBut.getModel(), true);
+					break;
+				case TFBotNode.NORMAL:
+					skillGroup.setSelected(normalBut.getModel(), true);
+					break;
+				case TFBotNode.HARD:
+					skillGroup.setSelected(hardBut.getModel(), true);
+					break;
+				case TFBotNode.EXPERT:
+					skillGroup.setSelected(expBut.getModel(), true);
+					break;
+			}
 		}
 		else {
-			tagList.clearSelection();
+			skillGroup.setSelected(noneBut.getModel(), true);
 		}
-		primaryList.setSelectedItem((String) tf.getValue(TFBotKeys.PRIMARY));
-		secList.setSelectedItem((String) tf.getValue(TFBotKeys.SECONDARY));
-		meleeList.setSelectedItem((String) tf.getValue(TFBotKeys.MELEE));
-		if(tf.getValue(TFBotKeys.CLASSNAME) == EngiPanel.Classes.Spy) {
-			buildingList.setSelectedItem((String) tf.getValue(TFBotKeys.BUILDING));
-		}
-		hat1List.setSelectedItem((String) tf.getValue(TFBotKeys.HAT1));
-		hat2List.setSelectedItem((String) tf.getValue(TFBotKeys.HAT2));
-		hat3List.setSelectedItem((String) tf.getValue(TFBotKeys.HAT3));
-		
-		setHatVisibility((String) tf.getValue(TFBotKeys.HAT1), hat1AttrBut);
-		setHatVisibility((String) tf.getValue(TFBotKeys.HAT2), hat2AttrBut);
-		setHatVisibility((String) tf.getValue(TFBotKeys.HAT3), hat3AttrBut);
-	}
-	
-	public void updateNode(TFBotNode tf) { //put values into node
-		tf.putKey(TFBotKeys.CLASSNAME, classBox.getSelectedItem());
-		tf.putKey(TFBotKeys.CLASSICON, iconBox.getSelectedItem()); //string
-		tf.putKey(TFBotKeys.NAME, nameField.getText());
-		tf.putKey(TFBotKeys.SKILL, skillGroup.getSelection().getActionCommand());
-		tf.putKey(TFBotKeys.WEAPONRESTRICT, wepGroup.getSelection().getActionCommand());
-		if(!tagList.getSelectedValuesList().isEmpty()) { //probably some other funny conversion bugs, double check
-			tf.setTags(tagList.getSelectedValuesList());
-		}
-		tf.putKey(TFBotKeys.PRIMARY, primaryList.getSelectedItem()); //strings
-		tf.putKey(TFBotKeys.SECONDARY, secList.getSelectedItem());
-		tf.putKey(TFBotKeys.MELEE, meleeList.getSelectedItem());
-		if(classBox.getSelectedItem() == EngiPanel.Classes.Spy) {
-			tf.putKey(TFBotKeys.BUILDING, buildingList.getSelectedItem());
-		}
-		tf.putKey(TFBotKeys.HAT1, hat1List.getSelectedItem());
-		tf.putKey(TFBotKeys.HAT2, hat2List.getSelectedItem());
-		tf.putKey(TFBotKeys.HAT3, hat3List.getSelectedItem());
-		//item attributes are added separately
-		
-		setHatVisibility((String) tf.getValue(TFBotKeys.HAT1), hat1AttrBut);
-		setHatVisibility((String) tf.getValue(TFBotKeys.HAT2), hat2AttrBut);
-		setHatVisibility((String) tf.getValue(TFBotKeys.HAT3), hat3AttrBut);
-	}
-	
-	//set visibility based on contents of string
-	private void setHatVisibility(String value, JRadioButton button) {
-		if(value == null || value.isEmpty()) {
-			button.setVisible(false);
+		if(tf.containsKey(TFBotNode.WEAPONRESTRICT)) {
+			switch ((String) tf.getValue(TFBotNode.WEAPONRESTRICT)) {
+				//case TFBotNode.ANY:
+				default:
+					wepGroup.setSelected(anyBut.getModel(), true);
+					break;
+				case TFBotNode.PRIMARYONLY:
+					wepGroup.setSelected(priBut.getModel(), true);
+					break;
+				case TFBotNode.SECONDARYONLY:
+					wepGroup.setSelected(secBut.getModel(), true);
+					break;
+				case TFBotNode.MELEEONLY:
+					wepGroup.setSelected(melBut.getModel(), true);
+					break;
+			}
 		}
 		else {
-			button.setVisible(true);
+			wepGroup.setSelected(anyBut.getModel(), true);
 		}
+		
+		tagTable.clearSelection();
+		if(tf.containsKey(TFBotNode.TAGS)) {
+			List<Object> tags = new ArrayList<Object>();
+			tags.addAll(tf.getListValue(TFBotNode.TAGS));
+			
+			//select all the tags that are already in the tagmodel
+			for(int i = 0; i < tagModel.getRowCount(); i++) {
+				if(tags.contains(tagModel.getValueAt(i, 0))) {
+					tagTable.changeSelection(i, 1, true, false);
+					tags.remove(tagModel.getValueAt(i, 0));
+				}
+			}
+			
+			//then add new tags that weren't added
+			for(Object newTag : tags) {
+				tagModel.addRow(new String[] {(String) newTag});
+				tagTable.changeSelection(tagModel.getRowCount() - 1, 0, true, false);
+			}
+		}
+		
+		botAttributeList.clearSelection();
+		if(tf.containsKey(TFBotNode.ATTRIBUTES)) {
+			List<Object> attr = tf.getListValue(TFBotNode.ATTRIBUTES);
+			int[] indices = new int[attr.size()]; //max possible taglist
+			
+			for(int i = 0; i < attr.size(); i++) { //get indices so they can be selected
+				indices[i] = botAttributeList.getNextMatch((String) attr.get(i), 0, Position.Bias.Forward);
+				//System.out.println(indices[i]);
+			}
+			botAttributeList.setSelectedIndices(indices);
+		}
+		
+		templateField.setText((String) tf.getValue(TFBotNode.TEMPLATE));
+		
+		if(!tf.isItemsSorted() && tf.containsKey(TFBotNode.ITEM) && (Classes) tf.getValue(TFBotNode.CLASSNAME) != Classes.None) {
+			String[] oldBotItems = (String[]) tf.getValue(TFBotNode.ITEM);
+			String newBotItems[] = new String[TFBotNode.ITEMCOUNT];
+			List<ItemData> classList = parser.getClassList((Classes) tf.getValue(TFBotNode.CLASSNAME));
+			List<String> asList = Arrays.asList(oldBotItems);
+			
+			for(ItemData item : classList) {
+				String itemName = item.toString();
+				
+				if(asList.contains(itemName.toLowerCase())) {
+					if(item.getSlot() == ItemSlot.COSMETIC1) {
+						if(newBotItems[ItemSlot.COSMETIC1.getSlot()] == null) {
+							newBotItems[ItemSlot.COSMETIC1.getSlot()] = itemName;
+						}
+						else if(newBotItems[ItemSlot.COSMETIC2.getSlot()] == null) {
+							newBotItems[ItemSlot.COSMETIC2.getSlot()] = itemName;
+						}
+						else {
+							newBotItems[ItemSlot.COSMETIC3.getSlot()] = itemName;
+						}
+					}
+					else {
+						newBotItems[item.getSlot().getSlot()] = itemName;
+					}
+					oldBotItems[asList.indexOf(itemName.toLowerCase())] = null;
+				}
+				if(asList.isEmpty()) {
+					break;
+				}
+			}
+			
+			tf.putKey(TFBotNode.ITEM, newBotItems);
+			tf.setItemsSorted(true);
+		}
+		
+		if(tf.isItemsSorted() && tf.containsKey(TFBotNode.ITEM)) {
+			String[] items = (String[]) tf.getValue(TFBotNode.ITEM);
+			
+			primaryList.setSelectedItem(items[ItemSlot.PRIMARY.getSlot()]);
+			secList.setSelectedItem(items[ItemSlot.SECONDARY.getSlot()]);
+			meleeList.setSelectedItem(items[ItemSlot.MELEE.getSlot()]);
+			buildingList.setSelectedItem(items[ItemSlot.BUILDING.getSlot()]);
+			hat1List.setSelectedItem(items[ItemSlot.COSMETIC1.getSlot()]);
+			hat2List.setSelectedItem(items[ItemSlot.COSMETIC2.getSlot()]);
+			hat3List.setSelectedItem(items[ItemSlot.COSMETIC3.getSlot()]);
+		}
+		else {
+			primaryList.setSelectedItem(null);
+			secList.setSelectedItem(null);
+			meleeList.setSelectedItem(null);
+			buildingList.setSelectedItem(null);
+			hat1List.setSelectedItem(null);
+			hat2List.setSelectedItem(null);
+			hat3List.setSelectedItem(null);
+		}
+		
+		itemArray = (String[]) tf.getValue(TFBotNode.ITEM); //do it down here so it's sorted
+
+		attributesSlotsBox.removeAllItems();
+		attributesSlotsBox.addItem(ItemSlot.NONE.toString());
+		attributesSlotsBox.addItem(ItemSlot.CHARACTER.toString());
+		
+		//TODO: might not need these ifs anymore if forcing
+		if(tf.containsKey(TFBotNode.ITEMATTRIBUTES)) {
+			attributeMapsArray = tf.getListValue(TFBotNode.ITEMATTRIBUTES);
+			
+			for(Object entry : attributeMapsArray) {
+				Map<String, Object> map = (Map<String, Object>) entry;
+				
+				if(map.containsKey(TFBotNode.ITEMNAME)) {
+					attributesSlotsBox.addItem((String) map.get(TFBotNode.ITEMNAME));
+				}
+			}
+			attributesSlotsBox.setSelectedIndex(0);
+		}
+		
+		if(attributesSlotsBox.getItemCount() < TFBotNode.ITEMCOUNT) {
+			attributesSlotsModel.insertElementAt(ADDNEWATTR, attributesSlotsBox.getItemCount());
+		}
+		
+		if(tf.containsKey(TFBotNode.CHARACTERATTRIBUTES)) {
+			currentCharAttributeMap = (Map<String, Object>) tf.getValue(TFBotNode.CHARACTERATTRIBUTES);
+		}
+		attributesSlotsBox.setSelectedItem(ItemSlot.NONE);
+		
+		if(tf.containsKey(TFBotNode.TELEPORTWHERE)) {
+			teleWherePanel.updateWhere(tf.getListValue(TFBotNode.TELEPORTWHERE));
+		}
+		else {
+			teleWherePanel.clearSelection();
+		}
+		
+		isNodeResetting = false;
 	}
 	
-	void setIconBox(JComboBox<String> jb, DefaultComboBoxModel<String> model, Classes str) { //set icon list depending on class
-		//todo: load icons from 
+	public void initUpdateListeners() { //put values into node
+		classBox.addActionListener(event -> {
+			Classes str = (Classes) classBox.getSelectedItem();
+			if(str != Classes.None) {
+				setIconBox(iconModel, str);
+			}
+			if(parser != null) { //prevent loading in cases where items_game.txt is unknown
+				setClassItems((Classes) classBox.getSelectedItem());
+			}	
+			
+			if(classBox.getSelectedItem() == Classes.Spy) {
+				buildingList.setVisible(true);
+				buildingLabel.setVisible(true);
+				
+				teleportLabel.setVisible(false);
+				teleWherePanel.setVisible(false);
+			}
+			else if(classBox.getSelectedItem() == Classes.Engineer) {
+				teleportLabel.setVisible(true);
+				teleWherePanel.setVisible(true);
+				
+				buildingList.setVisible(false);
+				buildingLabel.setVisible(false);
+				buildingList.setSelectedIndex(-1);
+			}
+			else {
+				buildingList.setVisible(false);
+				buildingLabel.setVisible(false);
+				buildingList.setSelectedIndex(-1);
+				
+				teleportLabel.setVisible(false);
+				teleWherePanel.setVisible(false);
+			}
+			
+			if(isNodeResetting) {
+				return;
+			}
+			
+			botNode.putKey(TFBotNode.CLASSNAME, classBox.getSelectedItem());
+			
+			if(manager != null) {
+				manager.updateSquadRCName();
+				manager.updateWavebar(false);
+			}
+		});
+		
+		iconBox.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			botNode.putKey(TFBotNode.CLASSICON, iconBox.getSelectedItem()); //string
+			
+			if(manager != null) {
+				manager.updateWavebar(false);
+			}
+		});
+		
+		nameField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() {
+				if(isNodeResetting) {
+					return;
+				}
+				
+				botNode.putKey(TFBotNode.NAME, nameField.getText());
+				if(manager != null) {
+					manager.updateWavebar(false);
+					manager.updateSquadRCName();
+				}
+			}
+		});
+		
+		ActionListener skillListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(isNodeResetting) {
+					return;
+				}
+				
+				botNode.putKey(TFBotNode.SKILL, e.getActionCommand());
+			}
+		};
+		
+		//allow the default values, filter them out in treeparse while we're parsing
+		noneBut.addActionListener(skillListener);
+		easyBut.addActionListener(skillListener);
+		normalBut.addActionListener(skillListener);
+		hardBut.addActionListener(skillListener);
+		expBut.addActionListener(skillListener);
+		
+		ActionListener restrictListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(isNodeResetting) {
+					return;
+				}
+				
+				botNode.putKey(TFBotNode.WEAPONRESTRICT, e.getActionCommand());
+			}
+		};
+		
+		anyBut.addActionListener(restrictListener);
+		priBut.addActionListener(restrictListener);
+		secBut.addActionListener(restrictListener);
+		melBut.addActionListener(restrictListener);
+		
+		//copy pasted from ws, could link somehow
+		
+		templateField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+			
+			public void update() { //TODO: this fires for every single char, which could be an issue
+				if(isNodeResetting) {
+					return;
+				}
+				
+				String template = templateField.getText();
+				botNode.putKey(TFBotNode.TEMPLATE, template);
+							
+				if(manager != null) {
+					manager.updateSquadRCName();
+					manager.updateWavebar(false);
+				}
+			}
+		});
+		
+		tagTable.getSelectionModel().addListSelectionListener(event -> {
+			if(event.getValueIsAdjusting() || isNodeResetting) {
+				return;
+			}
+			
+			List<String> tags = new ArrayList<String>(4);
+			
+			if(tagTable.getSelectedRowCount() == 1) {
+				removeTagRow.setEnabled(true);
+			}
+			else {
+				removeTagRow.setEnabled(false);
+			}
+			
+			for(int row : tagTable.getSelectedRows()) {
+				tags.add((String) tagTable.getValueAt(row, 0));
+			}
+			botNode.putKey(TFBotNode.TAGS, tags);
+		});
+		
+		botAttributeList.addListSelectionListener(event -> {
+			if(event.getValueIsAdjusting() || isNodeResetting) {
+				return;
+			}
+			
+			List<String> botAttr = new ArrayList<String>(4);
+			botAttr.addAll(botAttributeList.getSelectedValuesList());
+			botNode.putKey(TFBotNode.ATTRIBUTES, botAttr);
+		});
+		
+		//this sucks	
+		primaryList.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			if(primaryList.getSelectedItem() != null && !((String) primaryList.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.PRIMARY.getSlot()] = (String) primaryList.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.PRIMARY.getSlot()] = null;
+			}
+		});
+		
+		secList.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			if(secList.getSelectedItem() != null && !((String) secList.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.SECONDARY.getSlot()] = (String) secList.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.SECONDARY.getSlot()] = null;
+			}
+		});
+		
+		meleeList.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			if(meleeList.getSelectedItem() != null && !((String) meleeList.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.MELEE.getSlot()] = (String) meleeList.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.MELEE.getSlot()] = null;
+			}
+		});
+		
+		buildingList.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			if(buildingList.getSelectedItem() != null && !((String) buildingList.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.BUILDING.getSlot()] = (String) buildingList.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.BUILDING.getSlot()] = null;
+			}
+		});
+		
+		hat1List.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			if(hat1List.getSelectedItem() != null && !((String) hat1List.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.COSMETIC1.getSlot()] = (String) hat1List.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.COSMETIC1.getSlot()] = null;
+			}
+		});
+		
+		hat2List.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			if(hat2List.getSelectedItem() != null && !((String) hat2List.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.COSMETIC2.getSlot()] = (String) hat2List.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.COSMETIC2.getSlot()] = null;
+			}
+		});
+		
+		hat3List.addActionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			if(hat3List.getSelectedItem() != null && !((String) hat3List.getSelectedItem()).isBlank()) {
+				itemArray[ItemSlot.COSMETIC3.getSlot()] = (String) hat3List.getSelectedItem();
+			}
+			else { //if null or is blank
+				itemArray[ItemSlot.COSMETIC3.getSlot()] = null;
+			}
+		});
+		
+		teleWherePanel.getTable().getSelectionModel().addListSelectionListener(event -> {
+			if(isNodeResetting) {
+				return;
+			}
+			
+			List<String> wheres = teleWherePanel.updateNode();
+			if(wheres != null) {
+				botNode.putKey(TFBotNode.TELEPORTWHERE, wheres);
+			}
+		});
+	}
+	
+	void setIconBox(DefaultComboBoxModel<String> model, Classes str) { //set icon list depending on class
+		//todo: load icons from folder
 		model.removeAllElements();
 		
 		switch (str) {
@@ -405,441 +990,154 @@ public class BotPanel extends EngiPanel { //class to make the panel for bot crea
 					model.addElement(item);
 				}
 				break;
+			case None:
+			default:
+				break;
 		}
 	}
 	
-	//update item lists
-	public void getItemParser(ItemParser parser) {
-		this.parser = parser;
-		setClassItems(0); //since force updating, just default to first class
-	}
-	
-	public void setClassItems(int index) { //take class and get items from the parser
+	public void setClassItems(Classes index) { //take class and get items from the parser
 		primaryList.removeAllItems();
 		secList.removeAllItems();
 		meleeList.removeAllItems();
 		hat1List.removeAllItems();
 		hat2List.removeAllItems();
 		hat3List.removeAllItems();
+		
+		if(index != Classes.None) {
+			List<ItemData> lists = parser.getClassList(index);
 			
-		List<List<String>> lists = parser.updateModels(index);
-		
-		//set model(get the appropriate slot from lists, convert to a new string array of size inner list)
-		primaryList.setModel(getNewModel(lists, ItemParser.primary));
-		secList.setModel(getNewModel(lists, ItemParser.secondary));
-		meleeList.setModel(getNewModel(lists, ItemParser.melee));
-		
-		hat1List.setModel(getNewModel(lists, ItemParser.cosmetic));
-		hat2List.setModel(getNewModel(lists, ItemParser.cosmetic));
-		hat3List.setModel(getNewModel(lists, ItemParser.cosmetic));
-		
-		if(index == 8 && buildingList.getItemAt(0) == null) {
-			//only need to load once since there's only one possible building list
-			buildingList.setModel(getNewModel(lists, ItemParser.building));
-			buildingList.setSelectedIndex(-1);
+			for(ItemData item : lists) {
+				String itemName = item.toString();
+				
+				switch(item.getSlot()) {
+					case PRIMARY:
+						primaryModel.addElement(itemName);
+						break;
+					case SECONDARY:
+						secModel.addElement(itemName);
+						break;
+					case MELEE:
+						meleeModel.addElement(itemName);
+						break;
+					case BUILDING:
+						buildingModel.addElement(itemName);
+						break;
+					case COSMETIC1:
+						hat1Model.addElement(itemName);
+						hat2Model.addElement(itemName);
+						hat3Model.addElement(itemName);
+						break;
+					default:
+						break;
+						
+				}
+			}
 		}
-		
+	
 		//default to no selection since these aren't mandatory
 		primaryList.setSelectedIndex(-1);
 		secList.setSelectedIndex(-1);
 		meleeList.setSelectedIndex(-1);
+		buildingList.setSelectedIndex(-1);
 		hat1List.setSelectedIndex(-1);
 		hat2List.setSelectedIndex(-1);
 		hat3List.setSelectedIndex(-1);
 	}
 	
-	//make new defaultcomboboxmodel from the sublist converted to string[] of sublist's size
-	private DefaultComboBoxModel<String> getNewModel(List<List<String>> lists, int slot) {
-		List<String> sublist = lists.get(slot);
-		
-		return new DefaultComboBoxModel<String>(sublist.toArray(new String[sublist.size()]));
-	}
-	
 	public void updateTagList(List<String> list) { //add custom tags to list
-		tagModel.clear();
+		tagModel.setRowCount(0);
 		
 		for(String s : tags) { //add the constant tags
-			tagModel.addElement(s);
+			tagModel.addRow(new String[]{s});
 		}
 		for(String s : list) { //then add the variable ones
-			tagModel.addElement(s);
+			tagModel.addRow(new String[]{s});
 		}
-		tagList.setModel(tagModel);
 	}
 	
-	//add radio button to proper panels and the group, then init the listeners
-	private void initAttributeRadio() {
-		attrButPanel.add(noAttrBut);
-		attrButPanel.add(hat1AttrBut);
-		attrButPanel.add(hat2AttrBut);
-		attrButPanel.add(hat3AttrBut);
-		attrButPanel2.add(charAttrBut);
-		attrButPanel2.add(priAttrBut);
-		attrButPanel2.add(secAttrBut);
-		attrButPanel2.add(melAttrBut);
-		
-		attrGroup.add(noAttrBut);
-		attrGroup.add(charAttrBut);
-		attrGroup.add(priAttrBut);
-		attrGroup.add(secAttrBut);
-		attrGroup.add(melAttrBut);
-		attrGroup.add(buiAttrBut);
-		attrGroup.add(hat1AttrBut);
-		attrGroup.add(hat2AttrBut);
-		attrGroup.add(hat3AttrBut);
-		attrGroup.setSelected(noAttrBut.getModel(), true);
-		
-		noAttrBut.setActionCommand(ItemSlot.NONE.toString());
-		priAttrBut.setActionCommand(ItemSlot.PRIMARY.toString());
-		secAttrBut.setActionCommand(ItemSlot.SECONDARY.toString());
-		melAttrBut.setActionCommand(ItemSlot.MELEE.toString());
-		buiAttrBut.setActionCommand(ItemSlot.BUILDING.toString());
-		charAttrBut.setActionCommand(ItemSlot.CHARACTER.toString());
-		hat1AttrBut.setActionCommand(ItemSlot.HAT1.toString());
-		hat2AttrBut.setActionCommand(ItemSlot.HAT2.toString());
-		hat3AttrBut.setActionCommand(ItemSlot.HAT3.toString());
-		
-		setAttrButRed();
-		
-		//don't allow adding attributes with no hats set
-		hat1AttrBut.setVisible(false);
-		hat2AttrBut.setVisible(false);
-		hat3AttrBut.setVisible(false);
-		
-		noAttrBut.addItemListener(event -> {
-			if(event.getStateChange() == ItemEvent.SELECTED) {
-				attrPanel.setVisible(false);
-			}
-			else {
-				attrPanel.setVisible(true);
-			}
-		});
-		priAttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.PRIMARY);
-		});
-		secAttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.SECONDARY);
-		});
-		melAttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.MELEE);
-		});
-		melAttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.MELEE);
-		});
-		buiAttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.BUILDING);
-		});
-		charAttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.CHARACTER);
-		});
-		hat1AttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.HAT1);
-		});
-		hat2AttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.HAT2);
-		});
-		hat3AttrBut.addActionListener(event -> {
-			attrPanel.loadMap(ItemSlot.HAT3);
-		});
-	}
-	
-	//colors all the attr radio buttons red
-	public void setAttrButRed() {
-		charAttrBut.setForeground(Color.RED);
-		priAttrBut.setForeground(Color.RED);
-		secAttrBut.setForeground(Color.RED);
-		melAttrBut.setForeground(Color.RED);
-		buiAttrBut.setForeground(Color.RED);
-		hat1AttrBut.setForeground(Color.RED);
-		hat2AttrBut.setForeground(Color.RED);
-		hat3AttrBut.setForeground(Color.RED);
-	}
-	
-	public void setAttrButGreen(ItemSlot k) {
-		switch (k) {
-			case PRIMARY:
-				priAttrBut.setForeground(Color.GREEN);
+	//get info changes from secondarywindow
+	//TODO: this receives tfbot template events
+	public void propertyChange(PropertyChangeEvent evt) {
+		switch(evt.getPropertyName()) {
+			case PopulationPanel.TAGS:
+				updateTagList((List<String>) evt.getNewValue()); //this should always be a list<string>, may want to sanity check though
+				//tagList.setFixedCellWidth(-1);
 				break;
-			case SECONDARY:
-				secAttrBut.setForeground(Color.GREEN);
+			/*
+			case WaveSpawnNode.TFBOT:
+				if(evt.getOldValue() == null) {
+					templateModel.addElement((String) evt.getNewValue());
+				}
+				else if(evt.getNewValue() == null) {
+					templateModel.removeElement((String) evt.getOldValue());
+				}
+				else {
+					int index = templateModel.getIndexOf((String) evt.getOldValue());
+					templateModel.removeElementAt(index);
+					templateModel.insertElementAt((String) evt.getNewValue(), index);
+				}
+				//templateBox.setSelectedIndex(-1);
 				break;
-			case MELEE:
-				melAttrBut.setForeground(Color.GREEN);
+			case MainWindow.BOTTEMPLATEMAP: 
+				updateTemplateModel((Map<String, String>) evt.getNewValue());
 				break;
-			case BUILDING:
-				buiAttrBut.setForeground(Color.GREEN);
-				break;
-			case CHARACTER:
-				charAttrBut.setForeground(Color.GREEN);
-				break;
-			case HAT1:
-				hat1AttrBut.setForeground(Color.GREEN);
-				break;
-			case HAT2:
-				hat2AttrBut.setForeground(Color.GREEN);
-				break;
-			case HAT3:	
-				hat3AttrBut.setForeground(Color.GREEN);
-				break;
-			case NONE: //none is never colored
+			*/	
 			default:
 				break;
 		}
 	}
 	
-	public AttributesPanel getAttributesPanel() {
-		return this.attrPanel;
+	public static void setItemParser(ItemParser parser) {
+		BotPanel.parser = parser;
+	}
+		
+	private void checkListSize() {
+		if(itemAttributeTableModel.getRowCount() == ATTRMAX) { //only allow as many attributes that can be fit
+			addAttributeToListButton.setEnabled(false);
+			removeAttributeFromList.setEnabled(true);
+		}
+		else { 
+			addAttributeToListButton.setEnabled(true);
+			removeAttributeFromList.setEnabled(false);
+		}
 	}
 	
-	//externally changing between values
-	//public void setAttrNone() {
-	//	noAttrBut.setSelected(true);
-	//	//setAttrButRed();
-	//}
-	
-	//class for the attribute panel
-	@SuppressWarnings("serial")
-	public class AttributesPanel extends EngiPanel {
-		final int ATTRMAX = 2;
-		
-		DefaultListModel<String> userAttrListModel = new DefaultListModel<String>();
-		JList<String> attrSelectedList = new JList<String>(userAttrListModel); //fix list box
-		JButton addAttributeToListButton = new JButton("Add attribute");
-		JButton updateAttributeValueButton = new JButton("Update attribute value");
-		JButton removeAttributeFromList = new JButton("Remove attribute");
-		JTextField attrValueField = new JTextField(11);
-		
-		JComboBox<String> itemAttributeBox;
-		//ItemAttributeNode currentAttributeNode;
-		HashMap<String, String> addedAttributes = new HashMap<String, String>();
-		TFBotNode tfbotnode;
-		//Map<ItemSlot, ItemAttributeNode> nodeMap = new HashMap<ItemSlot, ItemAttributeNode>();
-		
-		//manage these two via outer frames
-		JButton addAttrToBot = new JButton("Add current ItemAttributes type to bot");
-		JButton removeAttrFromBot = new JButton("Remove current ItemAttribute type from bot");
-		
-		ButtonListManager attrBLManager = new ButtonListManager(attrSelectedList, addAttributeToListButton,
-				updateAttributeValueButton, removeAttributeFromList);
-		
-		public AttributesPanel(String[] itemAttributes) {
-			setLayout(gbLayout);
-			gb.anchor = GridBagConstraints.WEST;
-			
-			itemAttributeBox = new JComboBox<String>(itemAttributes);
-			itemAttributeBox.setEditable(true);
-			initAttributeComponents();
-			
-			attrSelectedList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			
-			addGB(addAttributeToListButton, 0, 1);
-			addGB(removeAttributeFromList, 1, 1);
-			addGB(updateAttributeValueButton, 2, 1);
-			addGB(attrValueField, 3, 1);
-			
-			addGB(addAttrToBot, 3, 5);
-			addGB(removeAttrFromBot, 3, 6);
-			
-			gb.gridwidth = 2;
-			addGB(new JScrollPane(itemAttributeBox), 0, 0);
-			
-			gb.gridwidth = 2;
-			gb.gridheight = 6;
-			addGB(new JScrollPane(attrSelectedList), 0, 2);	
-			
-			setAttrToBotButtonsStates(false, false, States.DISABLE);
-			//force no add until there's something
+	//load the appropriate map for the item slot
+	private void loadMap(String item) {
+		if(item.equals(ItemSlot.CHARACTER.toString())) {
+			currentAttributeMap = currentCharAttributeMap;
 		}
-
-		//init listeners
-		private void initAttributeComponents() {
-			itemAttributeBox.addItemListener(event -> {
-				attrSelectedList.clearSelection();
-			}); //if user selects a new attribute from dropdown, automatically clear selection to save a click
-			
-			attrSelectedList.addListSelectionListener(new ListSelectionListener() {
-				public void valueChanged(ListSelectionEvent e) { //fetches the value and updates button state
-					if(attrSelectedList.getSelectedIndex() != -1) {
-						attrValueField.setText(addedAttributes.get(attrSelectedList.getSelectedValue()));
-						attrBLManager.changeButtonState(ButtonListManager.States.SELECTED);
-					}
-					else {
-						checkListSize();
-					}
+		else {
+			currentAttributeMap = null;
+			for(Object entry : attributeMapsArray) {
+				Map<String, Object> map = (Map<String, Object>) entry;
+				
+				if(item.equals(map.get(TFBotNode.ITEMNAME))) {
+					currentAttributeMap = map;
+					break;
 				}
-			});
-			
-			addAttributeToListButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if(!userAttrListModel.contains((String) itemAttributeBox.getSelectedItem())) {
-						userAttrListModel.addElement((String) itemAttributeBox.getSelectedItem());
-					} //prevent duplicate entries in the visual list
-					else {
-						window.updateFeedback("Attribute already in list");
-					}
-					//addedAttributes.put((String) itemAttributeBox.getSelectedItem(), null);
-					attrSelectedList.setSelectedValue((String) itemAttributeBox.getSelectedItem(), false);
-					//explicitly show it is selected here, also selects if it was already entered
-					
-					attrBLManager.changeButtonState(States.SELECTED);
-				}
-			});
-			
-			updateAttributeValueButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if(attrValueField.getText().isEmpty()) {
-						window.updateFeedback("No value to add to attribute");
-					}
-					else { //put attr - value pair in map
-						addedAttributes.put((String) itemAttributeBox.getSelectedItem(), attrValueField.getText());
-						window.updateFeedback("Attribute value added");
-						addAttrToBot.setEnabled(true); //hit minimum valid attribute list at this point
-					}
-				}
-			});
-			
-			//remove a specific attribute from the list
-			removeAttributeFromList.addActionListener(event -> { 
-				addedAttributes.remove((String) itemAttributeBox.getSelectedItem());
-				//doesn't do anything if attr wasn't added to map
-				userAttrListModel.removeElementAt(attrSelectedList.getSelectedIndex());	
-				if(userAttrListModel.isEmpty()) {
-					setAttrToBotButtonsStates(false, false, ButtonListManager.States.EMPTY);
-					//don't allow adding empty itemattributes
-				}
-				else {
-					attrBLManager.changeButtonState(ButtonListManager.States.NOSELECTION);
-				}
-			});
-			
-			//add the attribute map to the tfbot node
-			addAttrToBot.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {			
-					if(tfbotnode.getItemAttributeList() == null) { //init map if there isn't one
-						tfbotnode.setItemAttributeList(new HashMap<EngiPanel.ItemSlot, HashMap<String, String>>());
-					}
-					ItemSlot selectedSlot = ItemSlot.valueOf(attrGroup.getSelection().getActionCommand());
-					setAttrButGreen(selectedSlot);
-					//get selected radio button and convert command back to itemslot
-					//also update radio color
-					
-					if(addedAttributes.isEmpty() || addedAttributes.containsValue(null) 
-							|| addedAttributes.containsValue("")) {
-						window.updateFeedback("Failed to add ItemAttributes list, an attribute is missing a value");
-					}
-					else {
-						//currentAttributeNode = new ItemAttributeNode(addedAttributes);
-						tfbotnode.getItemAttributeList().put(selectedSlot, addedAttributes);
-						window.updateFeedback("ItemAttributes list added to TFBot");
-						removeAttrFromBot.setEnabled(true);
-					}
-					//add type and the node to tfbot's itemattributes map
-					//possibly warn of overwrite
-				}
-			});
-			
-			removeAttrFromBot.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					ItemSlot selectedSlot = ItemSlot.valueOf(attrGroup.getSelection().getActionCommand());
-					//get selected radio button and convert command back to itemslot
-					tfbotnode.getItemAttributeList().remove(selectedSlot);
-					removeAttrFromBot.setEnabled(false);
-					//update slot color
-					window.updateFeedback("ItemAttributes list removed from TFBot");
-					updateComponents(false); //refresh components/destroy the node
-				}
-			});
-		}
-		
-		private void checkListSize() {
-			
-			if(userAttrListModel.getSize() == ATTRMAX) { //only allow as many attributes that can be fit
-				setAttrToBotButtonsStates(true, false, States.REMOVEONLY);
-			} 
-			else if (tfbotnode == null || tfbotnode.getParent() == null) { //even if no visible ws there is invis temp ws
-				setAttrToBotButtonsStates(false, false, States.DISABLE);
-			} //different from above since you want to be able to add if parent and empty
-			else if(userAttrListModel.getSize() == 0) { //if nothing in list
-				setAttrToBotButtonsStates(false, false, States.EMPTY);
-			} 
-			else { 
-				setAttrToBotButtonsStates(true, false, States.EMPTY);
 			}
 			
-			if(tfbotnode.getItemAttributeList() != null && tfbotnode.getItemAttributeList().containsValue(addedAttributes)) {
-				removeAttrFromBot.setEnabled(true); //enable remove only if already added to bot
+			if(currentAttributeMap == null) {
+				Map<String, Object> newMap = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
+				newMap.put(TFBotNode.ITEMNAME, item);
+				attributeMapsArray.add(newMap);
+				currentAttributeMap = newMap;
 			}
 		}
 		
-		public void setAttrToBotButtonsStates(boolean botState, boolean canRemove, ButtonListManager.States state) { //awful name
-			addAttrToBot.setEnabled(botState);
-			removeAttrFromBot.setEnabled(canRemove);
-			
-			attrBLManager.changeButtonState(state);
+		itemAttributeTableModel.setRowCount(0);
+		
+		if(!item.equals(ItemSlot.CHARACTER.toString())) {
+			itemAttributeTableModel.addRow(new Object[] {TFBotNode.ITEMNAME, item});
 		}
 		
-		//take node and load the appropriate map for the item slot
-		private void loadMap(ItemSlot index) {
-			//node = window.getCurrentBotNode();
-			
-			if(tfbotnode != null) {
-				Map<ItemSlot, HashMap<String, String>> nodeMap = tfbotnode.getItemAttributeList();
-				//node.getParent() != null && 
-				if(nodeMap != null && !nodeMap.isEmpty()) { //if map is not empty/null
-					if(nodeMap.containsKey(index)) { //set addedattributes map to map defined at corresponding key in nodemap
-						//currentAttributeNode = nodeMap.get(index);
-						addedAttributes = nodeMap.get(index);
-						updateComponents(true);
-					}	
-					else {
-						updateComponents(false);
-					}
-				}
-				else {
-					updateComponents(false);
-				}
-			}	
-			else { //otherwise just clear components
-				updateComponents(false);
+		currentAttributeMap.forEach((k, v) -> {
+			if(v != null && !v.equals(item)) {
+				itemAttributeTableModel.addRow(new String[] {k, v.toString()});
 			}
-			
-		}
-		
-		//load the map into model
-		private void updateComponents(boolean loadList) {
-			attrValueField.setText(null);
-			if(loadList) { //if there is an existing list
-				userAttrListModel.clear(); 
-				addedAttributes.forEach((k, v) -> userAttrListModel.addElement(k + " " + v));
-				checkListSize(); //force check in case list index never changes (stays at unselected)
-			}
-			else {
-				addedAttributes = new HashMap<String, String>();
-				userAttrListModel.clear(); //do it after updating addedAttributes so checklistsize can't false positive
-			}
-			
-		}
-		
-		//gets node from window and updates the radio colors 
-		public void updateItemAttrInfo(TFBotNode node) {
-			this.tfbotnode = node;
-			
-			updateComponents(false);
-			setAttrButRed();
-			if(node.getParent() != null) {
-				if(node.getItemAttributeList() != null) { //update radio colors based on what attrs it has
-					node.getItemAttributeList().keySet().forEach(k -> {
-						setAttrButGreen(k);
-					});
-				}
-			}
-			noAttrBut.setSelected(true);
-			if(node.getItemAttributeList() == null) { //if no attribute list to add to
-				setAttrToBotButtonsStates(false, false, ButtonListManager.States.EMPTY);
-			}
-			else {
-				setAttrToBotButtonsStates(true, false, ButtonListManager.States.EMPTY);
-			}
-		}
+		});
+		checkListSize(); //force check in case list index never changes (stays at unselected)
 	}
 }

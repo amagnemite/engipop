@@ -14,7 +14,7 @@ public class ItemAttributes {
 		
 	}
 	
-	public static String[] getItemAttributes() {
+	public String[] getItemAttributes() {
 		URL url = ItemAttributes.class.getResource("/itemattributes.txt");
 		
 		ArrayList<String> list = new ArrayList<String>();
