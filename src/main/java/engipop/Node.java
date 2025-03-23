@@ -125,46 +125,44 @@ public class Node {
 		Set<String> stringSet = new HashSet<String>(
 				Arrays.asList(WaveSpawnNode.NAME.toLowerCase(), WaveSpawnNode.WAITFORALLDEAD.toLowerCase(), 
 						WaveSpawnNode.WAITFORALLSPAWNED.toLowerCase()));
-		final String Digits = "(\\p{Digit}+)"; //decimal digit one or more times
+		final String digits = "(\\p{Digit}+)"; //decimal digit one or more times
 		final String fpRegex =
 				("-?(" + //- 0 or 1 times
-				"("+Digits+"(\\.)?("+Digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
-				"(\\.("+Digits+")))"); //. , digits
+				"("+digits+"(\\.)?("+digits+"?))|" + //digits 1 or more times, . 0 or 1 times, digits 0 or 1 times
+				"(\\.("+digits+")))"); //. , digits
 		
 		Map<String, List<Object>> newMap = new TreeMap<String, List<Object>>(String.CASE_INSENSITIVE_ORDER);
 		for(Entry<String, Object[]> entry : map.entrySet()) {
-            List<Object> array = new ArrayList<Object>(entry.getValue().length);
-            
-            //for(int i = 0; i < entry.getValue().length; i++) {
-            for(Object arrayEntry : entry.getValue()) {
-                if(arrayEntry instanceof Map) {
-                    array.add(copyVDFNode((VDFNode) arrayEntry));
-                }
-                else if(!stringSet.contains(entry.getKey().toLowerCase())) { //convert string numbers into ints/doubles
-                    String str = (String) arrayEntry;
-                    if(str.contains(".") && Pattern.matches(fpRegex, str)) {
-                        array.add(Double.valueOf(str));
-                    }    
-                    else if(Pattern.matches(Digits, str)) {
-                    	try {
-                    		array.add(Integer.valueOf(str)); //this may also catch certain booleans/flags
-                    	}
-                        catch(NumberFormatException n) {
-                        	//if people decide to be silly and use stupid large numbers, just keep it as string
-                        	//this will cause issues with the mandatory spinners though
-                        	array.add(arrayEntry);
-                        }
-                    }
-                    else {
-                    	array.add(arrayEntry);
-                    }
-                }
-                else {
-                	array.add(arrayEntry);
-                }
-            }
-            newMap.put(entry.getKey(), array);
-        }   
+			List<Object> array = new ArrayList<Object>(entry.getValue().length);
+			for(Object arrayEntry : entry.getValue()) {
+				if(arrayEntry instanceof Map) {
+					array.add(copyVDFNode((VDFNode) arrayEntry));
+				}
+				else if(!stringSet.contains(entry.getKey().toLowerCase())) { //convert string numbers into ints/doubles
+					String str = (String) arrayEntry;
+					if(str.contains(".") && Pattern.matches(fpRegex, str)) {
+						array.add(Double.valueOf(str));
+					}    
+					else if(Pattern.matches(digits, str)) {
+						try {
+							array.add(Integer.valueOf(str)); //this may also catch certain booleans/flags
+						}
+						catch(NumberFormatException n) {
+							//if people decide to be silly and use stupid large numbers, just make it the biggest num possible
+							//to make the spinners happy
+							array.add(Integer.MAX_VALUE);
+						}
+					}
+					else {
+						array.add(arrayEntry);
+					}
+				}
+				else {
+					array.add(arrayEntry);
+				}
+			}
+			newMap.put(entry.getKey(), array);
+		}   
 		return newMap; 
 	}
     
