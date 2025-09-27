@@ -82,6 +82,7 @@ public class WaveBarPanel extends EngiPanel {
 		MISSION
 	}
 	
+	//TODO: support can now have red bg
 	public void modifyIcon(TFBotNode bot, int count, BotType type, boolean isAddition) {
 		String iconName = (String) bot.getValue(TFBotNode.CLASSICON);
 		boolean isCrit = false;
@@ -169,15 +170,12 @@ public class WaveBarPanel extends EngiPanel {
 		String mapName = iconName + "_" + type.toString();
 		int indexShift = 0;
 		
-		//support don't have counts + visible crits so just skip them
 		setPreferredSize(null);
 		if(iconNames.containsKey(mapName)) {
-			if(type != BotType.SUPPORT) {
-				if(isCrit && !iconNames.get(mapName).getCrit()) {
-					iconNames.get(mapName).setCrit(isCrit);
-				}
-				iconNames.get(mapName).addToCount(count);
+			if(isCrit && !iconNames.get(mapName).getCrit()) {
+				iconNames.get(mapName).setCrit(isCrit);
 			}
+			iconNames.get(mapName).addToCount(count);
 		}
 		else {
 			iconNames.put(mapName, icon);
