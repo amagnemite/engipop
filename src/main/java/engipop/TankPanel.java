@@ -12,7 +12,6 @@ import javax.swing.event.DocumentListener;
 
 import engipop.Node.RelayNode;
 import engipop.Node.TankNode;
-import engipop.Node.WaveNode;
 
 //panel for tank
 @SuppressWarnings("serial")

@@ -17,6 +17,7 @@ public class VDFParser {
 		char[] charArray = vdfString.toCharArray();
 		StringBuilder currentString = new StringBuilder();
 		
+		nodeStack.addFirst(root);
 		
 		for(char c : charArray) {
 			switch(c) {

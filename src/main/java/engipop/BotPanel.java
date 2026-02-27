@@ -37,7 +37,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	MainWindow mainWindow;
 	EngiPanel attrPanel = new EngiPanel();
 	WherePanel teleWherePanel = new WherePanel();
-	NodePanelManager manager;
 	
 	//DefaultComboBoxModel<String> classModel;
 	DefaultComboBoxModel<String> iconModel = new DefaultComboBoxModel<String>();
@@ -129,11 +128,7 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 	private boolean isNodeResetting = false;
 	
 	public BotPanel(MainWindow mainWindow, PopulationPanel popPanel) {
-		this(mainWindow, popPanel, null);
-	}
-	
-	public BotPanel(MainWindow mainWindow, PopulationPanel popPanel, NodePanelManager manager) {
-		//window to send feedback to, mainwindow to get item updates, secondarywindow to get map updates
+		//mainwindow to get item updates, secondarywindow to get map updates
 		JTextField cellEditor = new JTextField();
 		JButton addTagRow = new JButton("+");
 		
@@ -142,7 +137,6 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 		attrPanel.setOpaque(false);
 		
 		this.mainWindow = mainWindow;
-		this.manager = manager;
 		popPanel.addPropertyChangeListener(this);
 		mainWindow.addPropertyChangeListener(this);
 		
@@ -683,11 +677,13 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			}
 			
 			botNode.putKey(TFBotNode.CLASSNAME, classBox.getSelectedItem());
-			
+				
+			/* TODO: fix wavebar linking
 			if(manager != null) {
 				manager.updateSquadRCName();
 				manager.updateWavebar(false);
 			}
+			*/
 		});
 		
 		iconBox.addActionListener(event -> {
@@ -697,9 +693,11 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 			
 			botNode.putKey(TFBotNode.CLASSICON, iconBox.getSelectedItem()); //string
 			
+			/* fix wavebar linking
 			if(manager != null) {
 				manager.updateWavebar(false);
 			}
+			*/
 		});
 		
 		nameField.getDocument().addDocumentListener(new DocumentListener() {
@@ -719,10 +717,12 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				}
 				
 				botNode.putKey(TFBotNode.NAME, nameField.getText());
+				/* fix wavebar linking
 				if(manager != null) {
 					manager.updateWavebar(false);
 					manager.updateSquadRCName();
 				}
+				*/
 			}
 		});
 		
@@ -778,11 +778,13 @@ public class BotPanel extends EngiPanel implements PropertyChangeListener { //cl
 				
 				String template = templateField.getText();
 				botNode.putKey(TFBotNode.TEMPLATE, template);
-							
+				
+				/* fix wavebar linking
 				if(manager != null) {
 					manager.updateSquadRCName();
 					manager.updateWavebar(false);
 				}
+				*/
 			}
 		});
 		

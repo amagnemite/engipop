@@ -1,6 +1,7 @@
 package engipop;
 
 import java.awt.GridBagConstraints;
+import java.awt.Insets;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
@@ -32,7 +33,7 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 	JCheckBox waveTimeBox = new JCheckBox("Fixed respawn wave times?");
 	JSpinner busterDmgSpinner = new JSpinner();
 	JSpinner busterKillSpinner = new JSpinner();
-	JCheckBox atkSpawnBox = new JCheckBox("Can bots attack in spawn?");
+	JCheckBox atkSpawnBox = new JCheckBox("Should bots attack in spawn?");
 	//JCheckBox advancedBox = new JCheckBox("Advanced?");
 	
 	JButton loadPop = new JButton("Load a population file");
@@ -46,7 +47,6 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 	private PropertyChangeSupport propertySupport = new PropertyChangeSupport(this);
 	
 	public PopulationPanel(MainWindow mainwindow, SettingsWindow setWin) {
-		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		//this.setBackground(new Color(.86f, .22f, .22f, 1.0f));
 		//189.0, 59.0, 59.0,
 		
@@ -63,10 +63,10 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 				busterKillInit = 15, busterKillIncr = 1, busterKillMax = 100;
 		//arbitary numbers
 		
-		JLabel currLabel = new JLabel("StartingCurrency: ");
+		JLabel currencyLabel = new JLabel("StartingCurrency: ");
 		JLabel respawnWaveLabel = new JLabel("RespawnWaveTime: ");
-		JLabel busterDmgLabel = new JLabel("AddSentryBusterWhenDamageDealtExceeds: ");
-		JLabel busterKillLabel = new JLabel("AddSentryBusterWhenKillCountExceeds: ");
+		JLabel busterDmgLabel = new JLabel("Spawn a sentry buster when sentry damage exceeds: ");
+		JLabel busterKillLabel = new JLabel("Spawn a sentry buster when sentry kill count exceeds: ");
 		JLabel mapLabel = new JLabel("Map: ");
 		
 		SpinnerNumberModel currModel = new SpinnerNumberModel(currInit, min, currMax, currIncr);
@@ -90,25 +90,27 @@ public class PopulationPanel extends EngiPanel { //population keyvals
 		maps.setModel(mapsModel);
 		maps.setSelectedItem("");
 		
+		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
+		gbConstraints.insets = new Insets(0, 0, 5, 0);
+		
 		addGB(loadPop, 0, 0);
 		addGB(loadTemplate, 1, 0);
 		
-		addGB(mapLabel, 0, 1);
-		addGB(maps, 1, 1);
-		
-		addGB(currLabel, 0, 2);
-		addGB(currSpinner, 1, 2);
-		addGB(respawnWaveLabel, 2, 2);
+		addGB(maps, 1, 1);	
+		addGB(currSpinner, 1, 2);	
 		addGB(respawnWaveSpinner, 3, 2);
-		addGB(waveTimeBox, 4, 2);
-		
-		addGB(busterDmgLabel, 0, 3);
+		addGB(waveTimeBox, 4, 2);			
 		addGB(busterDmgSpinner, 1, 3);
-		addGB(busterKillLabel, 2, 3);
 		addGB(busterKillSpinner, 3, 3);
-		
 		addGB(eventBox, 0, 4);
 		addGB(atkSpawnBox, 1, 4);
+		
+		gbConstraints.anchor = GridBagConstraints.WEST;
+		addGB(mapLabel, 0, 1);
+		addGB(currencyLabel, 0, 2);
+		addGB(respawnWaveLabel, 2, 2);
+		addGB(busterDmgLabel, 0, 3);
+		addGB(busterKillLabel, 2, 3);
 		//this.addGB(advancedBox, 2, 4);
 	}
 	

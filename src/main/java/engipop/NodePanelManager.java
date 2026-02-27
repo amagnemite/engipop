@@ -92,7 +92,7 @@ public class NodePanelManager {
 	public NodePanelManager(MainWindow mainWindow, PopulationPanel popPanel, WaveBarPanel wavebar) {
 		popNode = Engipop.getPopNode();
 		this.mainWindow = mainWindow;
-		botPanel = new BotPanel(mainWindow, popPanel, this);
+		botPanel = new BotPanel(mainWindow, popPanel);
 		tankPanel = new TankPanel(popPanel);
 		this.wavebar = wavebar;
 		spawnerPanel.setBackground(botPanel.getBackground());

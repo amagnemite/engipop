@@ -15,8 +15,43 @@ public class Node {
 	//children refers to waveschedule - wave - wavespawn - spawner connections
 	//side connections like relays are connected elsewhere
 	
+	protected boolean isPlaceholder = false;
+	protected NodeType nodeType = NodeType.GENERIC;
+	protected boolean isDisplayOnly = false;
+	
     public enum SpawnerType {
     	NONE, TFBOT, TANK, SQUAD, RANDOMCHOICE
+    }
+    
+    public enum NodeType {
+    	GENERIC ("Node"),
+    	POPULATION ("WaveSchedule"),
+    	TEMPLATE ("Template"),
+    	MISSION ("Mission"),
+    	WAVE ("Wave"),
+    	WAVESPAWN ("WaveSpawn"),
+    	TFBOT ("TFBot"),
+    	TANK ("Tank"),
+    	SQUAD ("Squad"),
+    	RANDOMCHOICE ("RandomChoice"),
+    	CHARACTERATTRIBUTES ("CharacterAttributes"),
+    	ITEMATTRIBUTES ("ItemAttributes");
+    	
+    	private final String name;
+    	NodeType(String name) {
+    		this.name = name;
+    	}
+    	public String toString() {return name;};
+    }
+    
+    public Node() {
+    }
+    
+    public Node(boolean isPlaceholder, NodeType type) {
+    	if(isPlaceholder) {
+    		this.isPlaceholder = isPlaceholder;
+    		nodeType = type;
+    	}
     }
     
     public void connectNodes(Node parent) { //parents the calling node and adds calling node to parent's list
@@ -25,7 +60,7 @@ public class Node {
     }
     
     public List<Node> getChildren() {
-    	return this.children;
+    	return children;
     }
     
     public void setChildren(List<Node> children) {
@@ -35,21 +70,40 @@ public class Node {
  	public boolean hasChildren() {
 		boolean hasChild = false;
 		
-		if(this.getChildren().size() > 0) {
+		if(children.size() > 0) {
 			hasChild = true;
 		}
 		return hasChild;
 	}
     
     public Node getParent() {
-    	return this.parent;
+    	return parent;
     }
     
     //remove this?
     public void setParent(Node parent) {
     	this.parent = parent;
     }
+    
+    public String toString() {
+    	if(isPlaceholder) {
+    		return "Add new " + nodeType.toString();
+    	}
+    	return nodeType.toString();
+    }
+    
+    public boolean isPlaceholder() {
+    	return isPlaceholder;
+    }
 	
+    public NodeType getNodeType() {
+    	return nodeType;
+    }
+    
+    public boolean isDisplayOnly() {
+    	return isDisplayOnly;
+    }
+    
 	//put key into map assuming it's not null or empty, otherwise remove it
 	public void putKey(String key, Object value) {
 		if(value == null || value.equals("")) { //remove key does nothing if key doesn't exist
@@ -99,8 +153,8 @@ public class Node {
 		return keyVals.containsKey(key);
 	}
 	
-	public void removeKey(String key) {
-		keyVals.remove(key);
+	public Object removeKey(String key) {
+		return keyVals.remove(key);
 	}
 	
 	public void printKeyVals() {
@@ -117,7 +171,7 @@ public class Node {
 	
 	//reconsider this
 	public Map<String, List<Object>> getMap() {
-		return this.keyVals;
+		return keyVals;
 	}
 	
 	//converts vdfnodes (<string, object[]>) into treemaps <string, list<object>>
@@ -183,6 +237,8 @@ public class Node {
     	private Map<String, Node> botTemplateMap = new TreeMap<String, Node>(String.CASE_INSENSITIVE_ORDER);
 
         public PopNode() {
+        	nodeType = NodeType.POPULATION;
+        	
         	putKey(STARTINGCURRENCY, 400);
         	putKey(RESPAWNWAVETIME, 6);
         	putKey(BUSTERDAMAGE, Engipop.BUSTERDEFAULTDMG);
@@ -193,43 +249,54 @@ public class Node {
         	putKey(MISSION, new ArrayList<Node>());
         	//putKey(ADVANCED, false);
         	
+        	TemplateNode template = new TemplateNode(true);
+        	MissionNode mission = new MissionNode(true);
+        	
         	WaveNode wave = new WaveNode();
         	WaveSpawnNode ws = new WaveSpawnNode();
         	TFBotNode bot = new TFBotNode();
         	
+        	template.connectNodes(this);
+        	mission.connectNodes(this);
         	wave.connectNodes(this);
     		ws.connectNodes(wave);
     		bot.connectNodes(ws);
-    		//TODO: this scout isn't added to the wavebar 
+    		
+    		new Node(true, NodeType.TEMPLATE).connectNodes(template);
+    		new Node(true, NodeType.MISSION).connectNodes(mission);
+    		new Node(true, NodeType.WAVESPAWN).connectNodes(wave);
+    		new Node(true, NodeType.WAVE).connectNodes(this);
         }
         
         //only constructor to use Object[] as opposed to List<Object>> since hasn't been processed yet
 		public PopNode(Map<String, Object[]> map) { //constructor for read in nodes  	
-			keyVals = this.copyVDFNode(map);
+			nodeType = NodeType.POPULATION;
+			
+			keyVals = copyVDFNode(map);
         	
-        	if(this.containsKey("Wave")) {
+        	if(containsKey("Wave")) {
         		for(Object wave : keyVals.get("Wave")) {
         			WaveNode waveNode = new WaveNode((Map<String, List<Object>>) wave);
 					waveNode.connectNodes(this);
         		}
-        		this.removeKey("Wave");
+        		removeKey("Wave");
         	}
         	
-        	if(!this.containsKey(STARTINGCURRENCY)) {
+        	if(!containsKey(STARTINGCURRENCY)) {
         		putKey(STARTINGCURRENCY, 0);
         	}
         	
         	//may need to make sure this isn't a not string
-        	if(this.containsKey(EVENTPOPFILE) && 
-        			((String) this.getValue(EVENTPOPFILE)).equals("Halloween")) {
+        	if(containsKey(EVENTPOPFILE) && 
+        			((String) getValue(EVENTPOPFILE)).equals("Halloween")) {
         		putKey(EVENTPOPFILE, true);
         	}
         	else {
         		putKey(EVENTPOPFILE, false);
         	}
         	
-        	if(this.containsKey(BOTSATKINSPAWN)) {
-        		String atk = (String) this.getValue(BOTSATKINSPAWN);
+        	if(containsKey(BOTSATKINSPAWN)) {
+        		String atk = (String) getValue(BOTSATKINSPAWN);
         		if((atk.equalsIgnoreCase("no") || atk.equalsIgnoreCase("false"))) {
         			putKey(BOTSATKINSPAWN, false);
         		}
@@ -241,11 +308,11 @@ public class Node {
         		putKey(BOTSATKINSPAWN, true);
         	}
         	
-        	if(!this.containsKey(RESPAWNWAVETIME)) {
+        	if(!containsKey(RESPAWNWAVETIME)) {
         		putKey(RESPAWNWAVETIME, 0);
         	}
         	
-        	if(this.containsKey(FIXEDRESPAWNWAVETIME)) { //presence of flag is true
+        	if(containsKey(FIXEDRESPAWNWAVETIME)) { //presence of flag is true
         		putKey(FIXEDRESPAWNWAVETIME, true);
         	}
         	else {
@@ -302,15 +369,15 @@ public class Node {
         }
         
         public void setMapIndex(int i) {
-        	this.mapIndex = i;
+        	mapIndex = i;
         }
         
         public int getMapIndex() {
-        	return this.mapIndex;
+        	return mapIndex;
         }
         
         public void setWSTemplateMap(Map<String, Node> map) {
-        	this.wsTemplateMap = map;
+        	wsTemplateMap = map;
         }
         
         public Map<String, Node> getWSTemplateMap() {
@@ -318,7 +385,7 @@ public class Node {
         }
         
         public void setBotTemplateMap(Map<String, Node> map) {
-        	this.botTemplateMap = map;
+        	botTemplateMap = map;
         }
         
         public Map<String, Node> getBotTemplateMap() {
@@ -331,6 +398,26 @@ public class Node {
         	
     		return list;
         }
+    }
+    
+    public static class TemplateNode extends Node {
+    	private String templateName = "";
+    	
+    	public TemplateNode() {
+    		nodeType = NodeType.TEMPLATE;
+    	}
+    	
+    	public TemplateNode(boolean isDisplayOnly) {
+    		nodeType = NodeType.TEMPLATE;
+    		this.isDisplayOnly = isDisplayOnly;
+    	}
+    	
+    	public String toString() {
+    		if(!templateName.isEmpty()) {
+    			return templateName;
+    		}
+    		return nodeType.toString();
+    	}
     }
     
     public static abstract class NodeWithSpawner extends Node {
@@ -350,6 +437,7 @@ public class Node {
     			return null;
     		}
     		
+    		//TODO: replace this with nodetype?
     		if(node.getClass() == TFBotNode.class) {
     			type = SpawnerType.TFBOT;
     		}
@@ -384,6 +472,8 @@ public class Node {
     	//tfbot node is currently in the children list, may just move to keyval
     	
     	public MissionNode() {
+    		nodeType = NodeType.MISSION;
+    		
     		putKey(OBJECTIVE, DESTROYSENTRIES);
     		putKey(INITIALCOOLDOWN, 0);
     		putKey(COOLDOWNTIME, 0);
@@ -393,13 +483,19 @@ public class Node {
     		putKey(WHERE, new ArrayList<Object>(2));
     	}
     	
+    	public MissionNode(boolean isDisplayOnly) {
+    		nodeType = NodeType.MISSION;
+    		this.isDisplayOnly = isDisplayOnly;
+    	}
+    	
     	public MissionNode(Map<String, List<Object>> map) {
+    		nodeType = NodeType.MISSION;
     		keyVals.putAll(map);
     		
     		if(map.containsKey("TFBOT")) {
     			TFBotNode botNode = new TFBotNode((Map<String, List<Object>>) getValue("TFBOT"));
     			botNode.connectNodes(this);
-        		this.removeKey("TFBOT");
+        		removeKey("TFBOT");
     		}
     		else {
     			TFBotNode botNode = new TFBotNode();
@@ -413,6 +509,11 @@ public class Node {
     		
     		return keyValList;
     	}
+    	
+    	public String toString() {
+    		//return (String) getValue(OBJECTIVE);
+    		return "Mission";
+    	}
     }
     
     public static class WaveNode extends Node { 
@@ -425,6 +526,8 @@ public class Node {
     	public static final String WAVESPAWN = "WaveSpawn";
     	
     	public WaveNode() {
+    		nodeType = NodeType.WAVE;
+    		
     		putKey(STARTWAVEOUTPUT, new RelayNode());
     		putKey(DONEOUTPUT, new RelayNode());
     	}
@@ -458,6 +561,11 @@ public class Node {
         
         public static List<String> getNodeKeyList() {
         	return new ArrayList<String>(Arrays.asList(STARTWAVEOUTPUT, DONEOUTPUT, INITWAVEOUTPUT));
+        }
+        
+        //TODO: append index
+        public String toString() {
+        	return "Wave";
         }
     }
     
@@ -548,6 +656,7 @@ public class Node {
     	private boolean supportLimited;
     	
     	public WaveSpawnNode() {
+    		nodeType = NodeType.WAVESPAWN;
     		//putKey(WHERE, "spawnbot");
     		putKey(TOTALCOUNT, 1);
     		putKey(MAXACTIVE, 1);
@@ -676,9 +785,10 @@ public class Node {
     	}
     	
     	//copy input node to calling
+    	//TODO: is this used?
     	public void copyWaveSpawn(WaveSpawnNode copyFrom) {
-    		this.setParent(copyFrom.getParent()); //double check parent doesn't interfere with anything
-    		this.setChildren(copyFrom.getChildren());
+    		setParent(copyFrom.getParent()); //double check parent doesn't interfere with anything
+    		setChildren(copyFrom.getChildren());
     		//this.getMap().putAll(copyFrom.getMap());
     	}
     	
@@ -686,6 +796,13 @@ public class Node {
     		return new ArrayList<String>(Arrays.asList(NAME, WHERE, TOTALCOUNT, MAXACTIVE, SPAWNCOUNT, TOTALCURRENCY, WAITBEFORESTARTING,
     				WAITBETWEENSPAWNS, WAITBETWEENSPAWNSAFTERDEATH, WAITFORALLSPAWNED, WAITFORALLDEAD, SUPPORT, STARTWAVEOUTPUT,
     					FIRSTSPAWNOUTPUT, LASTSPAWNOUTPUT, DONEOUTPUT, TFBOT, TANK, SQUAD, RANDOMCHOICE, TEMPLATE));
+    	}
+    	
+    	public String toString() {
+    		if(containsKey(NAME)) {
+    			return (String) getValue(NAME);
+    		}
+    		return "WaveSpawn";
     	}
     }
     
@@ -699,6 +816,8 @@ public class Node {
     	public static final String ONBOMBDROPPEDOUTPUT = "OnBombDroppedOutput";
     	
     	public TankNode() {
+    		nodeType = NodeType.TANK;
+    		
     		putKey(HEALTH, Engipop.TANKDEFAULTHEALTH);
     		putKey(NAME, "tankboss");
     		putKey(SKIN, false);
@@ -727,7 +846,7 @@ public class Node {
     			putKey(ONBOMBDROPPEDOUTPUT, 
     				new RelayNode((Map<String, List<Object>>) getValue(ONBOMBDROPPEDOUTPUT)));
     		}
-    	}
+    	}    
     }
     
     public static class TFBotNode extends Node { //node for tfbot spawners
@@ -793,8 +912,10 @@ public class Node {
     	
     	private boolean isItemsSorted;
     	
-    	//consider allowing template only 
+    	//consider allowing template only
     	public TFBotNode() { //defaults
+    		nodeType = NodeType.TFBOT;
+    		
     		putKey(CLASSNAME, Classes.Scout);
     		putKey(CLASSICON, "scout");
     		putKey(SKILL, EASY);
@@ -936,6 +1057,16 @@ public class Node {
 						BULLETIMMUNE.toLowerCase(), BLASTIMMUNE.toLowerCase(), FIREIMMUNE.toLowerCase(), PARACHUTE.toLowerCase(), 
 							PROJECTILESHIELD.toLowerCase(), TELEPORTTOHINT.toLowerCase()));
     	}
+    	
+    	public String toString() {
+    		if(containsKey(NAME)) {
+    			return (String) getValue(NAME);
+    		}
+    		else if(containsKey(TEMPLATE)) {
+    			return (String) getValue(TEMPLATE);
+    		}
+    		return ((Classes) getValue(CLASSNAME)).toString();
+    	}
     }
     
     public static abstract class SquadRCNode extends Node {
@@ -981,6 +1112,7 @@ public class Node {
     //these two are mostly convenience 
     public static class SquadNode extends SquadRCNode {
     	public SquadNode() {
+    		nodeType = NodeType.SQUAD;
     	}
     	
     	public SquadNode(Map<String, List<Object>> map) {
@@ -990,6 +1122,7 @@ public class Node {
     
     public static class RandomChoiceNode extends SquadRCNode {
     	public RandomChoiceNode() {
+    		nodeType = NodeType.RANDOMCHOICE;
     	}
     	
     	public RandomChoiceNode(Map<String, List<Object>> map) {

@@ -43,6 +43,7 @@ public class WaveBarPanel extends EngiPanel {
 	private int seed = new Random().nextInt(0, 100000);
 	private Random ranGen = new Random(seed);
 	
+	//TODO: load current wave, update when relevant keyvals are updated
 	public WaveBarPanel() {
 		Set<String> iconNames = new HashSet<String>(Arrays.asList(
 			"scout", "scout_bat", "scout_bonk",

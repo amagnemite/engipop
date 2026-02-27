@@ -44,6 +44,7 @@ public class TemplatePanel extends EngiPanel implements PropertyChangeListener {
 	WaveSpawnPanel wsPanel;
 	BotPanel botPanel;
 	EngiPanel templateButtonPanel = new EngiPanel();
+	//TODO: relink to jtree
 	NodePanelManager spawnerListManager;
 	JPanel listPanel;
 	JPanel spawnerPanel;

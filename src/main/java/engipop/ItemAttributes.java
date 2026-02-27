@@ -9,12 +9,7 @@ import java.util.ArrayList;
 
 //read itemattributes from file and return the list
 public class ItemAttributes {
-
-	public ItemAttributes() {
-		
-	}
-	
-	public String[] getItemAttributes() {
+	public static String[] getItemAttributes() {
 		URL url = ItemAttributes.class.getResource("/itemattributes.txt");
 		
 		ArrayList<String> list = new ArrayList<String>();

@@ -20,25 +20,31 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 	JMenu optionsMenu = new JMenu("Options");
 	JMenu utilitiesMenu = new JMenu("Utilities");
 	
-	JTabbedPane tabbedPane = new JTabbedPane();
-	EngiPanel mainPanel = new EngiPanel();
 	WaveBarPanel wavebar = new WaveBarPanel();
 	
-	//todo: update botpanel
 	JMenuItem settings = new JMenuItem("Settings");
 	JMenuItem timeline = new JMenuItem("Minimum timeline viewer");
 	JMenuItem save = new JMenuItem("Save");
 	JMenuItem saveAs = new JMenuItem("Save as");
 	
+	TemplateTree templateTree;
+	
+	SettingsWindow settingsWindow;
+	PopulationPanel populationPanel;
+	EngiPanel populationFillerPanel = new EngiPanel();
+	TemplatePanel templatePanel;
+	MissionPanel missionPanel;
 	WavePanel wavePanel;
 	WaveSpawnPanel wsPanel;
-	WaveNodePanelManager waveNodeManager;
-	TemplateTree templateTree;
+	BotPanel botPanel;
+	TankPanel tankPanel;
+	//WaveNodePanelManager waveNodeManager;
 	
 	JLabel feedback = new JLabel("");
 	
 	PopNode popNode;
 	
+	private EngiPanel currentPanel = populationFillerPanel;
 	private PropertyChangeSupport support = new PropertyChangeSupport(this);
 	private File fileLocation = null;
 	
@@ -46,17 +52,17 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		super("Engipop");
 		//this.setBackground(new Color(193, 161, 138));
 		
-		setLayout(new BorderLayout());
-		
 		popNode = Engipop.getPopNode();
 		setSize(1200, 850);
 		
-		mainPanel.gbConstraints.anchor = GridBagConstraints.NORTHWEST;
-		
-		SettingsWindow settingsWindow = new SettingsWindow(this);
-		PopulationPanel populationPanel = new PopulationPanel(this, settingsWindow);
-		TemplatePanel tempPanel = new TemplatePanel(this, populationPanel);
-		MissionPanel missionPanel = new MissionPanel(this, populationPanel, wavebar);
+		settingsWindow = new SettingsWindow(this);
+		populationPanel = new PopulationPanel(this, settingsWindow);
+		templatePanel = new TemplatePanel(this, populationPanel);
+		missionPanel = new MissionPanel(this, populationPanel, wavebar);
+		wsPanel = new WaveSpawnPanel(populationPanel, this);
+		wavePanel = new WavePanel(populationPanel);
+		botPanel = new BotPanel(this, populationPanel); //receives tags and should receive 
+		tankPanel = new TankPanel(populationPanel); //receives spawns/relays
 		
 		populationPanel.addPropertyChangeListener("POPNODE", this);
 		
@@ -76,24 +82,18 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		menuBar.add(optionsMenu);
 		menuBar.add(utilitiesMenu);
 		setJMenuBar(menuBar);
+		NavigationTree navTree = new NavigationTree(this);
 		
-		wsPanel = new WaveSpawnPanel(populationPanel, this);
-		wavePanel = new WavePanel(populationPanel);
-		
-		waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, populationPanel, wavebar);
+		//TODO: figure out how the wavebar is receiving updates
+		//waveNodeManager = new WaveNodePanelManager(this, wavePanel, wsPanel, populationPanel, wavebar);
 		templateTree = new TemplateTree(populationPanel);
-		JPanel listPanel = waveNodeManager.getListPanel();
-		EngiPanel spawnerPanel = waveNodeManager.getSpawnerPanel();
-		EngiPanel populationFillerPanel = new EngiPanel();
+		//JPanel listPanel = waveNodeManager.getListPanel();
+		//EngiPanel spawnerPanel = waveNodeManager.getSpawnerPanel();
 		JScrollPane templateTreePane = templateTree.getTreePane();
-		JScrollPane panelScroll = new JScrollPane(mainPanel);
-		//EngiPanel wavebarPanel = new EngiPanel();
 		
 		//templateTreePane.setMinimumSize(new Dimension(225, templateTreePane.getPreferredSize().height));
 		templateTreePane.setPreferredSize(new Dimension(225, templateTreePane.getPreferredSize().height));
 		//wavebar.setPreferredSize(new Dimension(WaveBarIcon.WIDTH, WaveBarIcon.HEIGHT));
-		
-		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		
 		initListeners(settingsWindow);
 		
@@ -102,6 +102,8 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		populationFillerPanel.gbConstraints.weightx = 1;
 		populationFillerPanel.gbConstraints.weighty = 1;
 		populationFillerPanel.addGB(populationPanel, 0, 0);
+		
+		gbConstraints.anchor = GridBagConstraints.NORTHWEST;
 		
 		//wavebarPanel.setBorder(BorderFactory.createTitledBorder("Wavebar preview"));
 		/*
@@ -114,22 +116,42 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		wavebarPanel.addGB(wavebar, 0, 1);
 		*/
 		
-		mainPanel.gbConstraints.gridwidth = 2;
-		mainPanel.addGB(wavebar, 0, 0);
+		gbConstraints.gridwidth = 3;
+		addGB(wavebar, 0, 1);
 		//mainPanel.addGB(wavebarPanel, 0, 0);
-		mainPanel.gbConstraints.gridwidth = 1;
-		//mainPanel.addGB(waveNodeManager.getRefreshButton(), 0, 1);
+		gbConstraints.gridwidth = 1;
 		
-		mainPanel.gbConstraints.gridwidth = 2;
-		mainPanel.addGB(wavePanel.getDisabledPanel(), 0, 2);
-		mainPanel.addGB(wsPanel.getDisabledPanel(), 0, 3);
-		mainPanel.addGB(spawnerPanel.getDisabledPanel(), 0, 4);
-				
-		mainPanel.gbConstraints.gridheight = 2;
-		mainPanel.gbConstraints.weighty = 1;
-		mainPanel.addGB(waveNodeManager.getBotTankPanel().getDisabledPanel(), 0, 5);
-		//add insets?
+		JScrollPane navTreePane = new JScrollPane(navTree);
+		navTreePane.setPreferredSize(new Dimension(200, 400));
 		
+		//gbConstraints.gridwidth = 2;
+		gbConstraints.insets = new Insets(0, 20, 0, 10);
+		gbConstraints.weightx = .3;
+		addGB(navTreePane, 0, 3);
+		
+		//populationFillerPanel.setMinimumSize(mainPanel.getMinimumSize());
+		//populationFillerPanel.setPreferredSize(new Dimension(400, 400));
+		
+		gbConstraints.insets = new Insets(0, 0, 0, 10);
+		gbConstraints.weightx = .7;
+		addGB(populationFillerPanel, 1, 3);
+		addGB(templatePanel, 1, 3);
+		addGB(missionPanel, 1, 3);
+		addGB(wavePanel, 1, 3);
+		addGB(wsPanel, 1, 3);
+		addGB(botPanel, 1, 3);
+		addGB(tankPanel, 1, 3);
+		//addGB(spawnerPanel, 1, 3);
+		//mainPanel.addGB(waveNodeManager.getBotTankPanel().getDisabledPanel(), 0, 5);
+		
+		templatePanel.setVisible(false);
+		missionPanel.setVisible(false);
+		wavePanel.setVisible(false);
+		wsPanel.setVisible(false);
+		botPanel.setVisible(false);
+		tankPanel.setVisible(false);
+		
+		/*
 		mainPanel.gbConstraints.weighty = 0;
 		mainPanel.gbConstraints.gridheight = 4;
 		mainPanel.gbConstraints.gridwidth = 1;
@@ -141,18 +163,11 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		panelScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelScroll.setMinimumSize(mainPanel.getMinimumSize());
 		panelScroll.setPreferredSize(mainPanel.getPreferredSize());
+		*/
 		
-		populationFillerPanel.setMinimumSize(mainPanel.getMinimumSize());
-		populationFillerPanel.setPreferredSize(mainPanel.getPreferredSize());
-		//populationFillerPanel.setBackground(Color.BLUE);
+		addGB(feedback, 0, 0);
 		
-		tabbedPane.addTab("Main", panelScroll);
-		tabbedPane.addTab("Population settings", populationFillerPanel);
-		tabbedPane.addTab("Templates", tempPanel);
-		tabbedPane.addTab("Missions", missionPanel);
-		
-		add(feedback, BorderLayout.PAGE_START);
-		add(tabbedPane, BorderLayout.CENTER);
+		loadNode(Engipop.getPopNode());
 		
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -251,6 +266,62 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
 		//}
 	}
 	
+	public void loadNode(Node node) {
+		EngiPanel previousActivePanel = currentPanel;
+		
+		switch(node.getNodeType()) {
+			case POPULATION:
+				currentPanel = populationFillerPanel;
+				break;
+			case TEMPLATE:
+				currentPanel = templatePanel;
+				break;	
+			case MISSION:
+				currentPanel = missionPanel;
+				break;
+			case WAVE:
+				currentPanel = wavePanel;
+				wavePanel.updatePanel((WaveNode) node);
+				break;
+			case WAVESPAWN:
+				currentPanel = wsPanel;
+				wsPanel.updatePanel((WaveSpawnNode) node);
+				break;
+			case TFBOT:
+				currentPanel = botPanel;
+				botPanel.updatePanel((TFBotNode) node);
+				break;
+			case TANK:
+				currentPanel = tankPanel;
+				tankPanel.updatePanel((TankNode) node);
+				break;
+			case SQUAD:
+				break;
+			case RANDOMCHOICE: //display only
+				break;	
+				
+			case CHARACTERATTRIBUTES:
+				break;
+			case ITEMATTRIBUTES:
+				break;
+			
+
+			
+			
+			
+
+			
+			
+			default:
+				break;
+		}
+		
+		if(currentPanel != previousActivePanel) {
+			previousActivePanel.setVisible(false);
+			currentPanel.setVisible(true);
+		}
+	}
+	
 	public static void main(String args[]) {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -292,10 +363,6 @@ public class MainWindow extends EngiWindow implements PropertyChangeListener {
     public void updatePropertyListeners() {
     	//support.firePropertyChange(BOTTEMPLATELISTFIXED, null, popParse.getBotTemplateList());
     }
-	
-	public EngiPanel getMainPanel() {
-		return this.mainPanel;
-	}
 	
 	public void setFeedback(String string) {
 		feedback.setText(string);
